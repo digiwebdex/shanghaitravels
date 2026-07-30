@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { financeApi } from "@/lib/services";
+import { arApi, financeApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { Account, Application, Invoice } from "@/lib/types";
 import { Can } from "@/auth/Can";
@@ -72,6 +72,17 @@ export function CaseFinanceCard({
     }
   }
 
+  async function postToAr() {
+    if (!activeInvoice) return;
+    try {
+      const ar = await arApi.bridgeInvoice(activeInvoice.id);
+      setOk(`AR ${ar.docNo} posted to GL (${ar.journal?.journalNo || "journal"})`);
+      await onSaved();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "AR bridge failed");
+    }
+  }
+
   async function pay() {
     if (!activeInvoice) return;
     const amt = toPoisha(payAmount);
@@ -80,7 +91,7 @@ export function CaseFinanceCard({
       return;
     }
     try {
-      await financeApi.recordPayment({
+      const pay = await financeApi.recordPayment({
         invoiceId: activeInvoice.id,
         customerId: app.customerId,
         accountId,
@@ -89,6 +100,14 @@ export function CaseFinanceCard({
       });
       setOk("Payment recorded");
       setPayAmount("");
+      if (can("ar:manage") && pay?.id) {
+        try {
+          const ar = await arApi.bridgePayment(pay.id);
+          setOk(`Payment recorded · AR receipt ${ar.docNo} posted`);
+        } catch {
+          /* cash payment succeeded; AR bridge optional if GL not ready */
+        }
+      }
       await onSaved();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Payment failed");
@@ -182,6 +201,17 @@ export function CaseFinanceCard({
               Issue invoice
             </button>
           )}
+          <Can perm="ar:manage">
+            {activeInvoice && ["issued", "partially_paid", "paid"].includes(activeInvoice.status) && (
+              <button
+                type="button"
+                onClick={() => void postToAr()}
+                className="px-3 py-1.5 rounded-lg border border-amber-200 text-[10.5px] font-semibold text-amber-800 bg-amber-50"
+              >
+                Post receivable to GL
+              </button>
+            )}
+          </Can>
         </div>
       </Can>
 

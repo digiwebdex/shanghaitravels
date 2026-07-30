@@ -726,6 +726,106 @@ async function main() {
     ok("gl: reject unbalanced journal", r.status >= 400, `status=${r.status}`);
   }
 
+  // Phase C2 — AR / AP
+  let arInvoiceCashId;
+  {
+    const inv = await req("POST", "/invoices", {
+      customerId,
+      applicationId: airId,
+      items: [{ description: "QA AR bridge fee", quantity: 1, unitPrice: 250000 }],
+    });
+    arInvoiceCashId = inv.data?.id;
+    ok("ar: create operational invoice", okHttp(inv.status) && !!arInvoiceCashId, `status=${inv.status}`);
+    if (arInvoiceCashId) {
+      const issued = await req("POST", `/invoices/${arInvoiceCashId}/issue`);
+      ok("ar: issue operational invoice", okHttp(issued.status), `status=${issued.status}`);
+    }
+  }
+  let arDocId;
+  {
+    const r = await req("POST", `/ar/bridge/invoice/${arInvoiceCashId}`, {});
+    arDocId = r.data?.id;
+    ok(
+      "ar: bridge invoice posts GL",
+      okHttp(r.status) && r.data?.status === "posted" && !!r.data?.journalId,
+      `status=${r.status} ar=${r.data?.docNo} je=${r.data?.journalId}`,
+    );
+  }
+  {
+    const r = await req("GET", "/ar/documents?limit=20");
+    ok("ar: list documents", okHttp(r.status) && Array.isArray(r.data) && r.data.length >= 1, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/ar/reports/aging");
+    ok("ar: aging report", okHttp(r.status) && Array.isArray(r.data?.data), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", `/ar/reports/customer-ledger?customerId=${customerId}`);
+    ok("ar: customer ledger", okHttp(r.status) && (r.data?.entries?.length || 0) >= 1, `status=${r.status}`);
+  }
+  let supplierId;
+  {
+    const r = await req("POST", "/suppliers", {
+      name: `QA AP Supplier ${Date.now()}`,
+      type: "other",
+      phone: "01700000099",
+    });
+    supplierId = r.data?.id;
+    ok("ap: create supplier", okHttp(r.status) && !!supplierId, `status=${r.status}`);
+  }
+  let apDocId;
+  {
+    const r = await req("POST", "/ap/documents", {
+      type: "bill",
+      supplierId,
+      applicationId: hotelId,
+      dueDate: new Date(Date.now() + 7 * 864e5).toISOString(),
+      lines: [{ description: "QA hotel supplier bill", quantity: 1, unitPricePoisha: 180000, amountPoisha: 180000 }],
+    });
+    apDocId = r.data?.id;
+    ok("ap: create bill draft", okHttp(r.status) && !!apDocId && r.data?.status === "draft", `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", `/ap/documents/${apDocId}/submit`, {});
+    ok("ap: submit bill", okHttp(r.status) && r.data?.status === "pending_approval", `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", `/ap/documents/${apDocId}/approve`, {});
+    ok("ap: approve bill", okHttp(r.status) && r.data?.status === "approved", `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", `/ap/documents/${apDocId}/post`, {});
+    ok(
+      "ap: post bill to GL",
+      okHttp(r.status) && r.data?.status === "posted" && !!r.data?.journalId,
+      `status=${r.status} je=${r.data?.journalId}`,
+    );
+  }
+  {
+    const r = await req("GET", "/ap/reports/aging");
+    ok("ap: aging report", okHttp(r.status) && Array.isArray(r.data?.data), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", `/ap/reports/supplier-ledger?supplierId=${supplierId}`);
+    ok("ap: supplier ledger", okHttp(r.status) && (r.data?.entries?.length || 0) >= 1, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/ar/reports/outstanding");
+    ok(
+      "arap: outstanding summary",
+      okHttp(r.status) && (r.data?.arOutstandingPoisha ?? 0) >= 0 && (r.data?.apOutstandingPoisha ?? 0) >= 0,
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("GET", "/gl/reports/trial-balance");
+    ok(
+      "arap: trial balance still balanced",
+      okHttp(r.status) && r.data?.balanced === true,
+      `status=${r.status} bal=${r.data?.balanced}`,
+    );
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);

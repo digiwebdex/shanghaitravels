@@ -62,6 +62,11 @@ const FinanceCurrenciesPage = lazy(() => import("@/pages/FinanceCurrenciesPage")
 const FinanceJournalsPage = lazy(() => import("@/pages/FinanceJournalsPage"));
 const FinanceJournalDetailPage = lazy(() => import("@/pages/FinanceJournalDetailPage"));
 const FinanceReportsPage = lazy(() => import("@/pages/FinanceReportsPage"));
+const FinanceArPage = lazy(() => import("@/pages/FinanceArPage"));
+const FinanceArDetailPage = lazy(() => import("@/pages/FinanceArDetailPage"));
+const FinanceApPage = lazy(() => import("@/pages/FinanceApPage"));
+const FinanceApDetailPage = lazy(() => import("@/pages/FinanceApDetailPage"));
+const FinanceArApReportsPage = lazy(() => import("@/pages/FinanceArApReportsPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -432,6 +437,46 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <FinanceReportsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/ar",
+            element: (
+              <Lazy>
+                <FinanceArPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/ar/:id",
+            element: (
+              <Lazy>
+                <FinanceArDetailPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/ap",
+            element: (
+              <Lazy>
+                <FinanceApPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/ap/:id",
+            element: (
+              <Lazy>
+                <FinanceApDetailPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/ar-ap-reports",
+            element: (
+              <Lazy>
+                <FinanceArApReportsPage />
               </Lazy>
             ),
           },

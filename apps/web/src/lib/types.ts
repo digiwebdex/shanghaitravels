@@ -598,3 +598,90 @@ export type JournalEntry = {
   lines?: JournalLine[];
   _count?: { lines?: number };
 };
+
+export type ArDocument = {
+  id: string;
+  docNo: string;
+  type: string;
+  status: string;
+  customerId: string;
+  applicationId?: string | null;
+  invoiceId?: string | null;
+  currencyCode: string;
+  issueDate: string;
+  dueDate?: string | null;
+  subtotalPoisha: number;
+  taxPoisha: number;
+  totalPoisha: number;
+  balancePoisha: number;
+  memo?: string | null;
+  reference?: string | null;
+  journalId?: string | null;
+  approvedBy?: string | null;
+  postedAt?: string | null;
+  customer?: { id: string; code: string; fullName: string; phone?: string | null };
+  application?: { id: string; referenceNo: string; serviceType: string; title?: string | null } | null;
+  invoice?: { id: string; invoiceNo: string; status: string; total: number } | null;
+  journal?: { id: string; journalNo: string; status: string } | null;
+  lines?: ArDocumentLine[];
+  _count?: { lines?: number };
+};
+
+export type ArDocumentLine = {
+  id?: string;
+  lineNo: number;
+  description: string;
+  quantity: number;
+  unitPricePoisha: number;
+  amountPoisha: number;
+  glAccountCode?: string | null;
+};
+
+export type ApDocument = {
+  id: string;
+  docNo: string;
+  type: string;
+  status: string;
+  supplierId: string;
+  applicationId?: string | null;
+  currencyCode: string;
+  issueDate: string;
+  dueDate?: string | null;
+  subtotalPoisha: number;
+  taxPoisha: number;
+  totalPoisha: number;
+  balancePoisha: number;
+  memo?: string | null;
+  reference?: string | null;
+  journalId?: string | null;
+  approvedBy?: string | null;
+  postedAt?: string | null;
+  supplier?: { id: string; code: string; name: string; type?: string; phone?: string | null };
+  application?: { id: string; referenceNo: string; serviceType: string; title?: string | null } | null;
+  journal?: { id: string; journalNo: string; status: string } | null;
+  lines?: ApDocumentLine[];
+  _count?: { lines?: number };
+};
+
+export type ApDocumentLine = {
+  id?: string;
+  lineNo: number;
+  description: string;
+  quantity: number;
+  unitPricePoisha: number;
+  amountPoisha: number;
+  glAccountCode?: string | null;
+};
+
+export type AgingRow = {
+  customerId?: string;
+  supplierId?: string;
+  code: string;
+  name: string;
+  current: number;
+  "1-30": number;
+  "31-60": number;
+  "61-90": number;
+  "90+": number;
+  total: number;
+};

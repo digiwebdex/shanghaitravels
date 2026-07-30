@@ -7,7 +7,10 @@ const LINKS: { to: string; label: string; end?: boolean }[] = [
   { to: "/finance/cost-centers", label: "Cost Centers" },
   { to: "/finance/currencies", label: "Currencies" },
   { to: "/finance/journals", label: "Journals" },
-  { to: "/finance/reports", label: "Reports" },
+  { to: "/finance/ar", label: "AR" },
+  { to: "/finance/ap", label: "AP" },
+  { to: "/finance/ar-ap-reports", label: "AR/AP Reports" },
+  { to: "/finance/reports", label: "GL Reports" },
 ];
 
 export function FinanceModuleNav() {

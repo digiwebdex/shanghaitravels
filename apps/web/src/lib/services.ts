@@ -22,6 +22,9 @@ import type {
   HajjPilgrim,
   HajjUmrahPackageProduct,
   AccountingPeriod,
+  AgingRow,
+  ApDocument,
+  ArDocument,
   CostCenter,
   CurrencyRow,
   ExchangeRateRow,
@@ -171,10 +174,10 @@ export const financeApi = {
     apiFetch<Invoice>("/invoices", { method: "POST", body }),
   issueInvoice: (id: string) => apiFetch<Invoice>(`/invoices/${id}/issue`, { method: "POST" }),
   recordPayment: (body: Record<string, unknown>) =>
-    apiFetch("/payments", { method: "POST", body }),
+    apiFetch<{ id: string }>("/payments", { method: "POST", body }),
   /** Separate permission: payment:refund */
   recordRefund: (body: Record<string, unknown>) =>
-    apiFetch("/payments/refund", { method: "POST", body }),
+    apiFetch<{ id: string }>("/payments/refund", { method: "POST", body }),
   accounts: () => apiFetch<Account[]>("/accounts"),
 };
 
@@ -462,4 +465,77 @@ export const glApi = {
       balanced: boolean;
     }>(`/gl/reports/trial-balance${qs ? `?${qs}` : ""}`);
   },
+};
+
+export const arApi = {
+  listCustomers: () => apiFetch<{ id: string; code: string; fullName: string; outstandingPoisha: number; invoiceCount: number }[]>("/ar/customers"),
+  listDocuments: (q?: { status?: string; type?: string; customerId?: string; applicationId?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.status) p.set("status", q.status);
+    if (q?.type) p.set("type", q.type);
+    if (q?.customerId) p.set("customerId", q.customerId);
+    if (q?.applicationId) p.set("applicationId", q.applicationId);
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<ArDocument[]>(`/ar/documents${qs ? `?${qs}` : ""}`);
+  },
+  getDocument: (id: string) => apiFetch<ArDocument>(`/ar/documents/${id}`),
+  createDocument: (body: Record<string, unknown>) =>
+    apiFetch<ArDocument>("/ar/documents", { method: "POST", body }),
+  submit: (id: string) => apiFetch<ArDocument>(`/ar/documents/${id}/submit`, { method: "POST", body: {} }),
+  approve: (id: string) => apiFetch<ArDocument>(`/ar/documents/${id}/approve`, { method: "POST", body: {} }),
+  reject: (id: string, reason?: string) =>
+    apiFetch<ArDocument>(`/ar/documents/${id}/reject`, { method: "POST", body: { reason } }),
+  post: (id: string) => apiFetch<ArDocument>(`/ar/documents/${id}/post`, { method: "POST", body: {} }),
+  void: (id: string, reason?: string) =>
+    apiFetch<ArDocument>(`/ar/documents/${id}/void`, { method: "POST", body: { reason } }),
+  allocate: (body: Record<string, unknown>) => apiFetch("/ar/allocations", { method: "POST", body }),
+  bridgeInvoice: (invoiceId: string) =>
+    apiFetch<ArDocument>(`/ar/bridge/invoice/${invoiceId}`, { method: "POST", body: {} }),
+  bridgePayment: (paymentId: string) =>
+    apiFetch<ArDocument>(`/ar/bridge/payment/${paymentId}`, { method: "POST", body: {} }),
+  reportAging: (asOf?: string) =>
+    apiFetch<{ asOf: string; data: AgingRow[]; totals: Record<string, number> }>(
+      `/ar/reports/aging${asOf ? `?asOf=${encodeURIComponent(asOf)}` : ""}`,
+    ),
+  reportCustomerLedger: (customerId: string) =>
+    apiFetch<{ customerId: string; entries: unknown[]; closingPoisha: number }>(
+      `/ar/reports/customer-ledger?customerId=${encodeURIComponent(customerId)}`,
+    ),
+  reportOutstanding: () => apiFetch<Record<string, unknown>>("/ar/reports/outstanding"),
+};
+
+export const apApi = {
+  listSuppliers: () =>
+    apiFetch<{ id: string; code: string; name: string; type?: string; outstandingPoisha: number }[]>("/ap/suppliers"),
+  listDocuments: (q?: { status?: string; type?: string; supplierId?: string; applicationId?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.status) p.set("status", q.status);
+    if (q?.type) p.set("type", q.type);
+    if (q?.supplierId) p.set("supplierId", q.supplierId);
+    if (q?.applicationId) p.set("applicationId", q.applicationId);
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<ApDocument[]>(`/ap/documents${qs ? `?${qs}` : ""}`);
+  },
+  getDocument: (id: string) => apiFetch<ApDocument>(`/ap/documents/${id}`),
+  createDocument: (body: Record<string, unknown>) =>
+    apiFetch<ApDocument>("/ap/documents", { method: "POST", body }),
+  submit: (id: string) => apiFetch<ApDocument>(`/ap/documents/${id}/submit`, { method: "POST", body: {} }),
+  approve: (id: string) => apiFetch<ApDocument>(`/ap/documents/${id}/approve`, { method: "POST", body: {} }),
+  reject: (id: string, reason?: string) =>
+    apiFetch<ApDocument>(`/ap/documents/${id}/reject`, { method: "POST", body: { reason } }),
+  post: (id: string) => apiFetch<ApDocument>(`/ap/documents/${id}/post`, { method: "POST", body: {} }),
+  void: (id: string, reason?: string) =>
+    apiFetch<ApDocument>(`/ap/documents/${id}/void`, { method: "POST", body: { reason } }),
+  allocate: (body: Record<string, unknown>) => apiFetch("/ap/allocations", { method: "POST", body }),
+  reportAging: (asOf?: string) =>
+    apiFetch<{ asOf: string; data: AgingRow[]; totals: Record<string, number> }>(
+      `/ap/reports/aging${asOf ? `?asOf=${encodeURIComponent(asOf)}` : ""}`,
+    ),
+  reportSupplierLedger: (supplierId: string) =>
+    apiFetch<{ supplierId: string; entries: unknown[]; closingPoisha: number }>(
+      `/ap/reports/supplier-ledger?supplierId=${encodeURIComponent(supplierId)}`,
+    ),
+  reportOutstanding: () => apiFetch<Record<string, unknown>>("/ap/reports/outstanding"),
 };
