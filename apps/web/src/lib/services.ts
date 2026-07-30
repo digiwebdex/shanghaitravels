@@ -154,6 +154,9 @@ export const financeApi = {
   issueInvoice: (id: string) => apiFetch<Invoice>(`/invoices/${id}/issue`, { method: "POST" }),
   recordPayment: (body: Record<string, unknown>) =>
     apiFetch("/payments", { method: "POST", body }),
+  /** Separate permission: payment:refund */
+  recordRefund: (body: Record<string, unknown>) =>
+    apiFetch("/payments/refund", { method: "POST", body }),
   accounts: () => apiFetch<Account[]>("/accounts"),
 };
 

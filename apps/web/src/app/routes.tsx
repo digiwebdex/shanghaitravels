@@ -41,10 +41,12 @@ export const router = createHashRouter([
   { path: "/login", element: <LoginPage /> },
   {
     element: <RequireAuth />,
+    errorElement: <NotFoundPage />,
     children: [
       { path: "/change-password", element: <ChangePasswordPage /> },
       {
         element: <AdminLayout />,
+        errorElement: <NotFoundPage />,
         children: [
           {
             index: true,

@@ -254,6 +254,24 @@ async function main() {
       `pnr=${g.data?.airTicket?.pnr}`,
     );
   }
+  {
+    const r = await req("POST", `/applications/${airId}/note`, {
+      message: "Fare quotation: ৳15000 — QA consolidator",
+    });
+    ok("ticketing: fare quotation note", okHttp(r.status), `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", `/applications/${airId}/advance-stage`, { note: "QA advance to fare" });
+    ok("ticketing: advance stage", okHttp(r.status), `status=${r.status} stage=${r.data?.currentStage}`);
+  }
+  {
+    const r = await req("PATCH", `/applications/${airId}`, { status: "cancelled" });
+    ok("ticketing: cancel status", okHttp(r.status) && r.data?.status === "cancelled", `status=${r.status} app=${r.data?.status}`);
+    const j = await req("GET", `/applications/${airId}/journey`);
+    const events = j.data?.events || [];
+    const hasStatus = events.some((e) => e.type === "status_changed");
+    ok("ticketing: cancel audit event", okHttp(j.status) && hasStatus, `events=${events.length} hasStatus=${hasStatus}`);
+  }
 
   {
     const r = await req("POST", "/auth/logout");

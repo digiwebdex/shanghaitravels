@@ -21,6 +21,7 @@ import { CaseAssignCard } from "@/components/cases/CaseAssignCard";
 import { CaseDocumentsCard } from "@/components/cases/CaseDocumentsCard";
 import { CaseFinanceCard } from "@/components/cases/CaseFinanceCard";
 import { AirTicketDetailCard } from "@/components/cases/AirTicketDetailCard";
+import { TicketOpsCard } from "@/components/cases/TicketOpsCard";
 import CaseTimeline from "@/admin/shared/CaseTimeline";
 
 export default function TicketingCasePage() {
@@ -101,13 +102,14 @@ export default function TicketingCasePage() {
     return Math.min(done, Math.max(0, stages.length - 1));
   }, [stages]);
 
-  async function run(action: () => Promise<unknown>, success: string) {
+  async function run(action: () => Promise<unknown>, success: string, clearNote = false) {
     setBusy(true);
     setError("");
     setOk("");
     try {
       await action();
       setOk(success);
+      if (clearNote) setNote("");
       await reload();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Action failed");
@@ -204,7 +206,9 @@ export default function TicketingCasePage() {
               <button
                 type="button"
                 disabled={busy || !note.trim()}
-                onClick={() => run(() => applicationsApi.note(app.id, note.trim()), "Note saved")}
+                onClick={() =>
+                  run(() => applicationsApi.note(app.id, note.trim()), "Note saved", true)
+                }
                 className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold disabled:opacity-50"
               >
                 Add note
@@ -218,6 +222,7 @@ export default function TicketingCasePage() {
                   run(
                     () => applicationsApi.advance(app.id, note.trim() || undefined),
                     "Stage advanced",
+                    true,
                   )
                 }
                 className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white disabled:opacity-50"
@@ -264,6 +269,15 @@ export default function TicketingCasePage() {
           />
           <CaseAssignCard app={app} staff={staff} onSaved={reload} setError={setError} setOk={setOk} />
         </div>
+
+        <TicketOpsCard
+          app={app}
+          stages={stages}
+          detail={app.airTicket}
+          onSaved={reload}
+          setError={setError}
+          setOk={setOk}
+        />
 
         <CaseDocumentsCard
           appId={app.id}

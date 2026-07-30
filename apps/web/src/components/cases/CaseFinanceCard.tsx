@@ -95,6 +95,29 @@ export function CaseFinanceCard({
     }
   }
 
+  async function refund() {
+    if (!activeInvoice) return;
+    const amt = toPoisha(payAmount);
+    if (amt <= 0 || !accountId) {
+      setError("Enter refund amount and account");
+      return;
+    }
+    try {
+      await financeApi.recordRefund({
+        invoiceId: activeInvoice.id,
+        customerId: app.customerId,
+        accountId,
+        amount: amt,
+        method,
+      });
+      setOk("Refund recorded");
+      setPayAmount("");
+      await onSaved();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Refund failed");
+    }
+  }
+
   if (!can("invoice:amount:read") && !can("invoice:manage")) {
     return (
       <section className="bg-white rounded-xl border border-slate-200 p-4">
@@ -162,14 +185,18 @@ export function CaseFinanceCard({
         </div>
       </Can>
 
-      <Can perm="payment:record">
-        {activeInvoice && ["issued", "partially_paid"].includes(activeInvoice.status) && (
+      {(can("payment:record") || can("payment:refund")) &&
+        activeInvoice &&
+        ["issued", "partially_paid", "paid"].includes(activeInvoice.status) && (
           <div className="border-t border-slate-100 pt-3 space-y-2">
-            <p className="text-[10px] font-bold text-slate-500 uppercase">Record payment</p>
+            <p className="text-[10px] font-bold text-slate-500 uppercase">Record payment / refund</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
-                <label className={labelCls}>Amount (৳)</label>
+                <label className={labelCls} htmlFor="fin-pay-amt">
+                  Amount (৳)
+                </label>
                 <input
+                  id="fin-pay-amt"
                   className={inputCls}
                   type="number"
                   min="0"
@@ -179,8 +206,15 @@ export function CaseFinanceCard({
                 />
               </div>
               <div>
-                <label className={labelCls}>Account</label>
-                <select className={inputCls} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+                <label className={labelCls} htmlFor="fin-pay-acct">
+                  Account
+                </label>
+                <select
+                  id="fin-pay-acct"
+                  className={inputCls}
+                  value={accountId}
+                  onChange={(e) => setAccountId(e.target.value)}
+                >
                   {accounts.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.name}
@@ -189,8 +223,15 @@ export function CaseFinanceCard({
                 </select>
               </div>
               <div>
-                <label className={labelCls}>Method</label>
-                <select className={inputCls} value={method} onChange={(e) => setMethod(e.target.value)}>
+                <label className={labelCls} htmlFor="fin-pay-method">
+                  Method
+                </label>
+                <select
+                  id="fin-pay-method"
+                  className={inputCls}
+                  value={method}
+                  onChange={(e) => setMethod(e.target.value)}
+                >
                   {["cash", "bank_transfer", "bkash", "nagad", "card", "cheque", "other"].map((m) => (
                     <option key={m} value={m}>
                       {m}
@@ -199,17 +240,33 @@ export function CaseFinanceCard({
                 </select>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => void pay()}
-              className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white"
-              style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
-            >
-              Record payment
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <Can perm="payment:record">
+                {["issued", "partially_paid"].includes(activeInvoice.status) && (
+                  <button
+                    type="button"
+                    onClick={() => void pay()}
+                    className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white"
+                    style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+                  >
+                    Record payment
+                  </button>
+                )}
+              </Can>
+              <Can perm="payment:refund">
+                {(activeInvoice.paid ?? 0) > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => void refund()}
+                    className="px-3 py-1.5 rounded-lg border border-red-200 text-[10.5px] font-semibold text-red-700"
+                  >
+                    Record refund
+                  </button>
+                )}
+              </Can>
+            </div>
           </div>
         )}
-      </Can>
     </section>
   );
 }

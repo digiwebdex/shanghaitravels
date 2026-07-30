@@ -28,6 +28,25 @@ test.describe("Air ticketing module", () => {
     await page.goto("./#/ticketing");
     await expect(page.getByRole("heading", { name: /Air Ticketing/i })).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText(/manual PNR/i)).toBeVisible();
+
+    // Open first case if present — ops panel must render for air_ticket workspace
+    const caseLink = page.locator('a[href*="#/ticketing/"]').filter({ hasText: /^APP-/ }).first();
+    if (await caseLink.count()) {
+      await caseLink.click();
+      await expect(page.getByRole("heading", { name: /Ticket operations/i })).toBeVisible({
+        timeout: 20_000,
+      });
+      await expect(page.getByRole("heading", { name: /Air ticket details/i })).toBeVisible();
+    }
+  });
+
+  test("unauthenticated ticketing hash redirects to login", async ({ page }) => {
+    await page.context().clearCookies();
+    await page.goto("./#/ticketing");
+    await expect(page.getByRole("heading", { name: /Welcome back/i })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByText(/Unexpected Application Error/i)).toHaveCount(0);
   });
 });
 
