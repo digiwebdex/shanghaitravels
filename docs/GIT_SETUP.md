@@ -19,9 +19,11 @@
 | Annotated tag | `v1.0-phase-a` |
 | Tag message | Stable production baseline after Phase A stabilization. |
 | Tag object | `0b3651029edf46a718ab631ca956833a9da18714` (points at commit above) |
-| Remote | **None configured** |
+| Remote | `origin` → `https://github.com/digiwebdex/shanghaitravels.git` |
+| Tracking | `main` ↔ `origin/main` |
+| Pushed | `main` + tag `v1.0-phase-a` (2026-07-30) |
 
-`docs/GIT_SETUP.md` was written immediately after the tag and committed on `main` as a follow-up docs commit (the annotated tag `v1.0-phase-a` still points at the RC baseline hash above).
+`docs/GIT_SETUP.md` was written immediately after the tag and committed on `main` as a follow-up docs commit (the annotated tag `v1.0-phase-a` still points at the RC baseline hash `5a7a6e1`).
 
 ---
 
@@ -65,31 +67,28 @@ git config --global --add safe.directory /var/www/ShanghaiTravels
 
 ## Remote status
 
-No `origin` (or any remote) is configured.
+**Configured and pushed.**
 
-**Do not invent a GitHub remote.** After you create an empty GitHub repository, run:
-
-```bash
-cd /var/www/ShanghaiTravels
-
-# Optional if you hit dubious-ownership:
-# export GIT_CONFIG_COUNT=1
-# export GIT_CONFIG_KEY_0=safe.directory
-# export GIT_CONFIG_VALUE_0=/var/www/ShanghaiTravels
-
-git remote add origin git@github.com:<YOUR_ORG_OR_USER>/<YOUR_REPO>.git
-# or HTTPS:
-# git remote add origin https://github.com/<YOUR_ORG_OR_USER>/<YOUR_REPO>.git
-
-git push -u origin main
-git push origin v1.0-phase-a
+```text
+origin  https://github.com/digiwebdex/shanghaitravels.git (fetch)
+origin  https://github.com/digiwebdex/shanghaitravels.git (push)
 ```
+
+Repo URL: https://github.com/digiwebdex/shanghaitravels
 
 Verify:
 
 ```bash
-git remote -v
-git ls-remote --tags origin
+git -c safe.directory=/var/www/ShanghaiTravels remote -v
+git -c safe.directory=/var/www/ShanghaiTravels ls-remote --heads --tags origin
+```
+
+Future pushes:
+
+```bash
+cd /var/www/ShanghaiTravels
+git -c safe.directory=/var/www/ShanghaiTravels push origin main
+git -c safe.directory=/var/www/ShanghaiTravels push origin v1.0-phase-a   # only when creating new tags
 ```
 
 ---
