@@ -647,6 +647,85 @@ async function main() {
     ok("hajj: cancel status", okHttp(r.status) && r.data?.status === "cancelled", `status=${r.status}`);
   }
 
+  // Phase C1 — Finance ERP foundation (double-entry GL)
+  {
+    const r = await req("POST", "/gl/bootstrap", {});
+    ok("gl: bootstrap foundation", okHttp(r.status), `status=${r.status} boot=${r.data?.bootstrapped}`);
+  }
+  {
+    const r = await req("GET", "/gl/accounts?active=true");
+    const n = Array.isArray(r.data) ? r.data.length : 0;
+    ok("gl: list chart of accounts", okHttp(r.status) && n >= 1, `status=${r.status} n=${n}`);
+  }
+  let cashId;
+  let revenueId;
+  {
+    const r = await req("GET", "/gl/accounts?active=true");
+    const list = Array.isArray(r.data) ? r.data : [];
+    cashId = list.find((a) => a.code === "1100")?.id || list.find((a) => a.isPostable && a.type === "asset")?.id;
+    revenueId = list.find((a) => a.code === "4000")?.id || list.find((a) => a.isPostable && a.type === "income")?.id;
+    ok("gl: resolve postable accounts", !!cashId && !!revenueId, `cash=${!!cashId} rev=${!!revenueId}`);
+  }
+  let journalId;
+  {
+    const r = await req("POST", "/gl/journals", {
+      entryDate: new Date().toISOString(),
+      type: "opening",
+      memo: "QA opening balance",
+      currencyCode: "BDT",
+      lines: [
+        { glAccountId: cashId, debitPoisha: 100000, creditPoisha: 0, currencyCode: "BDT" },
+        { glAccountId: revenueId, debitPoisha: 0, creditPoisha: 100000, currencyCode: "BDT" },
+      ],
+    });
+    journalId = r.data?.id;
+    ok(
+      "gl: create balanced journal",
+      okHttp(r.status) && !!journalId && r.data?.totalDebitPoisha === r.data?.totalCreditPoisha,
+      `status=${r.status} no=${r.data?.journalNo}`,
+    );
+  }
+  {
+    const r = await req("POST", `/gl/journals/${journalId}/submit`, {});
+    ok("gl: submit journal", okHttp(r.status) && r.data?.status === "pending_approval", `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", `/gl/journals/${journalId}/approve`, {});
+    ok("gl: approve journal", okHttp(r.status) && !!r.data?.approvedBy, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", `/gl/journals/${journalId}/post`, {});
+    ok("gl: post journal", okHttp(r.status) && r.data?.status === "posted", `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/gl/reports/trial-balance");
+    ok(
+      "gl: trial balance balanced",
+      okHttp(r.status) && r.data?.balanced === true,
+      `status=${r.status} bal=${r.data?.balanced}`,
+    );
+  }
+  {
+    const r = await req("GET", "/gl/reports/journal-register");
+    ok("gl: journal register", okHttp(r.status) && (r.data?.total ?? 0) >= 1, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/gl/fiscal-years");
+    ok("gl: list fiscal years", okHttp(r.status) && Array.isArray(r.data) && r.data.length >= 1, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/gl/journals", {
+      entryDate: new Date().toISOString(),
+      type: "standard",
+      memo: "QA unbalanced should fail",
+      lines: [
+        { glAccountId: cashId, debitPoisha: 5000, creditPoisha: 0 },
+        { glAccountId: revenueId, debitPoisha: 0, creditPoisha: 1000 },
+      ],
+    });
+    ok("gl: reject unbalanced journal", r.status >= 400, `status=${r.status}`);
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);

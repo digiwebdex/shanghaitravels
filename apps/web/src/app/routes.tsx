@@ -54,6 +54,14 @@ const HajjPackagesPage = lazy(() => import("@/pages/HajjPackagesPage"));
 const HajjPilgrimsPage = lazy(() => import("@/pages/HajjPilgrimsPage"));
 const HajjGroupsPage = lazy(() => import("@/pages/HajjGroupsPage"));
 const HajjReportsPage = lazy(() => import("@/pages/HajjReportsPage"));
+const FinanceAccountsPage = lazy(() => import("@/pages/FinanceAccountsPage"));
+const FinanceGroupsPage = lazy(() => import("@/pages/FinanceGroupsPage"));
+const FinancePeriodsPage = lazy(() => import("@/pages/FinancePeriodsPage"));
+const FinanceCostCentersPage = lazy(() => import("@/pages/FinanceCostCentersPage"));
+const FinanceCurrenciesPage = lazy(() => import("@/pages/FinanceCurrenciesPage"));
+const FinanceJournalsPage = lazy(() => import("@/pages/FinanceJournalsPage"));
+const FinanceJournalDetailPage = lazy(() => import("@/pages/FinanceJournalDetailPage"));
+const FinanceReportsPage = lazy(() => import("@/pages/FinanceReportsPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -360,6 +368,70 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <HajjCasePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance",
+            element: (
+              <Lazy>
+                <FinanceAccountsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/groups",
+            element: (
+              <Lazy>
+                <FinanceGroupsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/periods",
+            element: (
+              <Lazy>
+                <FinancePeriodsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/cost-centers",
+            element: (
+              <Lazy>
+                <FinanceCostCentersPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/currencies",
+            element: (
+              <Lazy>
+                <FinanceCurrenciesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/journals",
+            element: (
+              <Lazy>
+                <FinanceJournalsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/journals/:id",
+            element: (
+              <Lazy>
+                <FinanceJournalDetailPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/reports",
+            element: (
+              <Lazy>
+                <FinanceReportsPage />
               </Lazy>
             ),
           },

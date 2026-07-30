@@ -21,6 +21,14 @@ import type {
   HajjGroup,
   HajjPilgrim,
   HajjUmrahPackageProduct,
+  AccountingPeriod,
+  CostCenter,
+  CurrencyRow,
+  ExchangeRateRow,
+  FiscalYear,
+  GlAccount,
+  GlAccountGroup,
+  JournalEntry,
   VisaDetail,
 } from "@/lib/types";
 
@@ -374,4 +382,84 @@ export const hajjGroupsApi = {
   update: (id: string, body: Record<string, unknown>) =>
     apiFetch<HajjGroup>(`/reference/hajj-groups/${id}`, { method: "PATCH", body }),
   remove: (id: string) => apiFetch(`/reference/hajj-groups/${id}`, { method: "DELETE" }),
+};
+
+export const glApi = {
+  bootstrap: () => apiFetch<{ bootstrapped: boolean; message?: string }>("/gl/bootstrap", { method: "POST", body: {} }),
+  listGroups: () => apiFetch<GlAccountGroup[]>("/gl/account-groups"),
+  createGroup: (body: Record<string, unknown>) =>
+    apiFetch<GlAccountGroup>("/gl/account-groups", { method: "POST", body }),
+  updateGroup: (id: string, body: Record<string, unknown>) =>
+    apiFetch<GlAccountGroup>(`/gl/account-groups/${id}`, { method: "PATCH", body }),
+  listAccounts: (q?: { q?: string; type?: string; active?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.q) p.set("q", q.q);
+    if (q?.type) p.set("type", q.type);
+    if (q?.active) p.set("active", q.active);
+    const qs = p.toString();
+    return apiFetch<GlAccount[]>(`/gl/accounts${qs ? `?${qs}` : ""}`);
+  },
+  createAccount: (body: Record<string, unknown>) =>
+    apiFetch<GlAccount>("/gl/accounts", { method: "POST", body }),
+  updateAccount: (id: string, body: Record<string, unknown>) =>
+    apiFetch<GlAccount>(`/gl/accounts/${id}`, { method: "PATCH", body }),
+  listFiscalYears: () => apiFetch<FiscalYear[]>("/gl/fiscal-years"),
+  createFiscalYear: (body: Record<string, unknown>) =>
+    apiFetch<FiscalYear>("/gl/fiscal-years", { method: "POST", body }),
+  createPeriod: (body: Record<string, unknown>) =>
+    apiFetch<AccountingPeriod>("/gl/periods", { method: "POST", body }),
+  closePeriod: (id: string) => apiFetch<AccountingPeriod>(`/gl/periods/${id}/close`, { method: "POST", body: {} }),
+  reopenPeriod: (id: string) => apiFetch<AccountingPeriod>(`/gl/periods/${id}/reopen`, { method: "POST", body: {} }),
+  listCostCenters: () => apiFetch<CostCenter[]>("/gl/cost-centers"),
+  createCostCenter: (body: Record<string, unknown>) =>
+    apiFetch<CostCenter>("/gl/cost-centers", { method: "POST", body }),
+  listCurrencies: () => apiFetch<CurrencyRow[]>("/gl/currencies"),
+  createCurrency: (body: Record<string, unknown>) =>
+    apiFetch<CurrencyRow>("/gl/currencies", { method: "POST", body }),
+  listExchangeRates: () => apiFetch<ExchangeRateRow[]>("/gl/exchange-rates"),
+  createExchangeRate: (body: Record<string, unknown>) =>
+    apiFetch<ExchangeRateRow>("/gl/exchange-rates", { method: "POST", body }),
+  listJournals: (q?: { status?: string; periodId?: string; type?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.status) p.set("status", q.status);
+    if (q?.periodId) p.set("periodId", q.periodId);
+    if (q?.type) p.set("type", q.type);
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<JournalEntry[]>(`/gl/journals${qs ? `?${qs}` : ""}`);
+  },
+  getJournal: (id: string) => apiFetch<JournalEntry>(`/gl/journals/${id}`),
+  createJournal: (body: Record<string, unknown>) =>
+    apiFetch<JournalEntry>("/gl/journals", { method: "POST", body }),
+  updateJournal: (id: string, body: Record<string, unknown>) =>
+    apiFetch<JournalEntry>(`/gl/journals/${id}`, { method: "PATCH", body }),
+  submitJournal: (id: string) => apiFetch<JournalEntry>(`/gl/journals/${id}/submit`, { method: "POST", body: {} }),
+  approveJournal: (id: string) => apiFetch<JournalEntry>(`/gl/journals/${id}/approve`, { method: "POST", body: {} }),
+  rejectJournal: (id: string, reason?: string) =>
+    apiFetch<JournalEntry>(`/gl/journals/${id}/reject`, { method: "POST", body: { reason } }),
+  postJournal: (id: string) => apiFetch<JournalEntry>(`/gl/journals/${id}/post`, { method: "POST", body: {} }),
+  voidJournal: (id: string, reason?: string) =>
+    apiFetch<JournalEntry>(`/gl/journals/${id}/void`, { method: "POST", body: { reason } }),
+  reportCoa: () => apiFetch<{ groups: GlAccountGroup[]; accounts: GlAccount[] }>("/gl/reports/chart-of-accounts"),
+  reportRegister: (q?: { status?: string; periodId?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.status) p.set("status", q.status);
+    if (q?.periodId) p.set("periodId", q.periodId);
+    const qs = p.toString();
+    return apiFetch<{ data: JournalEntry[]; total: number }>(
+      `/gl/reports/journal-register${qs ? `?${qs}` : ""}`,
+    );
+  },
+  reportTrialBalance: (q?: { periodId?: string; asOf?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.periodId) p.set("periodId", q.periodId);
+    if (q?.asOf) p.set("asOf", q.asOf);
+    const qs = p.toString();
+    return apiFetch<{
+      rows: { code: string; name: string; type: string; debitPoisha: number; creditPoisha: number; balancePoisha: number }[];
+      totalDebitPoisha: number;
+      totalCreditPoisha: number;
+      balanced: boolean;
+    }>(`/gl/reports/trial-balance${qs ? `?${qs}` : ""}`);
+  },
 };

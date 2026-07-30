@@ -484,3 +484,117 @@ export type Paginated<T> = {
   page: number;
   limit: number;
 };
+
+export type GlAccountGroup = {
+  id: string;
+  code: string;
+  name: string;
+  type: string;
+  parentId?: string | null;
+  sortOrder?: number;
+  isActive?: boolean;
+  _count?: { accounts?: number };
+};
+
+export type GlAccount = {
+  id: string;
+  code: string;
+  name: string;
+  type: string;
+  groupId?: string | null;
+  parentId?: string | null;
+  isHeader?: boolean;
+  isPostable?: boolean;
+  currencyCode?: string | null;
+  branchId?: string | null;
+  taxCode?: string | null;
+  costCenterRequired?: boolean;
+  description?: string | null;
+  isActive?: boolean;
+  group?: { id: string; code: string; name: string } | null;
+};
+
+export type FiscalYear = {
+  id: string;
+  code: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  periods?: AccountingPeriod[];
+};
+
+export type AccountingPeriod = {
+  id: string;
+  fiscalYearId: string;
+  code: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  closedAt?: string | null;
+};
+
+export type CostCenter = {
+  id: string;
+  code: string;
+  name: string;
+  branchId?: string | null;
+  notes?: string | null;
+  isActive?: boolean;
+};
+
+export type CurrencyRow = {
+  id: string;
+  code: string;
+  name: string;
+  symbol?: string | null;
+  decimalPlaces?: number;
+  isBase?: boolean;
+  isActive?: boolean;
+};
+
+export type ExchangeRateRow = {
+  id: string;
+  fromCode: string;
+  toCode: string;
+  rateScaled: string;
+  rate?: number;
+  rateDate: string;
+  source?: string | null;
+};
+
+export type JournalLine = {
+  id?: string;
+  lineNo: number;
+  glAccountId: string;
+  costCenterId?: string | null;
+  debitPoisha: number;
+  creditPoisha: number;
+  currencyCode?: string;
+  debitBasePoisha?: number;
+  creditBasePoisha?: number;
+  memo?: string | null;
+  glAccount?: { id: string; code: string; name: string; type?: string };
+  costCenter?: { id: string; code: string; name: string } | null;
+};
+
+export type JournalEntry = {
+  id: string;
+  journalNo: string;
+  entryDate: string;
+  periodId: string;
+  branchId?: string | null;
+  currencyCode: string;
+  type: string;
+  status: string;
+  memo?: string | null;
+  reference?: string | null;
+  totalDebitPoisha: number;
+  totalCreditPoisha: number;
+  approvedBy?: string | null;
+  postedAt?: string | null;
+  period?: { id?: string; code: string; name: string; status?: string };
+  lines?: JournalLine[];
+  _count?: { lines?: number };
+};
