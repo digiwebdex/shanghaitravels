@@ -13,6 +13,9 @@ import type {
   Passport,
   StaffUser,
   Supplier,
+  TourDeparture,
+  TourDestination,
+  TourPackageProduct,
   TransportRoute,
   TransportVehicleType,
   VisaDetail,
@@ -249,4 +252,62 @@ export const transportRoutesApi = {
   update: (id: string, body: Partial<TransportRoute>) =>
     apiFetch<TransportRoute>(`/reference/transport-routes/${id}`, { method: "PATCH", body }),
   remove: (id: string) => apiFetch(`/reference/transport-routes/${id}`, { method: "DELETE" }),
+};
+
+export const tourPackagesApi = {
+  list: (q?: { q?: string; category?: string; packageType?: string; active?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.q) p.set("q", q.q);
+    if (q?.category) p.set("category", q.category);
+    if (q?.packageType) p.set("packageType", q.packageType);
+    if (q?.active) p.set("active", q.active);
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<{ data: TourPackageProduct[]; total: number }>(
+      `/reference/tour-packages${qs ? `?${qs}` : ""}`,
+    );
+  },
+  get: (id: string) => apiFetch<TourPackageProduct>(`/reference/tour-packages/${id}`),
+  create: (body: Record<string, unknown>) =>
+    apiFetch<TourPackageProduct>("/reference/tour-packages", { method: "POST", body }),
+  update: (id: string, body: Record<string, unknown>) =>
+    apiFetch<TourPackageProduct>(`/reference/tour-packages/${id}`, { method: "PATCH", body }),
+  remove: (id: string) => apiFetch(`/reference/tour-packages/${id}`, { method: "DELETE" }),
+};
+
+export const tourDeparturesApi = {
+  list: (q?: { packageId?: string; status?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.packageId) p.set("packageId", q.packageId);
+    if (q?.status) p.set("status", q.status);
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<{ data: TourDeparture[]; total: number }>(
+      `/reference/tour-departures${qs ? `?${qs}` : ""}`,
+    );
+  },
+  create: (body: Record<string, unknown>) =>
+    apiFetch<TourDeparture>("/reference/tour-departures", { method: "POST", body }),
+  update: (id: string, body: Record<string, unknown>) =>
+    apiFetch<TourDeparture>(`/reference/tour-departures/${id}`, { method: "PATCH", body }),
+  remove: (id: string) => apiFetch(`/reference/tour-departures/${id}`, { method: "DELETE" }),
+};
+
+export const tourDestinationsApi = {
+  list: (q?: { q?: string; country?: string; active?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.q) p.set("q", q.q);
+    if (q?.country) p.set("country", q.country);
+    if (q?.active) p.set("active", q.active);
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<{ data: TourDestination[]; total: number }>(
+      `/reference/tour-destinations${qs ? `?${qs}` : ""}`,
+    );
+  },
+  create: (body: Partial<TourDestination> & { name: string }) =>
+    apiFetch<TourDestination>("/reference/tour-destinations", { method: "POST", body }),
+  update: (id: string, body: Partial<TourDestination>) =>
+    apiFetch<TourDestination>(`/reference/tour-destinations/${id}`, { method: "PATCH", body }),
+  remove: (id: string) => apiFetch(`/reference/tour-destinations/${id}`, { method: "DELETE" }),
 };

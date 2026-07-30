@@ -68,5 +68,6 @@ export const DOC_CATEGORIES = [
   "hotel_booking",
   "hotel_voucher",
   "transport_voucher",
+  "tour_voucher",
   "other",
 ] as const;

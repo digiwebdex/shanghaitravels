@@ -111,7 +111,7 @@ export type Application = {
   visa?: VisaDetail | null;
   airTicket?: AirTicketDetail | null;
   hotel?: HotelDetail | null;
-  tour?: unknown;
+  tour?: TourDetail | null;
   transport?: TransportDetail | null;
   createdAt?: string;
   completedAt?: string | null;
@@ -211,6 +211,91 @@ export type TransportRoute = {
   origin: string;
   destination: string;
   kind: string;
+  notes?: string | null;
+  isActive?: boolean;
+};
+
+export type TourDetail = {
+  id?: string;
+  applicationId?: string;
+  packageName?: string | null;
+  packageCode?: string | null;
+  packageType?: string | null;
+  category?: string | null;
+  destination?: string | null;
+  season?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  pax?: number | null;
+  itinerary?: string | null;
+  inclusions?: string | null;
+  exclusions?: string | null;
+  activities?: string | null;
+  hotelsNote?: string | null;
+  transportNote?: string | null;
+  flightsNote?: string | null;
+  visaRequirements?: string | null;
+  insuranceNote?: string | null;
+  occupancyNote?: string | null;
+  childPolicy?: string | null;
+  seasonalPricingNote?: string | null;
+  costBreakdown?: string | null;
+  supplierCostPoisha?: number | null;
+  sellingPricePoisha?: number | null;
+  confirmationNo?: string | null;
+  notes?: string | null;
+};
+
+export type TourPackageProduct = {
+  id: string;
+  code: string;
+  name: string;
+  packageType: string;
+  category: string;
+  destination?: string | null;
+  country?: string | null;
+  city?: string | null;
+  season?: string | null;
+  durationDays?: number | null;
+  durationNights?: number | null;
+  itinerary?: string | null;
+  inclusions?: string | null;
+  exclusions?: string | null;
+  activities?: string | null;
+  hotelsNote?: string | null;
+  transportNote?: string | null;
+  flightsNote?: string | null;
+  visaRequirements?: string | null;
+  insuranceNote?: string | null;
+  occupancyNote?: string | null;
+  childPolicy?: string | null;
+  seasonalPricingNote?: string | null;
+  costBreakdown?: string | null;
+  supplierCostPoisha?: number | null;
+  sellingPricePoisha?: number | null;
+  notes?: string | null;
+  isActive?: boolean;
+  _count?: { departures?: number };
+};
+
+export type TourDeparture = {
+  id: string;
+  packageId: string;
+  departAt: string;
+  returnAt?: string | null;
+  seats?: number | null;
+  status: string;
+  notes?: string | null;
+  package?: { id: string; code: string; name: string };
+};
+
+export type TourDestination = {
+  id: string;
+  name: string;
+  country?: string | null;
+  city?: string | null;
+  region?: string | null;
+  season?: string | null;
   notes?: string | null;
   isActive?: boolean;
 };

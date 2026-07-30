@@ -417,6 +417,111 @@ async function main() {
     ok("transport: cancel status", okHttp(r.status) && r.data?.status === "cancelled", `status=${r.status}`);
   }
 
+  // Phase B4 — tour packages (supplier-curated, not OTA)
+  let tourId;
+  {
+    const r = await req("POST", "/applications", {
+      serviceType: "tour",
+      customerId,
+      priority: "medium",
+      title: "QA Tour Package",
+      direction: "outbound",
+    });
+    tourId = r.data?.id;
+    ok("tour: create tour case", okHttp(r.status) && !!tourId, `status=${r.status} stages=${r.data?.totalStages}`);
+  }
+  {
+    const r = await req("PUT", `/applications/${tourId}/detail/tour`, {
+      packageName: "QA Bali Escape",
+      packageCode: "QA-BALI-01",
+      packageType: "group",
+      category: "international",
+      destination: "Bali",
+      season: "peak",
+      pax: 2,
+      itinerary: "Day 1: Arrival\nAirport meet\n\nDay 2: Ubud\nTemples",
+      inclusions: "Hotel, transfers",
+      exclusions: "Flights",
+      supplierCostPoisha: 5000000,
+      sellingPricePoisha: 6500000,
+      confirmationNo: "TOUR-QA-001",
+    });
+    ok("tour: put tour detail", okHttp(r.status), `status=${r.status}`);
+    const g = await req("GET", `/applications/${tourId}`);
+    ok(
+      "tour: reload tour on case",
+      okHttp(g.status) &&
+        g.data?.tour?.packageCode === "QA-BALI-01" &&
+        g.data?.tour?.confirmationNo === "TOUR-QA-001",
+      `code=${g.data?.tour?.packageCode} conf=${g.data?.tour?.confirmationNo}`,
+    );
+  }
+  let tourPkgId;
+  {
+    const r = await req("POST", "/reference/tour-packages", {
+      code: `QA-PKG-${Date.now().toString(36)}`,
+      name: "QA Catalog Package",
+      packageType: "family",
+      category: "domestic",
+      destination: "Cox's Bazar",
+      season: "all_year",
+      supplierCostPoisha: 1000000,
+      sellingPricePoisha: 1400000,
+    });
+    tourPkgId = r.data?.id;
+    ok("tour: create package product", okHttp(r.status) && !!tourPkgId, `status=${r.status}`);
+  }
+  {
+    if (tourPkgId) {
+      const r = await req("POST", "/reference/tour-departures", {
+        packageId: tourPkgId,
+        departAt: new Date("2026-09-01T12:00:00Z").toISOString(),
+        returnAt: new Date("2026-09-05T12:00:00Z").toISOString(),
+        seats: 20,
+        status: "open",
+      });
+      ok("tour: create departure", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+      if (r.data?.id) {
+        const d = await req("DELETE", `/reference/tour-departures/${r.data.id}`);
+        ok("tour: soft-delete departure", okHttp(d.status), `status=${d.status}`);
+      }
+    } else {
+      ok("tour: create departure", false, "skipped");
+      ok("tour: soft-delete departure", false, "skipped");
+    }
+  }
+  {
+    const r = await req("POST", "/reference/tour-destinations", {
+      name: `QA Dest ${Date.now().toString(36)}`,
+      country: "Bangladesh",
+      city: "Cox's Bazar",
+      season: "peak",
+    });
+    ok("tour: create destination", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+    if (r.data?.id) {
+      const d = await req("DELETE", `/reference/tour-destinations/${r.data.id}`);
+      ok("tour: soft-delete destination", okHttp(d.status), `status=${d.status}`);
+    } else {
+      ok("tour: soft-delete destination", false, "skipped");
+    }
+  }
+  {
+    if (tourPkgId) {
+      const d = await req("DELETE", `/reference/tour-packages/${tourPkgId}`);
+      ok("tour: soft-delete package product", okHttp(d.status), `status=${d.status}`);
+    } else {
+      ok("tour: soft-delete package product", false, "skipped");
+    }
+  }
+  {
+    const r = await req("POST", `/applications/${tourId}/note`, { message: "Tour quotation: ৳65000 — QA" });
+    ok("tour: quotation note", okHttp(r.status), `status=${r.status}`);
+  }
+  {
+    const r = await req("PATCH", `/applications/${tourId}`, { status: "cancelled" });
+    ok("tour: cancel status", okHttp(r.status) && r.data?.status === "cancelled", `status=${r.status}`);
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);

@@ -36,6 +36,15 @@ const TransportVehiclesPage = lazy(() => import("@/pages/TransportVehiclesPage")
 const TransportRoutesPage = lazy(() => import("@/pages/TransportRoutesPage"));
 const TransportSuppliersPage = lazy(() => import("@/pages/TransportSuppliersPage"));
 const TransportReportsPage = lazy(() => import("@/pages/TransportReportsPage"));
+const TourListPage = lazy(() => import("@/pages/TourListPage"));
+const TourCasePage = lazy(() => import("@/pages/TourCasePage"));
+const NewTourCasePage = lazy(() =>
+  import("@/pages/TourListPage").then((m) => ({ default: m.NewTourCasePage })),
+);
+const TourPackagesPage = lazy(() => import("@/pages/TourPackagesPage"));
+const TourDeparturesPage = lazy(() => import("@/pages/TourDeparturesPage"));
+const TourDestinationsPage = lazy(() => import("@/pages/TourDestinationsPage"));
+const TourReportsPage = lazy(() => import("@/pages/TourReportsPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -230,6 +239,62 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <TransportCasePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "tours",
+            element: (
+              <Lazy>
+                <TourListPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "tours/new",
+            element: (
+              <Lazy>
+                <NewTourCasePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "tours/packages",
+            element: (
+              <Lazy>
+                <TourPackagesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "tours/departures",
+            element: (
+              <Lazy>
+                <TourDeparturesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "tours/destinations",
+            element: (
+              <Lazy>
+                <TourDestinationsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "tours/reports",
+            element: (
+              <Lazy>
+                <TourReportsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "tours/:id",
+            element: (
+              <Lazy>
+                <TourCasePage />
               </Lazy>
             ),
           },
