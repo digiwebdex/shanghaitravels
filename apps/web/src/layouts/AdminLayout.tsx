@@ -17,6 +17,7 @@ import {
   GitBranch,
   Plane,
   Building2,
+  Car,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
@@ -31,6 +32,7 @@ const NAV: NavItem[] = [
   { id: "visa", label: "Visa Management", to: "/visa", icon: FileCheck, perm: "application:read" },
   { id: "ticketing", label: "Air Ticketing", to: "/ticketing", icon: Plane, perm: "application:read" },
   { id: "hotels", label: "Hotels", to: "/hotels", icon: Building2, perm: "application:read" },
+  { id: "transport", label: "Transport", to: "/transport", icon: Car, perm: "application:read" },
   { id: "passports", label: "Passport Management", to: "/passports", icon: BookOpen, perm: "customer:read" },
   { id: "case-journey", label: "Case Journey Map", to: "/case-journey", icon: GitBranch, perm: "application:read" },
 ];

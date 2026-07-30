@@ -340,6 +340,83 @@ async function main() {
     ok("hotel: cancel status", okHttp(r.status) && r.data?.status === "cancelled", `status=${r.status}`);
   }
 
+  // Phase B3 — transport (supplier-based, no fleet)
+  let transportId;
+  {
+    const r = await req("POST", "/applications", {
+      customerId,
+      serviceType: "transport",
+      title: "QA Transport booking",
+      direction: "outbound",
+    });
+    transportId = r.data?.id;
+    ok("transport: create transport case", okHttp(r.status) && !!transportId, `status=${r.status} stages=${r.data?.totalStages}`);
+  }
+  {
+    const r = await req("PUT", `/applications/${transportId}/detail/transport`, {
+      serviceKind: "airport_transfer",
+      vehicleType: "sedan",
+      pickupLocation: "DAC Airport",
+      dropLocation: "Gulshan 2",
+      routeName: "DAC → Gulshan",
+      passengers: 2,
+      confirmationNo: "TRN-QA-001",
+      driverName: "QA Driver",
+      vehicleNo: "DHA-QA-1",
+      scheduledAt: new Date(Date.now() + 864e5).toISOString(),
+    });
+    ok("transport: put transport detail", okHttp(r.status), `status=${r.status}`);
+    const g = await req("GET", `/applications/${transportId}`);
+    ok(
+      "transport: reload transport on case",
+      okHttp(g.status) &&
+        g.data?.transport?.serviceKind === "airport_transfer" &&
+        g.data?.transport?.confirmationNo === "TRN-QA-001",
+      `kind=${g.data?.transport?.serviceKind} conf=${g.data?.transport?.confirmationNo}`,
+    );
+  }
+  {
+    const r = await req("POST", "/reference/transport-vehicles", {
+      name: `QA Sedan ${Date.now()}`,
+      category: "sedan",
+      capacity: 4,
+    });
+    ok("transport: create vehicle offer", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+    if (r.data?.id) {
+      const d = await req("DELETE", `/reference/transport-vehicles/${r.data.id}`);
+      ok("transport: soft-delete vehicle offer", okHttp(d.status), `status=${d.status}`);
+    } else {
+      ok("transport: soft-delete vehicle offer", false, "skipped");
+    }
+  }
+  {
+    const r = await req("POST", "/reference/transport-routes", {
+      name: `QA Route ${Date.now()}`,
+      origin: "DAC Airport",
+      destination: "Banani",
+      kind: "airport_transfer",
+    });
+    ok("transport: create route", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+    if (r.data?.id) {
+      const d = await req("DELETE", `/reference/transport-routes/${r.data.id}`);
+      ok("transport: soft-delete route", okHttp(d.status), `status=${d.status}`);
+    } else {
+      ok("transport: soft-delete route", false, "skipped");
+    }
+  }
+  {
+    const r = await req("GET", "/suppliers?type=transport&limit=20");
+    ok("transport: list transport suppliers", okHttp(r.status) || r.status === 403, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", `/applications/${transportId}/note`, { message: "Transport quote: ৳4500 — QA" });
+    ok("transport: quote note", okHttp(r.status), `status=${r.status}`);
+  }
+  {
+    const r = await req("PATCH", `/applications/${transportId}`, { status: "cancelled" });
+    ok("transport: cancel status", okHttp(r.status) && r.data?.status === "cancelled", `status=${r.status}`);
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);

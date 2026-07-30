@@ -13,6 +13,8 @@ import type {
   Passport,
   StaffUser,
   Supplier,
+  TransportRoute,
+  TransportVehicleType,
   VisaDetail,
 } from "@/lib/types";
 
@@ -208,4 +210,43 @@ export const suppliersApi = {
   update: (id: string, body: Partial<Supplier>) =>
     apiFetch<Supplier>(`/suppliers/${id}`, { method: "PATCH", body }),
   remove: (id: string) => apiFetch(`/suppliers/${id}`, { method: "DELETE" }),
+};
+
+/** Supplier vehicle offer catalog — not fleet inventory. */
+export const transportVehiclesApi = {
+  list: (q?: { q?: string; category?: string; active?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.q) p.set("q", q.q);
+    if (q?.category) p.set("category", q.category);
+    if (q?.active) p.set("active", q.active);
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<{ data: TransportVehicleType[]; total: number }>(
+      `/reference/transport-vehicles${qs ? `?${qs}` : ""}`,
+    );
+  },
+  create: (body: Partial<TransportVehicleType> & { name: string; category: string }) =>
+    apiFetch<TransportVehicleType>("/reference/transport-vehicles", { method: "POST", body }),
+  update: (id: string, body: Partial<TransportVehicleType>) =>
+    apiFetch<TransportVehicleType>(`/reference/transport-vehicles/${id}`, { method: "PATCH", body }),
+  remove: (id: string) => apiFetch(`/reference/transport-vehicles/${id}`, { method: "DELETE" }),
+};
+
+export const transportRoutesApi = {
+  list: (q?: { q?: string; kind?: string; active?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.q) p.set("q", q.q);
+    if (q?.kind) p.set("kind", q.kind);
+    if (q?.active) p.set("active", q.active);
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<{ data: TransportRoute[]; total: number }>(
+      `/reference/transport-routes${qs ? `?${qs}` : ""}`,
+    );
+  },
+  create: (body: Partial<TransportRoute> & { name: string; origin: string; destination: string; kind: string }) =>
+    apiFetch<TransportRoute>("/reference/transport-routes", { method: "POST", body }),
+  update: (id: string, body: Partial<TransportRoute>) =>
+    apiFetch<TransportRoute>(`/reference/transport-routes/${id}`, { method: "PATCH", body }),
+  remove: (id: string) => apiFetch(`/reference/transport-routes/${id}`, { method: "DELETE" }),
 };

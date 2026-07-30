@@ -112,7 +112,7 @@ export type Application = {
   airTicket?: AirTicketDetail | null;
   hotel?: HotelDetail | null;
   tour?: unknown;
-  transport?: unknown;
+  transport?: TransportDetail | null;
   createdAt?: string;
   completedAt?: string | null;
 };
@@ -175,6 +175,42 @@ export type Supplier = {
   phone?: string | null;
   email?: string | null;
   address?: string | null;
+  notes?: string | null;
+  isActive?: boolean;
+};
+
+export type TransportDetail = {
+  id?: string;
+  applicationId?: string;
+  vehicleType?: string | null;
+  serviceKind?: string | null;
+  pickupLocation?: string | null;
+  dropLocation?: string | null;
+  routeName?: string | null;
+  scheduledAt?: string | null;
+  passengers?: number | null;
+  driverName?: string | null;
+  vehicleNo?: string | null;
+  confirmationNo?: string | null;
+  notes?: string | null;
+};
+
+/** Supplier vehicle offer (not owned fleet). */
+export type TransportVehicleType = {
+  id: string;
+  name: string;
+  category: string;
+  capacity?: number | null;
+  notes?: string | null;
+  isActive?: boolean;
+};
+
+export type TransportRoute = {
+  id: string;
+  name: string;
+  origin: string;
+  destination: string;
+  kind: string;
   notes?: string | null;
   isActive?: boolean;
 };

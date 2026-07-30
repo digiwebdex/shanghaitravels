@@ -27,6 +27,15 @@ const NewHotelCasePage = lazy(() =>
 const HotelCatalogPage = lazy(() => import("@/pages/HotelCatalogPage"));
 const HotelSuppliersPage = lazy(() => import("@/pages/HotelSuppliersPage"));
 const HotelReportsPage = lazy(() => import("@/pages/HotelReportsPage"));
+const TransportListPage = lazy(() => import("@/pages/TransportListPage"));
+const TransportCasePage = lazy(() => import("@/pages/TransportCasePage"));
+const NewTransportCasePage = lazy(() =>
+  import("@/pages/TransportListPage").then((m) => ({ default: m.NewTransportCasePage })),
+);
+const TransportVehiclesPage = lazy(() => import("@/pages/TransportVehiclesPage"));
+const TransportRoutesPage = lazy(() => import("@/pages/TransportRoutesPage"));
+const TransportSuppliersPage = lazy(() => import("@/pages/TransportSuppliersPage"));
+const TransportReportsPage = lazy(() => import("@/pages/TransportReportsPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -165,6 +174,62 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <HotelsCasePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "transport",
+            element: (
+              <Lazy>
+                <TransportListPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "transport/new",
+            element: (
+              <Lazy>
+                <NewTransportCasePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "transport/vehicles",
+            element: (
+              <Lazy>
+                <TransportVehiclesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "transport/routes",
+            element: (
+              <Lazy>
+                <TransportRoutesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "transport/suppliers",
+            element: (
+              <Lazy>
+                <TransportSuppliersPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "transport/reports",
+            element: (
+              <Lazy>
+                <TransportReportsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "transport/:id",
+            element: (
+              <Lazy>
+                <TransportCasePage />
               </Lazy>
             ),
           },
