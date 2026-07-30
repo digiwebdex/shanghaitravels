@@ -73,6 +73,9 @@ export const applicationsApi = {
   approve: (id: string) => apiFetch(`/applications/${id}/approve`, { method: "POST" }),
   putVisa: (id: string, body: Partial<VisaDetail>) =>
     apiFetch(`/applications/${id}/visa`, { method: "PUT", body }),
+  /** Phase 4+ service detail (air_ticket | hotel | tour | transport | …). */
+  putDetail: (id: string, serviceType: string, body: Record<string, unknown>) =>
+    apiFetch(`/applications/${id}/detail/${serviceType}`, { method: "PUT", body }),
   documents: (id: string) =>
     apiFetch<AppDocument[] | { data: AppDocument[] }>(`/applications/${id}/documents`).then((r) =>
       listOf<AppDocument>(r),

@@ -14,6 +14,11 @@ const VisaListPage = lazy(() => import("@/pages/VisaListPage"));
 const VisaCasePage = lazy(() => import("@/pages/VisaCasePage"));
 const PassportsPage = lazy(() => import("@/pages/PassportsPage"));
 const CaseJourneyPage = lazy(() => import("@/pages/CaseJourneyPage"));
+const TicketingListPage = lazy(() => import("@/pages/TicketingListPage"));
+const TicketingCasePage = lazy(() => import("@/pages/TicketingCasePage"));
+const NewTicketingCasePage = lazy(() =>
+  import("@/pages/TicketingListPage").then((m) => ({ default: m.NewTicketingCasePage })),
+);
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -78,6 +83,30 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <VisaCasePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "ticketing",
+            element: (
+              <Lazy>
+                <TicketingListPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "ticketing/new",
+            element: (
+              <Lazy>
+                <NewTicketingCasePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "ticketing/:id",
+            element: (
+              <Lazy>
+                <TicketingCasePage />
               </Lazy>
             ),
           },

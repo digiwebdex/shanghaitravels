@@ -8,6 +8,7 @@ export const LIVE_MODULES = new Set<string>([
   "passports",
   "visa",
   "case-journey",
+  "ticketing",
 ]);
 
 export const APP_NAME = "TravelOS";

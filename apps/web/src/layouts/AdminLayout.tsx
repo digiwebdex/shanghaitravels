@@ -15,6 +15,7 @@ import {
   BookOpen,
   Users,
   GitBranch,
+  Plane,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
@@ -27,6 +28,7 @@ const NAV: NavItem[] = [
   { id: "dashboard", label: "Dashboard", to: "/", icon: LayoutDashboard },
   { id: "customers", label: "Customer Management", to: "/customers", icon: User, perm: "customer:read" },
   { id: "visa", label: "Visa Management", to: "/visa", icon: FileCheck, perm: "application:read" },
+  { id: "ticketing", label: "Air Ticketing", to: "/ticketing", icon: Plane, perm: "application:read" },
   { id: "passports", label: "Passport Management", to: "/passports", icon: BookOpen, perm: "customer:read" },
   { id: "case-journey", label: "Case Journey Map", to: "/case-journey", icon: GitBranch, perm: "application:read" },
 ];

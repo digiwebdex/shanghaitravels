@@ -221,6 +221,40 @@ async function main() {
     ok("ocr: list endpoint reachable", okHttp(r.status) || r.status === 403, `status=${r.status}`);
   }
 
+  // Phase B — air_ticket (manual detail, no GDS)
+  let airId;
+  {
+    const r = await req("POST", "/applications", {
+      customerId,
+      serviceType: "air_ticket",
+      title: "QA Air ticket",
+      direction: "outbound",
+    });
+    airId = r.data?.id;
+    ok("ticketing: create air_ticket case", okHttp(r.status) && !!airId, `status=${r.status} stages=${r.data?.totalStages}`);
+  }
+  {
+    const r = await req("PUT", `/applications/${airId}/detail/air_ticket`, {
+      pnr: "QA1PNR",
+      airline: "CA",
+      flightNo: "CA123",
+      origin: "DAC",
+      destination: "PEK",
+      tripType: "one_way",
+      cabinClass: "economy",
+      passengerName: "QA Passenger",
+      ticketNo: "999-1234567890",
+      departAt: new Date(Date.now() + 864e5).toISOString(),
+    });
+    ok("ticketing: put air_ticket detail", okHttp(r.status), `status=${r.status}`);
+    const g = await req("GET", `/applications/${airId}`);
+    ok(
+      "ticketing: reload airTicket on case",
+      okHttp(g.status) && g.data?.airTicket?.pnr === "QA1PNR",
+      `pnr=${g.data?.airTicket?.pnr}`,
+    );
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);

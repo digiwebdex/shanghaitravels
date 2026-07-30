@@ -109,8 +109,29 @@ export type Application = {
   events?: ApplicationEvent[];
   docs?: unknown[];
   visa?: VisaDetail | null;
+  airTicket?: AirTicketDetail | null;
+  hotel?: unknown;
+  tour?: unknown;
+  transport?: unknown;
   createdAt?: string;
   completedAt?: string | null;
+};
+
+export type AirTicketDetail = {
+  id?: string;
+  applicationId?: string;
+  pnr?: string | null;
+  airline?: string | null;
+  flightNo?: string | null;
+  origin?: string | null;
+  destination?: string | null;
+  tripType?: string | null;
+  departAt?: string | null;
+  returnAt?: string | null;
+  cabinClass?: string | null;
+  passengerName?: string | null;
+  ticketNo?: string | null;
+  notes?: string | null;
 };
 
 export type Journey = {
