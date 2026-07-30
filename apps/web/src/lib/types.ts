@@ -110,7 +110,7 @@ export type Application = {
   docs?: unknown[];
   visa?: VisaDetail | null;
   airTicket?: AirTicketDetail | null;
-  hotel?: unknown;
+  hotel?: HotelDetail | null;
   tour?: unknown;
   transport?: unknown;
   createdAt?: string;
@@ -132,6 +132,51 @@ export type AirTicketDetail = {
   passengerName?: string | null;
   ticketNo?: string | null;
   notes?: string | null;
+};
+
+export type HotelDetail = {
+  id?: string;
+  applicationId?: string;
+  hotelName?: string | null;
+  city?: string | null;
+  country?: string | null;
+  checkIn?: string | null;
+  checkOut?: string | null;
+  nights?: number | null;
+  roomType?: string | null;
+  mealPlan?: string | null;
+  rooms?: number | null;
+  guests?: number | null;
+  confirmationNo?: string | null;
+  notes?: string | null;
+};
+
+/** Reference catalog property (Hotel master). */
+export type HotelProperty = {
+  id: string;
+  name: string;
+  country?: string | null;
+  city?: string | null;
+  area?: string | null;
+  address?: string | null;
+  stars?: number | null;
+  phone?: string | null;
+  notes?: string | null;
+  isActive?: boolean;
+  isExample?: boolean;
+};
+
+export type Supplier = {
+  id: string;
+  code: string;
+  name: string;
+  type?: string | null;
+  contactName?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  notes?: string | null;
+  isActive?: boolean;
 };
 
 export type Journey = {

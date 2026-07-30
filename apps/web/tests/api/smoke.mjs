@@ -273,6 +273,73 @@ async function main() {
     ok("ticketing: cancel audit event", okHttp(j.status) && hasStatus, `events=${events.length} hasStatus=${hasStatus}`);
   }
 
+  // Phase B2 — hotel (manual detail, hotel master, no bed-bank)
+  let hotelId;
+  {
+    const r = await req("POST", "/applications", {
+      customerId,
+      serviceType: "hotel",
+      title: "QA Hotel booking",
+      direction: "outbound",
+    });
+    hotelId = r.data?.id;
+    ok("hotel: create hotel case", okHttp(r.status) && !!hotelId, `status=${r.status} stages=${r.data?.totalStages}`);
+  }
+  {
+    const r = await req("PUT", `/applications/${hotelId}/detail/hotel`, {
+      hotelName: "QA Grand Hotel",
+      city: "Dhaka",
+      country: "Bangladesh",
+      roomType: "Deluxe",
+      mealPlan: "BB",
+      rooms: 1,
+      guests: 2,
+      nights: 2,
+      confirmationNo: "HTL-QA-001",
+      checkIn: new Date(Date.now() + 864e5).toISOString(),
+      checkOut: new Date(Date.now() + 3 * 864e5).toISOString(),
+    });
+    ok("hotel: put hotel detail", okHttp(r.status), `status=${r.status}`);
+    const g = await req("GET", `/applications/${hotelId}`);
+    ok(
+      "hotel: reload hotel on case",
+      okHttp(g.status) && g.data?.hotel?.mealPlan === "BB" && g.data?.hotel?.hotelName === "QA Grand Hotel",
+      `meal=${g.data?.hotel?.mealPlan} name=${g.data?.hotel?.hotelName}`,
+    );
+  }
+  {
+    const r = await req("GET", "/reference/hotels?limit=20");
+    ok("hotel: list hotel master", okHttp(r.status) && Array.isArray(r.data?.data), `status=${r.status} n=${r.data?.data?.length}`);
+  }
+  {
+    const r = await req("POST", "/reference/hotels", {
+      name: `QA Hotel ${Date.now()}`,
+      city: "Dhaka",
+      country: "Bangladesh",
+      stars: 4,
+    });
+    // settings:manage — super_admin bypass
+    ok("hotel: create hotel master", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+    if (r.data?.id) {
+      const d = await req("DELETE", `/reference/hotels/${r.data.id}`);
+      ok("hotel: soft-delete hotel master", okHttp(d.status), `status=${d.status}`);
+    } else {
+      ok("hotel: soft-delete hotel master", false, "skipped — create failed");
+    }
+  }
+  {
+    const r = await req("GET", "/suppliers?type=hotel&limit=20");
+    ok("hotel: list hotel suppliers", okHttp(r.status) || r.status === 403, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", `/applications/${hotelId}/note`, { message: "Hotel quote: ৳12000 — QA" });
+    ok("hotel: quote note", okHttp(r.status), `status=${r.status}`);
+  }
+  {
+    const r = await req("PATCH", `/applications/${hotelId}`, { status: "cancelled" });
+    ok("hotel: cancel status", okHttp(r.status) && r.data?.status === "cancelled", `status=${r.status}`);
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);

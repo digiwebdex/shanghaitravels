@@ -19,6 +19,14 @@ const TicketingCasePage = lazy(() => import("@/pages/TicketingCasePage"));
 const NewTicketingCasePage = lazy(() =>
   import("@/pages/TicketingListPage").then((m) => ({ default: m.NewTicketingCasePage })),
 );
+const HotelsListPage = lazy(() => import("@/pages/HotelsListPage"));
+const HotelsCasePage = lazy(() => import("@/pages/HotelsCasePage"));
+const NewHotelCasePage = lazy(() =>
+  import("@/pages/HotelsListPage").then((m) => ({ default: m.NewHotelCasePage })),
+);
+const HotelCatalogPage = lazy(() => import("@/pages/HotelCatalogPage"));
+const HotelSuppliersPage = lazy(() => import("@/pages/HotelSuppliersPage"));
+const HotelReportsPage = lazy(() => import("@/pages/HotelReportsPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -109,6 +117,54 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <TicketingCasePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "hotels",
+            element: (
+              <Lazy>
+                <HotelsListPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "hotels/new",
+            element: (
+              <Lazy>
+                <NewHotelCasePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "hotels/catalog",
+            element: (
+              <Lazy>
+                <HotelCatalogPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "hotels/suppliers",
+            element: (
+              <Lazy>
+                <HotelSuppliersPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "hotels/reports",
+            element: (
+              <Lazy>
+                <HotelReportsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "hotels/:id",
+            element: (
+              <Lazy>
+                <HotelsCasePage />
               </Lazy>
             ),
           },

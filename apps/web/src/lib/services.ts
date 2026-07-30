@@ -4,6 +4,7 @@ import type {
   AppDocument,
   Application,
   Customer,
+  HotelProperty,
   Invoice,
   Journey,
   Me,
@@ -11,6 +12,7 @@ import type {
   Paginated,
   Passport,
   StaffUser,
+  Supplier,
   VisaDetail,
 } from "@/lib/types";
 
@@ -168,4 +170,42 @@ export const usersApi = {
 
 export const settingsApi = {
   list: () => apiFetch<{ key: string; value: unknown }[]>("/settings"),
+};
+
+/** Hotel master (reference catalog) — not a bed-bank API. */
+export const hotelsApi = {
+  list: (q?: { q?: string; city?: string; country?: string; active?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.q) p.set("q", q.q);
+    if (q?.city) p.set("city", q.city);
+    if (q?.country) p.set("country", q.country);
+    if (q?.active) p.set("active", q.active);
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<Paginated<HotelProperty> | { data: HotelProperty[]; total: number }>(
+      `/reference/hotels${qs ? `?${qs}` : ""}`,
+    );
+  },
+  create: (body: Partial<HotelProperty>) =>
+    apiFetch<HotelProperty>("/reference/hotels", { method: "POST", body }),
+  update: (id: string, body: Partial<HotelProperty>) =>
+    apiFetch<HotelProperty>(`/reference/hotels/${id}`, { method: "PATCH", body }),
+  remove: (id: string) => apiFetch(`/reference/hotels/${id}`, { method: "DELETE" }),
+};
+
+export const suppliersApi = {
+  list: (q?: { type?: string; q?: string; page?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.type) p.set("type", q.type);
+    if (q?.q) p.set("q", q.q);
+    if (q?.page) p.set("page", String(q.page));
+    if (q?.limit) p.set("limit", String(q.limit ?? 50));
+    const qs = p.toString();
+    return apiFetch<Paginated<Supplier>>(`/suppliers${qs ? `?${qs}` : ""}`);
+  },
+  create: (body: Partial<Supplier> & { name: string }) =>
+    apiFetch<Supplier>("/suppliers", { method: "POST", body }),
+  update: (id: string, body: Partial<Supplier>) =>
+    apiFetch<Supplier>(`/suppliers/${id}`, { method: "PATCH", body }),
+  remove: (id: string) => apiFetch(`/suppliers/${id}`, { method: "DELETE" }),
 };
