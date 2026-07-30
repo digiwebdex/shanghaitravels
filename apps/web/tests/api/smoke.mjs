@@ -522,6 +522,131 @@ async function main() {
     ok("tour: cancel status", okHttp(r.status) && r.data?.status === "cancelled", `status=${r.status}`);
   }
 
+  // Phase B5 — Hajj & Umrah (operator packages / pilgrims / groups)
+  let hajjId;
+  {
+    const r = await req("POST", "/applications", {
+      serviceType: "hajj",
+      customerId,
+      priority: "medium",
+      title: "QA Hajj Booking",
+      direction: "outbound",
+    });
+    hajjId = r.data?.id;
+    ok("hajj: create hajj case", okHttp(r.status) && !!hajjId, `status=${r.status} stages=${r.data?.totalStages}`);
+  }
+  {
+    const r = await req("PUT", `/applications/${hajjId}/detail/hajj`, {
+      packageType: "hajj",
+      year: "2026",
+      pilgrimName: "QA Pilgrim",
+      passportNo: "BP1234567",
+      mahramName: "QA Mahram",
+      packageName: "QA Hajj Standard",
+      packageCode: "QA-HAJJ-01",
+      packageCategory: "standard",
+      visaStatus: "applied",
+      passportStatus: "received",
+      flightNo: "SV123",
+      airline: "Saudia",
+      hotelMakkah: "QA Makkah Hotel",
+      hotelMadinah: "QA Madinah Hotel",
+      roomType: "quad",
+      supplierCostPoisha: 20000000,
+      sellingPricePoisha: 28000000,
+      paidPoisha: 10000000,
+      confirmationNo: "HAJJ-QA-001",
+      paymentPlanNote: "4 installments",
+    });
+    ok("hajj: put hajj detail", okHttp(r.status), `status=${r.status}`);
+    const g = await req("GET", `/applications/${hajjId}`);
+    ok(
+      "hajj: reload hajjUmrah on case",
+      okHttp(g.status) &&
+        g.data?.hajjUmrah?.packageCode === "QA-HAJJ-01" &&
+        g.data?.hajjUmrah?.confirmationNo === "HAJJ-QA-001",
+      `code=${g.data?.hajjUmrah?.packageCode} conf=${g.data?.hajjUmrah?.confirmationNo}`,
+    );
+  }
+  let hajjPkgId;
+  {
+    const r = await req("POST", "/reference/hajj-packages", {
+      code: `QA-HU-${Date.now().toString(36)}`,
+      name: "QA Hajj Catalog Package",
+      kind: "hajj",
+      category: "economy",
+      season: "Hajj 2026",
+      year: "2026",
+      capacity: 40,
+      supplierCostPoisha: 15000000,
+      sellingPricePoisha: 21000000,
+    });
+    hajjPkgId = r.data?.id;
+    ok("hajj: create package", okHttp(r.status) && !!hajjPkgId, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/reference/hajj-pilgrims", {
+      code: `QA-PIL-${Date.now().toString(36)}`,
+      fullName: "QA Pilgrim Profile",
+      passportNo: "BP9999999",
+      nationality: "Bangladeshi",
+      gender: "M",
+      visaStatus: "not_applied",
+      passportStatus: "pending",
+      mahramName: "QA Father",
+      mahramRelation: "father",
+      emergencyContact: "QA Contact",
+      emergencyPhone: "01700000000",
+    });
+    ok("hajj: create pilgrim", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+    if (r.data?.id) {
+      const d = await req("DELETE", `/reference/hajj-pilgrims/${r.data.id}`);
+      ok("hajj: soft-delete pilgrim", okHttp(d.status), `status=${d.status}`);
+    } else {
+      ok("hajj: soft-delete pilgrim", false, "skipped");
+    }
+  }
+  {
+    const r = await req("POST", "/reference/hajj-groups", {
+      code: `QA-GRP-${Date.now().toString(36)}`,
+      name: "QA Group A",
+      kind: "hajj",
+      packageId: hajjPkgId || undefined,
+      leaderName: "QA Leader",
+      flightNo: "SV456",
+      airline: "Saudia",
+      status: "forming",
+      capacity: 40,
+      departAt: new Date("2026-06-01T12:00:00Z").toISOString(),
+      returnAt: new Date("2026-06-25T12:00:00Z").toISOString(),
+    });
+    ok("hajj: create group", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+    if (r.data?.id) {
+      const d = await req("DELETE", `/reference/hajj-groups/${r.data.id}`);
+      ok("hajj: soft-delete group", okHttp(d.status), `status=${d.status}`);
+    } else {
+      ok("hajj: soft-delete group", false, "skipped");
+    }
+  }
+  {
+    if (hajjPkgId) {
+      const d = await req("DELETE", `/reference/hajj-packages/${hajjPkgId}`);
+      ok("hajj: soft-delete package", okHttp(d.status), `status=${d.status}`);
+    } else {
+      ok("hajj: soft-delete package", false, "skipped");
+    }
+  }
+  {
+    const r = await req("POST", `/applications/${hajjId}/note`, {
+      message: "Hajj/Umrah installment: ৳100000 — QA",
+    });
+    ok("hajj: installment note", okHttp(r.status), `status=${r.status}`);
+  }
+  {
+    const r = await req("PATCH", `/applications/${hajjId}`, { status: "cancelled" });
+    ok("hajj: cancel status", okHttp(r.status) && r.data?.status === "cancelled", `status=${r.status}`);
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);

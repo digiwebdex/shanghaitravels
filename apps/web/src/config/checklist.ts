@@ -69,5 +69,11 @@ export const DOC_CATEGORIES = [
   "hotel_voucher",
   "transport_voucher",
   "tour_voucher",
+  "hajj_passport",
+  "hajj_visa",
+  "hajj_ticket",
+  "hajj_hotel_voucher",
+  "hajj_transport_voucher",
+  "hajj_pilgrim_doc",
   "other",
 ] as const;

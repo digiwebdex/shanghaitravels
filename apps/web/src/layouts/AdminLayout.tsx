@@ -19,6 +19,7 @@ import {
   Building2,
   Car,
   Map,
+  Moon,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
@@ -35,6 +36,7 @@ const NAV: NavItem[] = [
   { id: "hotels", label: "Hotels", to: "/hotels", icon: Building2, perm: "application:read" },
   { id: "transport", label: "Transport", to: "/transport", icon: Car, perm: "application:read" },
   { id: "tours", label: "Tour Packages", to: "/tours", icon: Map, perm: "application:read" },
+  { id: "hajj", label: "Hajj & Umrah", to: "/hajj", icon: Moon, perm: "application:read" },
   { id: "passports", label: "Passport Management", to: "/passports", icon: BookOpen, perm: "customer:read" },
   { id: "case-journey", label: "Case Journey Map", to: "/case-journey", icon: GitBranch, perm: "application:read" },
 ];

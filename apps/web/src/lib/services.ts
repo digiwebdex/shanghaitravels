@@ -18,6 +18,9 @@ import type {
   TourPackageProduct,
   TransportRoute,
   TransportVehicleType,
+  HajjGroup,
+  HajjPilgrim,
+  HajjUmrahPackageProduct,
   VisaDetail,
 } from "@/lib/types";
 
@@ -310,4 +313,65 @@ export const tourDestinationsApi = {
   update: (id: string, body: Partial<TourDestination>) =>
     apiFetch<TourDestination>(`/reference/tour-destinations/${id}`, { method: "PATCH", body }),
   remove: (id: string) => apiFetch(`/reference/tour-destinations/${id}`, { method: "DELETE" }),
+};
+
+export const hajjPackagesApi = {
+  list: (q?: { q?: string; kind?: string; category?: string; active?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.q) p.set("q", q.q);
+    if (q?.kind) p.set("kind", q.kind);
+    if (q?.category) p.set("category", q.category);
+    if (q?.active) p.set("active", q.active);
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<{ data: HajjUmrahPackageProduct[]; total: number }>(
+      `/reference/hajj-packages${qs ? `?${qs}` : ""}`,
+    );
+  },
+  get: (id: string) => apiFetch<HajjUmrahPackageProduct>(`/reference/hajj-packages/${id}`),
+  create: (body: Record<string, unknown>) =>
+    apiFetch<HajjUmrahPackageProduct>("/reference/hajj-packages", { method: "POST", body }),
+  update: (id: string, body: Record<string, unknown>) =>
+    apiFetch<HajjUmrahPackageProduct>(`/reference/hajj-packages/${id}`, { method: "PATCH", body }),
+  remove: (id: string) => apiFetch(`/reference/hajj-packages/${id}`, { method: "DELETE" }),
+};
+
+export const hajjPilgrimsApi = {
+  list: (q?: { q?: string; visaStatus?: string; active?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.q) p.set("q", q.q);
+    if (q?.visaStatus) p.set("visaStatus", q.visaStatus);
+    if (q?.active) p.set("active", q.active);
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<{ data: HajjPilgrim[]; total: number }>(
+      `/reference/hajj-pilgrims${qs ? `?${qs}` : ""}`,
+    );
+  },
+  create: (body: Record<string, unknown>) =>
+    apiFetch<HajjPilgrim>("/reference/hajj-pilgrims", { method: "POST", body }),
+  update: (id: string, body: Record<string, unknown>) =>
+    apiFetch<HajjPilgrim>(`/reference/hajj-pilgrims/${id}`, { method: "PATCH", body }),
+  remove: (id: string) => apiFetch(`/reference/hajj-pilgrims/${id}`, { method: "DELETE" }),
+};
+
+export const hajjGroupsApi = {
+  list: (q?: { q?: string; kind?: string; status?: string; packageId?: string; active?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.q) p.set("q", q.q);
+    if (q?.kind) p.set("kind", q.kind);
+    if (q?.status) p.set("status", q.status);
+    if (q?.packageId) p.set("packageId", q.packageId);
+    if (q?.active) p.set("active", q.active);
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<{ data: HajjGroup[]; total: number }>(
+      `/reference/hajj-groups${qs ? `?${qs}` : ""}`,
+    );
+  },
+  create: (body: Record<string, unknown>) =>
+    apiFetch<HajjGroup>("/reference/hajj-groups", { method: "POST", body }),
+  update: (id: string, body: Record<string, unknown>) =>
+    apiFetch<HajjGroup>(`/reference/hajj-groups/${id}`, { method: "PATCH", body }),
+  remove: (id: string) => apiFetch(`/reference/hajj-groups/${id}`, { method: "DELETE" }),
 };

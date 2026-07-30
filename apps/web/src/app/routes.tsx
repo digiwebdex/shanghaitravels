@@ -45,6 +45,15 @@ const TourPackagesPage = lazy(() => import("@/pages/TourPackagesPage"));
 const TourDeparturesPage = lazy(() => import("@/pages/TourDeparturesPage"));
 const TourDestinationsPage = lazy(() => import("@/pages/TourDestinationsPage"));
 const TourReportsPage = lazy(() => import("@/pages/TourReportsPage"));
+const HajjListPage = lazy(() => import("@/pages/HajjListPage"));
+const HajjCasePage = lazy(() => import("@/pages/HajjCasePage"));
+const NewHajjCasePage = lazy(() =>
+  import("@/pages/HajjListPage").then((m) => ({ default: m.NewHajjCasePage })),
+);
+const HajjPackagesPage = lazy(() => import("@/pages/HajjPackagesPage"));
+const HajjPilgrimsPage = lazy(() => import("@/pages/HajjPilgrimsPage"));
+const HajjGroupsPage = lazy(() => import("@/pages/HajjGroupsPage"));
+const HajjReportsPage = lazy(() => import("@/pages/HajjReportsPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -295,6 +304,62 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <TourCasePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "hajj",
+            element: (
+              <Lazy>
+                <HajjListPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "hajj/new",
+            element: (
+              <Lazy>
+                <NewHajjCasePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "hajj/packages",
+            element: (
+              <Lazy>
+                <HajjPackagesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "hajj/pilgrims",
+            element: (
+              <Lazy>
+                <HajjPilgrimsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "hajj/groups",
+            element: (
+              <Lazy>
+                <HajjGroupsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "hajj/reports",
+            element: (
+              <Lazy>
+                <HajjReportsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "hajj/:id",
+            element: (
+              <Lazy>
+                <HajjCasePage />
               </Lazy>
             ),
           },
