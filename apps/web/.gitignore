@@ -1,0 +1,14 @@
+# Local overrides (root .gitignore also covers these)
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.env
+.env.*
+!.env.example
+*.log
+.cache/
+tmp/
+.DS_Store

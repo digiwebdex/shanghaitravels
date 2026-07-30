@@ -1,0 +1,193 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  --font-size: 14px;
+
+  /* === TravelOS Brand Tokens === */
+  --navy-50:  #EEF1F7;
+  --navy-100: #D5DCE9;
+  --navy-200: #AAB7D3;
+  --navy-300: #7A91BC;
+  --navy-400: #4F6CA5;
+  --navy-500: #2D4E8A;
+  --navy-600: #1E3570;
+  --navy-700: #14213D;
+  --navy-800: #0D1629;
+  --navy-900: #070C15;
+
+  --orange-50:  #FFF7ED;
+  --orange-100: #FFEDD5;
+  --orange-200: #FED7AA;
+  --orange-300: #FDBA74;
+  --orange-400: #FB923C;
+  --orange-500: #F97316;
+  --orange-600: #EA580C;
+  --orange-700: #C2410C;
+
+  /* === Core UI Tokens === */
+  --background: #F4F6FA;
+  --foreground: #0F1629;
+  --card: #FFFFFF;
+  --card-foreground: #0F1629;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F1629;
+  --primary: #14213D;
+  --primary-foreground: #FFFFFF;
+  --secondary: #EEF1F7;
+  --secondary-foreground: #14213D;
+  --muted: #EEF1F7;
+  --muted-foreground: #6B7694;
+  --accent: #F97316;
+  --accent-foreground: #FFFFFF;
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(20, 33, 61, 0.10);
+  --input: transparent;
+  --input-background: #F4F6FA;
+  --switch-background: #CBD5E1;
+  --font-weight-medium: 600;
+  --font-weight-normal: 400;
+  --ring: rgba(20, 33, 61, 0.30);
+
+  /* === Semantic Colors === */
+  --success: #16A34A;
+  --success-bg: #DCFCE7;
+  --success-foreground: #14532D;
+  --warning: #D97706;
+  --warning-bg: #FEF3C7;
+  --warning-foreground: #78350F;
+  --error: #DC2626;
+  --error-bg: #FEE2E2;
+  --error-foreground: #7F1D1D;
+  --info: #0891B2;
+  --info-bg: #CFFAFE;
+  --info-foreground: #164E63;
+
+  /* === Chart Colors === */
+  --chart-1: #14213D;
+  --chart-2: #F97316;
+  --chart-3: #16A34A;
+  --chart-4: #0891B2;
+  --chart-5: #7C3AED;
+
+  --radius: 0.5rem;
+
+  /* === Sidebar === */
+  --sidebar: #14213D;
+  --sidebar-foreground: #CBD5E1;
+  --sidebar-primary: #F97316;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: rgba(255,255,255,0.08);
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: rgba(255,255,255,0.08);
+  --sidebar-ring: rgba(249, 115, 22, 0.5);
+}
+
+.dark {
+  --background: #0A0F1E;
+  --foreground: #E8ECF4;
+  --card: #0F1729;
+  --card-foreground: #E8ECF4;
+  --popover: #0F1729;
+  --popover-foreground: #E8ECF4;
+  --primary: #E8ECF4;
+  --primary-foreground: #0F1729;
+  --secondary: #1A2540;
+  --secondary-foreground: #E8ECF4;
+  --muted: #1A2540;
+  --muted-foreground: #8896B0;
+  --accent: #F97316;
+  --accent-foreground: #FFFFFF;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.06);
+  --ring: rgba(249, 115, 22, 0.5);
+  --font-weight-medium: 600;
+  --font-weight-normal: 400;
+  --sidebar: #070C18;
+  --sidebar-foreground: #8896B0;
+  --sidebar-primary: #F97316;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: rgba(255,255,255,0.06);
+  --sidebar-accent-foreground: #E8ECF4;
+  --sidebar-border: rgba(255,255,255,0.06);
+  --sidebar-ring: rgba(249, 115, 22, 0.4);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 6px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-family-sans: var(--font-sans);
+  --font-family-mono: var(--font-mono);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    font-family: var(--font-sans);
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-size: var(--font-size);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  h1 { font-size: 2rem; font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; }
+  h2 { font-size: 1.5rem; font-weight: 700; line-height: 1.3; letter-spacing: -0.015em; }
+  h3 { font-size: 1.25rem; font-weight: 600; line-height: 1.4; letter-spacing: -0.01em; }
+  h4 { font-size: 1rem; font-weight: 600; line-height: 1.5; }
+  h5 { font-size: 0.875rem; font-weight: 600; line-height: 1.5; }
+  h6 { font-size: 0.75rem; font-weight: 600; line-height: 1.5; letter-spacing: 0.05em; text-transform: uppercase; }
+
+  code, kbd, pre { font-family: var(--font-mono); }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted-foreground); }
+}

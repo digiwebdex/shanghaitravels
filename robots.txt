@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /portal
+Disallow: /admin
+Disallow: /staff
+Disallow: /agent
+Disallow: /supplier
+Disallow: /corporate
+Disallow: /mobile
+
+Sitemap: https://shanghaitravels.com.bd/sitemap.xml

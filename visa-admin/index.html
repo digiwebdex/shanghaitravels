@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="noindex"/>
+<title>Shanghai Travels — Service Desk</title>
+<style>
+  :root{--bg:#0f1523;--panel:#fff;--ink:#14213d;--muted:#6b7280;--line:#e5e7eb;--accent:#c8102e;--ok:#15803d;--warn:#b45309}
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 system-ui,Segoe UI,Roboto,sans-serif;color:var(--ink);background:#f3f4f6}
+  a{color:var(--accent)}
+  .hidden{display:none!important}
+  header{background:var(--ink);color:#fff;padding:10px 18px;display:flex;align-items:center;gap:14px}
+  header b{font-size:15px}
+  header .sp{flex:1}
+  header .who{font-size:12px;opacity:.85}
+  button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 12px}
+  button.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+  button.ghost{background:transparent;color:#fff;border-color:#ffffff55}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  input,select,textarea{font:inherit;width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:10px 0 3px}
+  .wrap{max-width:1080px;margin:18px auto;padding:0 16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .row>div{flex:1;min-width:180px}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);font-size:13px}
+  th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+  tr[data-click]{cursor:pointer} tr[data-click]:hover{background:#f9fafb}
+  .nav{display:flex;gap:8px;margin-bottom:14px}
+  .nav button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .msg{padding:10px 14px;border-radius:8px;margin:0 0 14px}
+  .msg.err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+  .msg.ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:#eef2ff;color:#3730a3}
+  .pill.approved{background:#dcfce7;color:#166534}.pill.in_progress{background:#fef9c3;color:#854d0e}.pill.draft{background:#f3f4f6;color:#374151}.pill.rejected{background:#fee2e2;color:#991b1b}
+  .stage{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+  .dot{width:22px;height:22px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;background:#cbd5e1}
+  .dot.done{background:var(--ok)}.dot.active{background:var(--warn)}
+  .muted{color:var(--muted)} .right{text-align:right} h2{margin:.2em 0 .6em;font-size:18px} h3{margin:1em 0 .4em;font-size:14px}
+  .login{max-width:360px;margin:9vh auto}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="login card">
+  <h2>Shanghai Travels — Service Desk</h2>
+  <div id="loginMsg"></div>
+  <label>Email</label><input id="email" autocomplete="username" value="admin@shanghaitravels.com.bd"/>
+  <label>Password</label><input id="password" type="password" autocomplete="current-password"/>
+  <div style="margin-top:14px"><button class="primary" id="loginBtn" style="width:100%">Sign in</button></div>
+  <p class="muted" style="font-size:12px">Wired to <code>/api2</code> (pre-cutover). Staff only.</p>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <header>
+    <b>Service Desk</b><span style="font-size:10px;opacity:.55;margin-left:6px">build 2026-07-28d</span><span class="who" id="who"></span><span class="sp"></span>
+    <button class="ghost" id="cpwBtn">Change password</button>
+    <button class="ghost" id="logoutBtn">Log out</button>
+  </header>
+  <div class="wrap">
+    <div id="msg"></div>
+    <div class="nav">
+      <button data-view="customers" class="on">Customers</button>
+      <button data-view="cases">Cases</button>
+      <button data-view="staff">Staff</button>
+    </div>
+    <div id="view"></div>
+  </div>
+</div>
+
+<div id="cpwModal" class="hidden" style="position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;z-index:50">
+  <div class="card" style="max-width:360px;width:90%">
+    <h2>Change password</h2><div id="cpwMsg"></div>
+    <label>Current password</label><input id="cpw_cur" type="password">
+    <label>New password (min 8)</label><input id="cpw_new" type="password">
+    <div style="margin-top:14px;display:flex;gap:8px"><button class="primary" id="cpw_save">Save</button><button id="cpw_cancel">Cancel</button></div>
+  </div>
+</div>
+
+<div id="custModal" class="hidden" style="position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;z-index:50">
+  <div class="card" style="max-width:540px;width:92%;max-height:92vh;overflow:auto">
+    <h2>Edit customer <span id="cm_code" class="muted" style="font-size:13px;font-weight:400"></span></h2><div id="cm_msg"></div>
+    <div class="row">
+      <div><label>Full name *</label><input id="cm_name"></div>
+      <div><label>Phone *</label><input id="cm_phone"></div>
+    </div>
+    <div class="row">
+      <div><label>Email</label><input id="cm_email"></div>
+      <div><label>WhatsApp</label><input id="cm_whatsapp"></div>
+    </div>
+    <div class="row">
+      <div><label>Nationality</label><input id="cm_nat"></div>
+      <div><label>Gender</label><select id="cm_gender"><option value="">—</option><option>male</option><option>female</option></select></div>
+    </div>
+    <div><label>Address</label><input id="cm_address"></div>
+    <div><label>Notes</label><textarea id="cm_notes" rows="2"></textarea></div>
+    <div style="margin-top:14px;display:flex;gap:8px"><button class="primary" id="cm_save">Save changes</button><button id="cm_cancel">Cancel</button></div>
+  </div>
+</div>
+
+<script>
+const ERP = "/api2";
+const $ = s => document.querySelector(s);
+const el = (h) => { const t=document.createElement("template"); t.innerHTML=h.trim(); return t.content.firstChild; };
+const esc = s => (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const taka = p => (Number(p||0)/100).toLocaleString("en-BD",{minimumFractionDigits:2});
+let ME=null, STATE={view:"customers", customers:[], caseId:null};
+const SVC={visa:"Visa",air_ticket:"Air Ticket",hotel:"Hotel",tour:"Tour",hajj:"Hajj",umrah:"Umrah",student:"Study",medical:"Medical",immigration:"Immigration",insurance:"Insurance",transport:"Transport",corporate:"Corporate",work:"Manpower"};
+const DKEY={visa:"visa",air_ticket:"airTicket",hotel:"hotel",tour:"tour",transport:"transport",hajj:"hajjUmrah",umrah:"hajjUmrah",student:"student",medical:"medical",immigration:"immigration",insurance:"insurance",work:"work"};
+
+async function api(path, opts={}){
+  const o={method:opts.method||"GET", credentials:"include", headers:{}};
+  if(opts.form){ o.body=opts.form; }
+  else if(opts.body!==undefined){ o.headers["Content-Type"]="application/json"; o.body=JSON.stringify(opts.body); }
+  const res=await fetch(ERP+path,o);
+  let data=null; const txt=await res.text(); try{data=txt?JSON.parse(txt):null;}catch{data={raw:txt};}
+  if(!res.ok){ const m=(data&&(data.message||data.error))||("HTTP "+res.status); throw Object.assign(new Error(Array.isArray(m)?m.join(", "):m),{status:res.status,data}); }
+  return data;
+}
+const listOf = r => Array.isArray(r)?r:(r&&r.data)||[];
+function flash(kind,text){ const m=$("#msg"); m.innerHTML=`<div class="msg ${kind}">${esc(text)}</div>`; if(kind==="ok") setTimeout(()=>{if(m.firstChild)m.innerHTML="";},4000); }
+
+/* ---------- auth ---------- */
+$("#loginBtn").onclick=async()=>{
+  $("#loginMsg").innerHTML=""; $("#loginBtn").disabled=true;
+  try{
+    const lr=await api("/auth/login",{method:"POST",body:{email:$("#email").value.trim(),password:$("#password").value}});
+    ME=await api("/auth/me");
+    $("#who").textContent=`${ME.fullName||ME.email} · ${ME.role}`;
+    if(!can("user:manage")){ const sb=document.querySelector('.nav button[data-view="staff"]'); if(sb) sb.style.display="none"; }
+    $("#login").classList.add("hidden"); $("#app").classList.remove("hidden");
+    render("customers");
+    if(lr && lr.mustChangePassword){ flash("err","Please set a new password (your temporary one)."); $("#cpwModal").classList.remove("hidden"); }
+  }catch(e){ $("#loginMsg").innerHTML=`<div class="msg err">${esc(e.message)}</div>`; }
+  finally{ $("#loginBtn").disabled=false; }
+};
+$("#logoutBtn").onclick=async()=>{ try{await api("/auth/logout",{method:"POST"});}catch{} location.reload(); };
+$("#cpwBtn").onclick=()=>{ $("#cpwMsg").innerHTML=""; $("#cpw_cur").value=""; $("#cpw_new").value=""; $("#cpwModal").classList.remove("hidden"); };
+$("#cpw_cancel").onclick=()=>$("#cpwModal").classList.add("hidden");
+$("#cpw_save").onclick=async()=>{ try{ await api("/auth/change-password",{method:"POST",body:{currentPassword:$("#cpw_cur").value,newPassword:$("#cpw_new").value}}); $("#cpwModal").classList.add("hidden"); flash("ok","Password changed — use the new one next time."); }catch(e){ $("#cpwMsg").innerHTML=`<div class="msg err">${esc(e.message)}</div>`; } };
+/* ---------- customer edit modal ---------- */
+let EDITING=null;
+function openCustEdit(c){
+  EDITING=c;
+  $("#cm_code").textContent=c.code?("· "+c.code):"";
+  $("#cm_msg").innerHTML="";
+  $("#cm_name").value=c.fullName||""; $("#cm_phone").value=c.phone||"";
+  $("#cm_email").value=c.email||""; $("#cm_whatsapp").value=c.whatsapp||"";
+  $("#cm_nat").value=c.nationality||""; $("#cm_gender").value=c.gender||"";
+  $("#cm_address").value=c.address||""; $("#cm_notes").value=c.notes||"";
+  $("#custModal").classList.remove("hidden");
+}
+$("#cm_cancel").onclick=()=>$("#custModal").classList.add("hidden");
+$("#cm_save").onclick=async()=>{
+  if(!EDITING) return;
+  const body={ fullName:$("#cm_name").value.trim(), phone:$("#cm_phone").value.trim(),
+    email:$("#cm_email").value.trim()||null, whatsapp:$("#cm_whatsapp").value.trim()||null,
+    nationality:$("#cm_nat").value.trim()||null, gender:$("#cm_gender").value||null,
+    address:$("#cm_address").value.trim()||null, notes:$("#cm_notes").value.trim()||null };
+  if(body.fullName.length<2){ $("#cm_msg").innerHTML='<div class="msg err">Full name is required (min 2).</div>'; return; }
+  if(body.phone.length<6){ $("#cm_msg").innerHTML='<div class="msg err">A valid phone number is required.</div>'; return; }
+  $("#cm_save").disabled=true;
+  try{ await api("/customers/"+EDITING.id,{method:"PATCH",body}); $("#custModal").classList.add("hidden"); flash("ok",`Customer ${EDITING.code||""} updated.`); render("customers"); }
+  catch(e){ $("#cm_msg").innerHTML=`<div class="msg err">${esc(e.message)}</div>`; }
+  finally{ $("#cm_save").disabled=false; }
+};
+$("#password").addEventListener("keydown",e=>{if(e.key==="Enter")$("#loginBtn").click();});
+document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{ document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); render(b.dataset.view); });
+const can = p => ME && (ME.role==="super_admin" || (ME.permissions||[]).includes(p));
+
+/* ---------- router ---------- */
+async function render(view){ STATE.view=view; const v=$("#view"); v.innerHTML="<p class='muted'>Loading…</p>";
+  try{ if(view==="customers") await viewCustomers(v);
+       else if(view==="cases") await viewCases(v);
+       else if(view==="case") await viewCase(v);
+       else if(view==="staff") await viewStaff(v);
+  }catch(e){ v.innerHTML=`<div class="msg err">${esc(e.message)}</div>`; }
+}
+
+/* ---------- customers ---------- */
+async function viewCustomers(v){
+  const r=await api("/customers?limit=200"); STATE.customers=listOf(r);
+  v.innerHTML="";
+  const card=el(`<div class="card"><h2>New customer</h2>
+    <div class="row">
+      <div><label>Full name *</label><input id="c_name"></div>
+      <div><label>Phone *</label><input id="c_phone"></div>
+      <div><label>Email</label><input id="c_email"></div>
+    </div>
+    <div class="row">
+      <div><label>Nationality</label><input id="c_nat" value="Bangladeshi"></div>
+      <div><label>Gender</label><select id="c_gender"><option value="">—</option><option>male</option><option>female</option></select></div>
+      <div><label>Date of birth</label><input id="c_dob" type="date"></div>
+    </div>
+    <div style="margin-top:12px"><button class="primary" id="c_save" ${can("customer:create")?"":"disabled"}>Create customer</button></div>
+  </div>`);
+  card.querySelector("#c_save").onclick=async()=>{
+    try{ const cust=await api("/customers",{method:"POST",body:{
+      fullName:card.querySelector("#c_name").value.trim(), phone:card.querySelector("#c_phone").value.trim(),
+      email:card.querySelector("#c_email").value.trim()||undefined, nationality:card.querySelector("#c_nat").value.trim()||undefined,
+      gender:card.querySelector("#c_gender").value||undefined, dob:card.querySelector("#c_dob").value||undefined }});
+      flash("ok",`Customer created: ${cust.code||cust.id}`); render("customers");
+    }catch(e){ flash("err",e.message); }
+  };
+  v.appendChild(card);
+  const canEdit=can("customer:update");
+  const tbl=el(`<div class="card">
+    <div class="row" style="align-items:flex-end"><div style="flex:2"><h2 style="margin:0 0 2px">Customers (${STATE.customers.length})</h2>${canEdit?'<div class="muted" style="font-size:12px">Click a row to edit.</div>':''}</div>
+      <div><label style="margin-top:0">Search</label><input id="c_search" placeholder="name / phone / code / email…"></div></div>
+    <table style="margin-top:12px"><thead><tr><th>Code</th><th>Name</th><th>Phone</th><th>Email</th><th>Nationality</th>${canEdit?"<th></th>":""}</tr></thead><tbody></tbody></table></div>`);
+  const tb=tbl.querySelector("tbody");
+  const drawC=(rows)=>{ tb.innerHTML="";
+    rows.forEach(c=>{ const tr=el(`<tr ${canEdit?'data-click':''}><td>${esc(c.code)}</td><td>${esc(c.fullName)}</td><td>${esc(c.phone)}</td><td class="muted">${esc(c.email||"")}</td><td>${esc(c.nationality||"")}</td>${canEdit?'<td class="right muted">✎ Edit</td>':""}</tr>`);
+      if(canEdit) tr.onclick=()=>openCustEdit(c); tb.appendChild(tr); });
+    if(!rows.length) tb.appendChild(el(`<tr><td colspan="${canEdit?6:5}" class="muted">No matching customers.</td></tr>`)); };
+  drawC(STATE.customers);
+  const cs=tbl.querySelector("#c_search");
+  cs.oninput=()=>{ const q=cs.value.trim().toLowerCase(); drawC(!q?STATE.customers:STATE.customers.filter(c=>[c.code,c.fullName,c.phone,c.email,c.nationality].some(x=>String(x||"").toLowerCase().includes(q)))); };
+  v.appendChild(tbl);
+}
+
+/* ---------- cases ---------- */
+async function viewCases(v){
+  if(!STATE.customers.length){ try{STATE.customers=listOf(await api("/customers?limit=200"));}catch{} }
+  if(!STATE.services){ try{STATE.services=await api("/reference/services");}catch{STATE.services=[];} }
+  if(!STATE.countries){ try{STATE.countries=await api("/reference/countries");}catch{STATE.countries=[];} }
+  const cases=listOf(await api("/applications?limit=200"));
+  v.innerHTML="";
+  const custOpts=STATE.customers.map(c=>`<option value="${c.id}">${esc(c.fullName)} (${esc(c.code)})</option>`).join("");
+  const svcOpts=(STATE.services||[]).slice().sort((a,b)=>(SVC[a.serviceType]||a.serviceType).localeCompare(SVC[b.serviceType]||b.serviceType)).map(s=>`<option value="${s.serviceType}">${esc(SVC[s.serviceType]||s.serviceType)} — ${esc(s.workflow)} (${s.stages} stages)</option>`).join("");
+  const ctyOpts=(STATE.countries||[]).map(c=>`<option value="${esc(c.name)}">${esc(c.name)}</option>`).join("");
+  const card=el(`<div class="card"><h2>New case — any service</h2>
+    <div class="row">
+      <div><label>Service *</label><select id="k_svc">${svcOpts}</select></div>
+      <div><label>Direction</label><select id="k_dir"><option value="outbound">Outbound (Bangladesh → country)</option><option value="inbound">Inbound (country → Bangladesh)</option></select></div>
+      <div><label>Country</label><select id="k_country">${ctyOpts}</select></div>
+    </div>
+    <div class="row">
+      <div style="flex:2"><label>Customer *</label><select id="k_cust">${custOpts||"<option value=''>— create a customer first —</option>"}</select></div>
+      <div style="flex:2"><label>Title</label><input id="k_title" placeholder="e.g. Hajj 2026 — Iqbal"></div>
+    </div>
+    <div style="margin-top:12px"><button class="primary" id="k_save" ${can("application:create")?"":"disabled"}>Create case</button></div>
+  </div>`);
+  card.querySelector("#k_save").onclick=async()=>{
+    const cid=card.querySelector("#k_cust").value; if(!cid){flash("err","Pick a customer");return;}
+    const svc=card.querySelector("#k_svc").value, dir=card.querySelector("#k_dir").value, country=card.querySelector("#k_country").value;
+    const title=card.querySelector("#k_title").value.trim()||`${SVC[svc]||svc}${country?" — "+country:""}`;
+    try{
+      const app=await api("/applications",{method:"POST",body:{serviceType:svc,customerId:cid,title,direction:dir,priority:"medium"}});
+      try{ if(svc==="visa") await api(`/applications/${app.id}/visa`,{method:"PUT",body:{destination:country,visaType:"tourist",entryType:"single"}});
+           else await api(`/applications/${app.id}/detail/${svc}`,{method:"PUT",body:{country:country,destination:country}}); }catch(_){}
+      flash("ok",`Case created: ${app.referenceNo} (${SVC[svc]||svc})`); STATE.caseId=app.id; render("case");
+    }catch(e){ flash("err",e.message); }
+  };
+  v.appendChild(card);
+  const tbl=el(`<div class="card">
+    <div class="row" style="align-items:flex-end"><div style="flex:2"><h2 style="margin:0">Cases (${cases.length})</h2></div>
+      <div><label style="margin-top:0">Service</label><select id="k_svcfilter"><option value="">All services</option>${[...new Set(cases.map(c=>c.serviceType))].sort().map(st=>`<option value="${esc(st)}">${esc(SVC[st]||st)}</option>`).join("")}</select></div>
+      <div><label style="margin-top:0">Search</label><input id="k_search" placeholder="APP ref / customer / status…"></div></div>
+    <table style="margin-top:12px"><thead><tr><th>Ref</th><th>Service</th><th>Dir</th><th>Customer</th><th>Stage</th><th>Status</th></tr></thead><tbody></tbody></table></div>`);
+  const tb=tbl.querySelector("tbody");
+  const drawK=(rows)=>{ tb.innerHTML="";
+    rows.forEach(c=>{ const tr=el(`<tr data-click><td><b style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace">${esc(c.referenceNo||"—")}</b></td><td>${esc(SVC[c.serviceType]||c.serviceType)}</td><td class="muted">${esc(c.direction||"")}</td><td>${esc(c.customer&&c.customer.fullName)}</td><td>${esc(c.currentStage)}/${esc(c.totalStages)}</td><td><span class="pill ${esc(c.status)}">${esc(c.status)}</span></td></tr>`);
+      tr.onclick=()=>{STATE.caseId=c.id;render("case");}; tb.appendChild(tr); });
+    if(!rows.length) tb.appendChild(el(`<tr><td colspan="6" class="muted">No matching cases.</td></tr>`)); };
+  drawK(cases);
+  const ks=tbl.querySelector("#k_search"), kf=tbl.querySelector("#k_svcfilter");
+  const applyK=()=>{ const q=ks.value.trim().toLowerCase(), sf=kf.value; let rows=cases; if(sf) rows=rows.filter(c=>c.serviceType===sf); if(q) rows=rows.filter(c=>[c.referenceNo,SVC[c.serviceType]||c.serviceType,c.customer&&c.customer.fullName,c.status,c.direction].some(x=>String(x||"").toLowerCase().includes(q))); drawK(rows); };
+  ks.oninput=applyK; kf.onchange=applyK;
+  v.appendChild(tbl);
+}
+
+/* ---------- staff (add / manage) ---------- */
+async function viewStaff(v){
+  const roles=["visa_executive","visa_consultant","office_incharge","accounts_manager","marketing_manager","general_manager"];
+  const list=await api("/users");
+  v.innerHTML="";
+  const card=el(`<div class="card"><h2>Add staff</h2>
+    <div class="row">
+      <div><label>Full name *</label><input id="s_name"></div>
+      <div><label>Email *</label><input id="s_email" placeholder="name@shanghaitravels.com.bd"></div>
+      <div><label>Role</label><select id="s_role">${roles.map(r=>`<option value="${r}">${r}</option>`).join("")}</select></div>
+    </div>
+    <div style="margin-top:12px"><button class="primary" id="s_add">Create staff account</button></div>
+    <div id="sOut" style="margin-top:10px"></div>
+  </div>`);
+  card.querySelector("#s_add").onclick=async()=>{
+    const name=card.querySelector("#s_name").value.trim(), email=card.querySelector("#s_email").value.trim();
+    if(!name||!email){flash("err","Name and email required");return;}
+    try{ const r=await api("/users",{method:"POST",body:{fullName:name,email:email,role:card.querySelector("#s_role").value}});
+      card.querySelector("#sOut").innerHTML=`<div class="msg ok">Created <b>${esc(r.email)}</b> (${esc(r.role)}).<br>Temporary password: <b style="font-size:15px">${esc(r.tempPassword)}</b> — give this to the staff member. They change it on first login. <i>(Shown once — copy it now.)</i></div>`;
+      card.querySelector("#s_name").value=""; card.querySelector("#s_email").value="";
+    }catch(e){ flash("err",e.message); }
+  };
+  v.appendChild(card);
+  const tbl=el(`<div class="card"><h2>Staff (${list.length})</h2><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last login</th><th></th></tr></thead><tbody></tbody></table></div>`);
+  const tb=tbl.querySelector("tbody");
+  list.forEach(u=>{ const tr=el(`<tr><td>${esc(u.fullName)}</td><td>${esc(u.email)}</td><td>${esc(u.role)}</td><td><span class="pill ${u.status==="active"?"approved":"draft"}">${esc(u.status)}</span></td><td>${u.lastLoginAt?esc(new Date(u.lastLoginAt).toLocaleString()):"—"}</td><td></td></tr>`);
+    if(u.role!=="super_admin"){ const b=el(`<button>${u.status==="active"?"Disable":"Enable"}</button>`); b.onclick=async()=>{ try{ await api("/users/"+u.id,{method:"PATCH",body:{status:u.status==="active"?"disabled":"active"}}); render("staff"); }catch(e){flash("err",e.message);} }; tr.lastChild.appendChild(b); }
+    tb.appendChild(tr); });
+  v.appendChild(tbl);
+}
+
+/* ---------- one case workspace ---------- */
+async function viewCase(v){
+  const a=await api(`/applications/${STATE.caseId}`);
+  const stages=(a.stages||[]).slice().sort((x,y)=>x.stageNo-y.stageNo);
+  const doneAll=stages.length&&stages.every(s=>s.status==="done");
+  v.innerHTML="";
+  const det=a[DKEY[a.serviceType]]; const country=det?(det.destination||det.country||""):"";
+  const canUpd=can("application:update"), canAssign=can("application:assign"), canAppr=can("application:approve");
+  const PRIOS=["low","medium","high","urgent"];
+  const head=el(`<div class="card">
+    <div class="row"><div style="flex:2"><h2 style="margin-bottom:2px">${esc(a.referenceNo)} · ${esc(a.customer&&a.customer.fullName)}</h2>
+      <div class="muted"><b>${esc(SVC[a.serviceType]||a.serviceType)}</b> · ${esc(a.direction||"outbound")}${country?" → "+esc(country):""} · ${esc(a.title||"—")} · priority ${esc(a.priority||"medium")} · <span class="pill ${esc(a.status)}">${esc(a.status)}</span></div></div>
+      <div class="right" style="display:flex;gap:8px;align-items:flex-start">${canUpd?'<button id="edit">Edit case</button>':''}<button id="back">← Cases</button></div></div>
+    <div id="editBox" class="hidden" style="margin-top:12px;border-top:1px dashed var(--line);padding-top:12px">
+      <div class="row"><div style="flex:2"><label>Title</label><input id="e_title"></div>
+        <div><label>Priority</label><select id="e_prio">${PRIOS.map(p=>`<option value="${p}">${p}</option>`).join("")}</select></div></div>
+      <div style="margin-top:10px;display:flex;gap:8px"><button class="primary" id="e_save">Save changes</button><button id="e_cancel">Cancel</button></div>
+    </div>
+    ${canAssign?`<div style="margin-top:12px;border-top:1px dashed var(--line);padding-top:12px">
+      <label>Assign / reassign</label>
+      <div class="row" style="align-items:flex-end"><div style="flex:2"><select id="asg_sel"><option>Loading staff…</option></select></div>
+        <div style="flex:0 0 auto"><button class="primary" id="asg_save">Reassign</button></div></div>
+      <div id="asgOut" class="muted" style="font-size:12px;margin-top:6px"></div></div>`:''}
+  </div>`);
+  head.querySelector("#back").onclick=()=>{document.querySelector('.nav button[data-view="cases"]').click();};
+  if(canUpd){
+    const eb=head.querySelector("#editBox");
+    head.querySelector("#edit").onclick=()=>{ head.querySelector("#e_title").value=a.title||""; head.querySelector("#e_prio").value=a.priority||"medium"; eb.classList.toggle("hidden"); };
+    head.querySelector("#e_cancel").onclick=()=>eb.classList.add("hidden");
+    head.querySelector("#e_save").onclick=async()=>{ try{ await api(`/applications/${a.id}`,{method:"PATCH",body:{title:head.querySelector("#e_title").value.trim()||undefined,priority:head.querySelector("#e_prio").value}}); flash("ok","Case updated"); render("case"); }catch(e){flash("err",e.message);} };
+  }
+  if(canAssign){
+    const sel=head.querySelector("#asg_sel"), out=head.querySelector("#asgOut");
+    (async()=>{ let users=null; try{ users=await api("/users"); }catch{}
+      const opts=['<option value="">— unassigned —</option>'];
+      if(Array.isArray(users)&&users.length){ users.filter(u=>u.role!=="super_admin"&&u.status==="active").forEach(u=>opts.push(`<option value="${u.id}">${esc(u.fullName)} (${esc(u.role)})</option>`)); out.textContent=a.assignedTo?("Currently assigned to "+(((users.find(u=>u.id===a.assignedTo))||{}).fullName||a.assignedTo)):"Currently unassigned"; }
+      else if(ME){ opts.push(`<option value="${ME.id}">${esc(ME.fullName||ME.email)} (me)</option>`); out.textContent="Reassigning to other staff needs manager access — you can claim this case yourself."; }
+      sel.innerHTML=opts.join(""); sel.value=a.assignedTo||""; })();
+    head.querySelector("#asg_save").onclick=async()=>{ try{ await api(`/applications/${a.id}/assign`,{method:"POST",body:{assignedTo:head.querySelector("#asg_sel").value||null}}); flash("ok","Case reassigned"); render("case"); }catch(e){flash("err",e.message);} };
+  }
+  v.appendChild(head);
+
+  // stage tracker
+  const active=stages.find(s=>s.status==="active");
+  const sc=el(`<div class="card"><h2>Workflow — stage ${esc(a.currentStage)} of ${esc(a.totalStages)}</h2><div id="stages"></div>
+    <div style="margin-top:12px"><label>Note for the current stage${active?` — <b>${esc(active.name)}</b>`:""} (optional)</label>
+      <input id="st_note" placeholder="e.g. COVA ref 12345 · CVASC appointment 15 Aug · biometrics done"></div>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button id="note" ${can("application:note")?"":"disabled"}>Save note</button>
+      <button class="primary" id="adv" ${(!doneAll&&can("application:advance-stage"))?"":"disabled"}>Advance stage →</button>
+      <button id="appr" ${(a.status!=="approved"&&can("application:approve"))?"":"disabled"}>Approve case</button>
+      ${canAppr?`<button id="rej" ${(a.status!=="approved"&&a.status!=="rejected")?"":"disabled"} style="border-color:var(--accent);color:var(--accent)">Reject case</button>`:""}
+    </div></div>`);
+  const sd=sc.querySelector("#stages");
+  stages.forEach(s=> sd.appendChild(el(`<div class="stage"><div class="dot ${esc(s.status)}">${s.status==="done"?"✓":s.stageNo}</div><div><b>${esc(s.name)}</b> <span class="muted">· ${esc(s.status)}</span></div></div>`)));
+  sc.querySelector("#note").onclick=async()=>{ const m=sc.querySelector("#st_note").value.trim(); if(!m){flash("err","Write a note first");return;} try{ await api(`/applications/${a.id}/note`,{method:"POST",body:{message:m}}); flash("ok","Note saved"); render("case"); }catch(e){flash("err",e.message);} };
+  sc.querySelector("#adv").onclick=async()=>{ try{ await api(`/applications/${a.id}/advance-stage`,{method:"POST",body:{note:sc.querySelector("#st_note").value.trim()||undefined}}); flash("ok","Stage advanced"); render("case"); }catch(e){flash("err",e.message);} };
+  sc.querySelector("#appr").onclick=async()=>{ try{ await api(`/applications/${a.id}/approve`,{method:"POST"}); flash("ok","Case approved"); render("case"); }catch(e){flash("err",e.message);} };
+  const rejBtn=sc.querySelector("#rej"); if(rejBtn) rejBtn.onclick=async()=>{ if(!confirm("Reject this case? The customer's application will be marked rejected.")) return; try{ await api(`/applications/${a.id}`,{method:"PATCH",body:{status:"rejected"}}); flash("ok","Case rejected"); render("case"); }catch(e){flash("err",e.message);} };
+  v.appendChild(sc);
+
+  // history / timeline
+  const ev=a.events||[];
+  const tl=el(`<div class="card"><h2>History (${ev.length})</h2><div id="tl"></div></div>`);
+  const tld=tl.querySelector("#tl");
+  ev.forEach(e=> tld.appendChild(el(`<div class="stage"><div class="muted" style="flex:0 0 150px">${esc(new Date(e.createdAt).toLocaleString())}</div><div><span class="pill">${esc(e.type)}</span> ${esc(e.message)}</div></div>`)));
+  if(!ev.length) tld.appendChild(el(`<div class="muted">No history yet.</div>`));
+  v.appendChild(tl);
+
+  // passport OCR (guarded)
+  const oc=el(`<div class="card"><h2>Passport</h2>
+    <h3>Manual entry (no Google)</h3>
+    <div class="row"><div><label>Passport no *</label><input id="p_no"></div><div><label>Issuing country</label><input id="p_country" value="Bangladesh"></div></div>
+    <div class="row"><div><label>Date of issue</label><input id="p_iss" type="date"></div><div><label>Date of expiry</label><input id="p_exp" type="date"></div>
+      <div style="flex:0 0 auto;align-self:flex-end"><label style="font-weight:400"><input type="checkbox" id="p_primary" style="width:auto"> Primary</label></div></div>
+    <div style="margin-top:10px"><button class="primary" id="p_save" ${can("ocr:apply")?"":"disabled"}>Save passport</button></div>
+    <div id="pOut" style="margin-top:10px"></div>
+    <h3 style="margin-top:16px">Scan (OCR)</h3><div class="muted" style="margin-bottom:8px">Reads the passport with <b>Google Vision</b>. The photo is processed in memory only and <b>not stored</b> — extracted fields appear above for you to check, then Save.</div>
+    <input type="file" id="pfile" accept="image/*"><button id="scan" style="margin-top:10px" ${can("ocr:use")?"":"disabled"}>Scan passport</button>
+    <div id="ocrOut" style="margin-top:10px"></div></div>`);
+  oc.querySelector("#p_save").onclick=async()=>{
+    const no=oc.querySelector("#p_no").value.trim(); if(!no){flash("err","Passport no is required");return;}
+    try{ const pp=await api("/passports",{method:"POST",body:{customerId:a.customer.id,passportNo:no,issuingCountry:oc.querySelector("#p_country").value.trim()||undefined,dateOfIssue:oc.querySelector("#p_iss").value||undefined,dateOfExpiry:oc.querySelector("#p_exp").value||undefined,isPrimary:oc.querySelector("#p_primary").checked}});
+      oc.querySelector("#pOut").innerHTML=`<div class="msg ok">Passport saved: ${esc(pp.passportNo)}${pp.isPrimary?" (primary)":""}</div>`;
+    }catch(e){ flash("err",e.message); }
+  };
+  oc.querySelector("#scan").onclick=async()=>{
+    const f=oc.querySelector("#pfile").files[0]; if(!f){flash("err","Choose an image");return;}
+    const fd=new FormData(); fd.append("file",f); fd.append("docType","passport"); fd.append("customerId",a.customer.id); fd.append("applicationId",a.id);
+    try{ const r=await api("/ocr/scan",{method:"POST",form:fd}); const fl=r.fields||{};
+      if(fl.passportNo){
+        oc.querySelector("#p_no").value=fl.passportNo;
+        if(fl.issuingCountry) oc.querySelector("#p_country").value=fl.issuingCountry;
+        if(fl.dateOfExpiry) oc.querySelector("#p_exp").value=fl.dateOfExpiry;
+        const ok=fl.validation&&fl.validation.passportNo;
+        oc.querySelector("#ocrOut").innerHTML=`<div class="msg ok">Read <b>${esc(fl.fullName||fl.passportNo)}</b> · ${esc(fl.passportNo)} · exp ${esc(fl.dateOfExpiry||"—")} ${ok?"· MRZ check digits ✓":""} — filled in above; verify and Save.</div>`;
+      } else {
+        oc.querySelector("#ocrOut").innerHTML=`<div class="msg">Couldn't read the passport MRZ — please enter the details manually above.</div>`;
+      }
+    }catch(e){ oc.querySelector("#ocrOut").innerHTML=`<div class="msg err">${esc(e.message||"Scan failed")}</div>`; }
+  };
+  v.appendChild(oc);
+
+  // document collection
+  const dcats=["passport","photo","bank_statement","invitation_letter","admission_notice","financial_proof","return_ticket","hotel_booking","other"];
+  const dc=el(`<div class="card"><h2>Document Collection</h2>
+    <div class="row">
+      <div><label>Type</label><select id="d_cat">${dcats.map(c=>`<option value="${c}">${c.replace(/_/g," ")}</option>`).join("")}</select></div>
+      <div style="flex:2"><label>File (JPG/PNG/PDF, ≤15MB)</label><input type="file" id="d_file" accept="image/*,application/pdf"></div>
+      <div style="flex:0 0 auto;align-self:flex-end"><button class="primary" id="d_up" ${can("document:upload")?"":"disabled"}>Upload</button></div>
+    </div>
+    <div id="dOut" style="margin-top:8px"></div>
+    <table style="margin-top:10px"><thead><tr><th>Type</th><th>File</th><th>Status</th></tr></thead><tbody id="dBody"></tbody></table>
+  </div>`);
+  const renderDocs=(docs)=>{ const tb=dc.querySelector("#dBody"); tb.innerHTML=""; (docs||[]).forEach(d=>tb.appendChild(el(`<tr><td>${esc((d.category||"").replace(/_/g," "))}${d.isPassport?' <span class="pill">passport</span>':""}</td><td>${esc(d.fileName)}</td><td><span class="pill draft">${esc(d.status)}</span></td></tr>`))); if(!docs||!docs.length) tb.appendChild(el(`<tr><td colspan="3" class="muted">No documents uploaded yet.</td></tr>`)); };
+  try{ renderDocs(await api(`/applications/${a.id}/documents`)); }catch{ renderDocs([]); }
+  dc.querySelector("#d_up").onclick=async()=>{
+    const f=dc.querySelector("#d_file").files[0]; if(!f){flash("err","Choose a file");return;}
+    const fd=new FormData(); fd.append("file",f); fd.append("category",dc.querySelector("#d_cat").value);
+    try{ await api(`/applications/${a.id}/documents`,{method:"POST",form:fd});
+      dc.querySelector("#d_file").value=""; dc.querySelector("#dOut").innerHTML=`<div class="msg ok">Uploaded.</div>`;
+      renderDocs(await api(`/applications/${a.id}/documents`));
+    }catch(e){ flash("err",e.message); }
+  };
+  v.appendChild(dc);
+
+  // invoice
+  const ic=el(`<div class="card"><h2>Invoice</h2>
+    <div class="row"><div style="flex:2"><label>Line description</label><input id="i_desc" value="${esc(SVC[a.serviceType]||a.serviceType)}${country?(' — '+esc(country)):''} — service fee"></div>
+      <div><label>Amount (৳)</label><input id="i_amt" type="number" min="0" step="0.01" placeholder="5000.00"></div></div>
+    <div style="margin-top:12px"><button class="primary" id="i_make" ${can("invoice:manage")?"":"disabled"}>${can("invoice:manage")?"Create invoice":"Create invoice (needs accounts role)"}</button></div>
+    <div id="invOut" style="margin-top:10px"></div></div>`);
+  ic.querySelector("#i_make").onclick=async()=>{
+    const amt=Math.round(parseFloat(ic.querySelector("#i_amt").value||"0")*100); if(amt<=0){flash("err","Enter an amount");return;}
+    try{ const inv=await api("/invoices",{method:"POST",body:{customerId:a.customer.id,applicationId:a.id,items:[{description:ic.querySelector("#i_desc").value.trim(),quantity:1,unitPrice:amt}]}});
+      ic.querySelector("#invOut").innerHTML=`<div class="msg ok">Invoice ${esc(inv.invoiceNo||inv.id)} — total ৳${taka(inv.total)} · <span class="pill ${esc(inv.status)}">${esc(inv.status)}</span></div>
+        <button class="primary" id="i_issue" style="margin-top:8px">Issue invoice</button>`;
+      ic.querySelector("#i_issue").onclick=async()=>{ try{ await api(`/invoices/${inv.id}/issue`,{method:"POST"}); flash("ok",`Invoice ${inv.invoiceNo||inv.id} issued`); ic.querySelector("#invOut").innerHTML+=`<div class="msg ok">Issued.</div>`; }catch(e){flash("err",e.message);} };
+    }catch(e){ flash("err",e.message); }
+  };
+  v.appendChild(ic);
+}
+</script>
+</body>
+</html>

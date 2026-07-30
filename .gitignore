@@ -1,0 +1,85 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+.pnp.*
+
+# Build / bundle outputs
+dist/
+build/
+out/
+.turbo/
+.vite/
+apps/web/dist/
+erp/assets/
+erp/index.html
+
+# Test / coverage / reports
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+blob-report/
+*.lcov
+
+# Environment & secrets (keep *.example)
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Editors / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Logs & temp
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+tmp/
+temp/
+.tmp/
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+
+# OS junk
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Uploads / local scratch (never commit customer docs or temp uploads)
+uploads/temp/
+**/uploads/temp/
+.local-uploads/
+
+# Generated / tooling
+*.pem
+*.key
+*.p12
+*.pfx
+*.orig
+*.bak
+*.tmp
+
+# Cursor / agent local state (if present under workspace)
+.cursor/
+.agent/
+
+# Optional local Playwright auth state
+playwright/.auth/
