@@ -130,6 +130,7 @@ const PortalReportsPage = lazy(() => import("@/pages/portal/PortalReportsPage"))
 const AgentPortalLayout = lazy(() => import("@/layouts/AgentPortalLayout"));
 const AgentLoginPage = lazy(() => import("@/pages/portal/agent/AgentLoginPage"));
 const AgentForgotPage = lazy(() => import("@/pages/portal/agent/AgentForgotPage"));
+const AgentRegisterPage = lazy(() => import("@/pages/portal/agent/AgentRegisterPage"));
 const AgentDashboardPage = lazy(() => import("@/pages/portal/agent/AgentDashboardPage"));
 const AgentBookingsPage = lazy(() => import("@/pages/portal/agent/AgentBookingsPage"));
 const AgentBookingDetailPage = lazy(() => import("@/pages/portal/agent/AgentBookingDetailPage"));
@@ -325,6 +326,14 @@ export const router = createHashRouter([
     element: (
       <Lazy>
         <AgentLoginPage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/portal/agent/register",
+    element: (
+      <Lazy>
+        <AgentRegisterPage />
       </Lazy>
     ),
   },

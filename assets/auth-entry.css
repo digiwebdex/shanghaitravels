@@ -1,0 +1,348 @@
+/* Shanghai Travels — Auth Entry System */
+.st-auth-root {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  position: relative;
+  z-index: 60;
+}
+
+.st-auth-root--mobile {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(20, 33, 61, 0.1);
+}
+
+.st-auth-mobile-label {
+  margin: 0 0 0.15rem;
+  padding: 0 0.15rem;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7694;
+}
+
+.st-auth-dropdown {
+  position: relative;
+}
+
+.st-auth-dropdown--mobile {
+  width: 100%;
+}
+
+.st-auth-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease,
+    transform 0.15s ease;
+  background: transparent;
+  color: inherit;
+}
+
+.st-auth-root--desktop.st-auth-transparent .st-auth-trigger:not(.st-auth-trigger--accent) {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.st-auth-root--desktop.st-auth-transparent .st-auth-trigger:not(.st-auth-trigger--accent):hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.st-auth-root--desktop.st-auth-solid .st-auth-trigger:not(.st-auth-trigger--accent) {
+  color: #0f1629;
+}
+
+.st-auth-root--desktop.st-auth-solid .st-auth-trigger:not(.st-auth-trigger--accent):hover {
+  background: #eef1f7;
+}
+
+.st-auth-trigger--accent {
+  background: #f97316;
+  color: #fff !important;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 1px 2px rgba(20, 33, 61, 0.12);
+}
+
+.st-auth-trigger--accent:hover {
+  background: #ea580c;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.28);
+}
+
+.st-auth-dropdown--mobile .st-auth-trigger {
+  width: 100%;
+  justify-content: space-between;
+  border: 1px solid rgba(20, 33, 61, 0.1);
+  background: #fff;
+  color: #0f1629;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.75rem;
+}
+
+.st-auth-dropdown--mobile .st-auth-trigger--accent {
+  border-color: transparent;
+  background: #f97316;
+  color: #fff !important;
+}
+
+.st-auth-trigger:focus-visible {
+  outline: 2px solid rgba(20, 33, 61, 0.35);
+  outline-offset: 2px;
+}
+
+.st-auth-chevron {
+  display: inline-flex;
+  transition: transform 0.2s ease;
+}
+
+.st-auth-dropdown.is-open .st-auth-chevron {
+  transform: rotate(180deg);
+}
+
+.st-auth-panel {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  width: min(22rem, calc(100vw - 2rem));
+  border-radius: 1rem;
+  border: 1px solid rgba(20, 33, 61, 0.1);
+  background: #fff;
+  color: #0f1629;
+  box-shadow: 0 18px 40px rgba(20, 33, 61, 0.14);
+  overflow: hidden;
+  z-index: 70;
+}
+
+.st-auth-dropdown--mobile .st-auth-panel {
+  position: static;
+  width: 100%;
+  margin-top: 0.5rem;
+  box-shadow: 0 8px 24px rgba(20, 33, 61, 0.1);
+}
+
+.st-auth-dropdown.is-open .st-auth-panel {
+  display: block;
+  animation: st-auth-in 0.16s ease-out;
+}
+
+@keyframes st-auth-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.st-auth-panel-head {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid rgba(20, 33, 61, 0.08);
+  background: linear-gradient(
+    135deg,
+    rgba(20, 33, 61, 0.03),
+    rgba(249, 115, 22, 0.05)
+  );
+}
+
+.st-auth-panel-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f1629;
+}
+
+.st-auth-panel-sub {
+  margin: 0.15rem 0 0;
+  font-size: 12px;
+  color: #6b7694;
+}
+
+.st-auth-panel-list {
+  padding: 0.4rem;
+}
+
+.st-auth-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.st-auth-item:hover {
+  background: rgba(20, 33, 61, 0.04);
+}
+
+.st-auth-item:focus-visible {
+  outline: 2px solid rgba(20, 33, 61, 0.3);
+  outline-offset: 1px;
+}
+
+.st-auth-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background: rgba(20, 33, 61, 0.08);
+  color: #14213d;
+  flex-shrink: 0;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.st-auth-item:hover .st-auth-icon {
+  background: rgba(249, 115, 22, 0.15);
+  color: #f97316;
+}
+
+.st-auth-item-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.st-auth-item-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: #0f1629;
+}
+
+.st-auth-arrow {
+  display: inline-flex;
+  opacity: 0;
+  transform: translateX(-4px);
+  color: #f97316;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.st-auth-item:hover .st-auth-arrow {
+  opacity: 0.75;
+  transform: none;
+}
+
+.st-auth-item-desc {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #6b7694;
+}
+
+.st-auth-panel-foot {
+  border-top: 1px solid rgba(20, 33, 61, 0.08);
+  padding: 0.9rem 1rem 1rem;
+  background: rgba(238, 241, 247, 0.65);
+}
+
+.st-auth-corp-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f1629;
+}
+
+.st-auth-corp-desc {
+  margin: 0.3rem 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #6b7694;
+}
+
+.st-auth-corp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  margin-top: 0.7rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.75rem;
+  background: #14213d;
+  color: #fff !important;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 0.18s ease;
+}
+
+.st-auth-corp-btn:hover {
+  background: #1e3570;
+}
+
+/* Dark mode (when .dark is present on html/body) */
+.dark .st-auth-panel,
+.dark .st-auth-dropdown--mobile .st-auth-trigger:not(.st-auth-trigger--accent) {
+  background: #0f1629;
+  color: #f4f6fa;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .st-auth-panel-head {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.04),
+    rgba(249, 115, 22, 0.08)
+  );
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .st-auth-panel-title,
+.dark .st-auth-item-title,
+.dark .st-auth-corp-title {
+  color: #f4f6fa;
+}
+
+.dark .st-auth-panel-sub,
+.dark .st-auth-item-desc,
+.dark .st-auth-corp-desc,
+.dark .st-auth-mobile-label {
+  color: #9aa3b8;
+}
+
+.dark .st-auth-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dark .st-auth-icon {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.dark .st-auth-panel-foot {
+  background: rgba(255, 255, 255, 0.03);
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 1023px) {
+  .st-auth-root--desktop {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .st-auth-root--mobile {
+    display: none !important;
+  }
+}

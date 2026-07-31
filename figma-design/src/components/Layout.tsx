@@ -5,6 +5,7 @@ import {
   Facebook, Twitter, Instagram, Linkedin, Youtube,
   Shield, Award, Star, ArrowRight,
 } from "lucide-react";
+import { AuthEntryDesktop, AuthEntryMobile } from "./AuthEntryMenus";
 
 const NAV_LINKS = [
   { label: "Home",         path: "/" },
@@ -102,25 +103,25 @@ export default function Layout() {
             ))}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-2">
-            <Link to="/inquiry" className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${solid ? "text-foreground hover:bg-muted" : "text-white/85 hover:bg-white/10"}`}>Sign In</Link>
-            <Link to="/inquiry" className="px-4 py-2 rounded-md bg-accent text-white text-sm font-bold hover:bg-orange-600 transition-colors shadow-sm">Apply Now</Link>
-          </div>
+          <AuthEntryDesktop solid={solid} />
 
-          <button className={`lg:hidden p-2 rounded-md ${solid ? "text-foreground hover:bg-muted" : "text-white hover:bg-white/10"}`} onClick={() => setMenuOpen(m => !m)}>
+          <button
+            type="button"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            className={`lg:hidden p-2 rounded-md ${solid ? "text-foreground hover:bg-muted" : "text-white hover:bg-white/10"}`}
+            onClick={() => setMenuOpen(m => !m)}
+          >
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
 
         {menuOpen && (
-          <div className="lg:hidden bg-white border-t border-border px-6 py-4 space-y-1">
+          <div className="lg:hidden bg-white dark:bg-card border-t border-border px-6 py-4 space-y-1">
             {NAV_LINKS.map(link => (
               <Link key={link.label} to={link.path} className="block px-3 py-2.5 rounded-md text-sm font-medium text-foreground hover:bg-muted">{link.label}</Link>
             ))}
-            <div className="pt-3 flex gap-2">
-              <Link to="/inquiry" className="flex-1 text-center py-2.5 border border-border rounded-lg text-sm font-medium hover:bg-muted">Sign In</Link>
-              <Link to="/inquiry" className="flex-1 text-center py-2.5 bg-accent text-white rounded-lg text-sm font-bold">Apply Now</Link>
-            </div>
+            <AuthEntryMobile onNavigated={() => setMenuOpen(false)} />
           </div>
         )}
       </header>
