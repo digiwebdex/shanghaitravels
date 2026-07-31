@@ -826,6 +826,86 @@ async function main() {
     );
   }
 
+  // Phase C3 — Banking & cash
+  {
+    const r = await req("POST", "/banking/bootstrap", {});
+    ok("banking: bootstrap", okHttp(r.status), `status=${r.status} boot=${r.data?.bootstrapped}`);
+  }
+  let cashBankId;
+  let operatingBankId;
+  {
+    const r = await req("GET", "/banking/accounts?active=true");
+    const list = Array.isArray(r.data) ? r.data : [];
+    cashBankId = list.find((a) => a.kind === "cash")?.id;
+    operatingBankId = list.find((a) => a.kind === "bank")?.id;
+    ok("banking: list accounts", okHttp(r.status) && !!cashBankId && !!operatingBankId, `status=${r.status} n=${list.length}`);
+  }
+  {
+    const r = await req("POST", "/banking/movements", {
+      type: "transfer",
+      fromBankAccountId: cashBankId,
+      toBankAccountId: operatingBankId,
+      amountPoisha: 50000,
+      memo: "QA cash to bank",
+      postImmediately: true,
+    });
+    ok(
+      "banking: post transfer",
+      okHttp(r.status) && r.data?.status === "posted" && !!r.data?.journalId,
+      `status=${r.status} no=${r.data?.movementNo}`,
+    );
+  }
+  {
+    const r = await req("POST", "/banking/cheques", {
+      bankAccountId: operatingBankId,
+      direction: "outgoing",
+      chequeNo: `QA-${Date.now()}`,
+      payeeOrDrawer: "QA Supplier",
+      amountPoisha: 120000,
+    });
+    const chequeId = r.data?.id;
+    ok("banking: create cheque", okHttp(r.status) && !!chequeId, `status=${r.status}`);
+    if (chequeId) {
+      const p = await req("POST", `/banking/cheques/${chequeId}/print`, {});
+      ok("banking: print cheque", okHttp(p.status) && !!p.data?.print, `status=${p.status}`);
+    }
+  }
+  {
+    const r = await req("POST", "/banking/statements/import-csv", {
+      bankAccountId: operatingBankId,
+      csv: "date,description,amount,ref\n2026-07-30,QA Deposit,500.00,DEP1\n2026-07-30,QA Charge,-10.00,CHG1",
+    });
+    ok("banking: import CSV statement", okHttp(r.status) && (r.data?.lines?.length || 0) >= 2, `status=${r.status}`);
+    if (r.data?.id) {
+      const recon = await req("POST", "/banking/reconciliations", {
+        bankAccountId: operatingBankId,
+        statementId: r.data.id,
+        statementBalancePoisha: 49000,
+      });
+      ok("banking: start reconciliation", okHttp(recon.status), `status=${recon.status}`);
+      if (recon.data?.id) {
+        const done = await req("POST", `/banking/reconciliations/${recon.data.id}/complete`, {});
+        ok("banking: complete reconciliation", okHttp(done.status) && done.data?.status === "completed", `status=${done.status}`);
+      }
+    }
+  }
+  {
+    const r = await req("GET", "/banking/reports/daily-cash-position");
+    ok("banking: daily cash position", okHttp(r.status) && Array.isArray(r.data?.rows), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/banking/reports/cash-flow-summary");
+    ok("banking: cash flow summary", okHttp(r.status) && !!r.data?.summary, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/gl/reports/trial-balance");
+    ok(
+      "banking: trial balance still balanced",
+      okHttp(r.status) && r.data?.balanced === true,
+      `status=${r.status} bal=${r.data?.balanced}`,
+    );
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);

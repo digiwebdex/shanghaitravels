@@ -25,6 +25,10 @@ import type {
   AgingRow,
   ApDocument,
   ArDocument,
+  BankAccountRow,
+  BankMaster,
+  BankMovement,
+  ChequeRow,
   CostCenter,
   CurrencyRow,
   ExchangeRateRow,
@@ -538,4 +542,50 @@ export const apApi = {
       `/ap/reports/supplier-ledger?supplierId=${encodeURIComponent(supplierId)}`,
     ),
   reportOutstanding: () => apiFetch<Record<string, unknown>>("/ap/reports/outstanding"),
+};
+
+
+export const bankingApi = {
+  bootstrap: () => apiFetch<{ bootstrapped: boolean; message?: string }>("/banking/bootstrap", { method: "POST", body: {} }),
+  listMasters: () => apiFetch<BankMaster[]>("/banking/masters"),
+  createMaster: (body: Record<string, unknown>) => apiFetch<BankMaster>("/banking/masters", { method: "POST", body }),
+  listAccounts: (q?: { kind?: string; active?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.kind) p.set("kind", q.kind);
+    if (q?.active) p.set("active", q.active);
+    const qs = p.toString();
+    return apiFetch<BankAccountRow[]>(`/banking/accounts${qs ? `?${qs}` : ""}`);
+  },
+  createAccount: (body: Record<string, unknown>) => apiFetch<BankAccountRow>("/banking/accounts", { method: "POST", body }),
+  listMovements: (q?: { status?: string; type?: string; bankAccountId?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.status) p.set("status", q.status);
+    if (q?.type) p.set("type", q.type);
+    if (q?.bankAccountId) p.set("bankAccountId", q.bankAccountId);
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<BankMovement[]>(`/banking/movements${qs ? `?${qs}` : ""}`);
+  },
+  createMovement: (body: Record<string, unknown>) => apiFetch<BankMovement>("/banking/movements", { method: "POST", body }),
+  postMovement: (id: string) => apiFetch<BankMovement>(`/banking/movements/${id}/post`, { method: "POST", body: {} }),
+  listCheques: (q?: { status?: string; bankAccountId?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.status) p.set("status", q.status);
+    if (q?.bankAccountId) p.set("bankAccountId", q.bankAccountId);
+    const qs = p.toString();
+    return apiFetch<ChequeRow[]>(`/banking/cheques${qs ? `?${qs}` : ""}`);
+  },
+  createCheque: (body: Record<string, unknown>) => apiFetch<ChequeRow>("/banking/cheques", { method: "POST", body }),
+  printCheque: (id: string) => apiFetch<{ cheque: ChequeRow; print: Record<string, unknown> }>(`/banking/cheques/${id}/print`, { method: "POST", body: {} }),
+  chequeStatus: (id: string, status: string) =>
+    apiFetch<ChequeRow>(`/banking/cheques/${id}/status`, { method: "POST", body: { status } }),
+  importCsv: (body: Record<string, unknown>) => apiFetch("/banking/statements/import-csv", { method: "POST", body }),
+  listStatements: (bankAccountId?: string) =>
+    apiFetch(`/banking/statements${bankAccountId ? `?bankAccountId=${encodeURIComponent(bankAccountId)}` : ""}`),
+  startReconciliation: (body: Record<string, unknown>) => apiFetch("/banking/reconciliations", { method: "POST", body }),
+  completeReconciliation: (id: string) => apiFetch(`/banking/reconciliations/${id}/complete`, { method: "POST", body: {} }),
+  reportDailyPosition: () => apiFetch<{ asOf: string; rows: { id: string; name: string; kind: string; balancePoisha: number }[]; totalPoisha: number }>("/banking/reports/daily-cash-position"),
+  reportBankBook: (bankAccountId: string) =>
+    apiFetch(`/banking/reports/bank-book?bankAccountId=${encodeURIComponent(bankAccountId)}`),
+  reportCashFlow: () => apiFetch("/banking/reports/cash-flow-summary"),
 };

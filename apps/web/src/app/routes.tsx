@@ -67,6 +67,11 @@ const FinanceArDetailPage = lazy(() => import("@/pages/FinanceArDetailPage"));
 const FinanceApPage = lazy(() => import("@/pages/FinanceApPage"));
 const FinanceApDetailPage = lazy(() => import("@/pages/FinanceApDetailPage"));
 const FinanceArApReportsPage = lazy(() => import("@/pages/FinanceArApReportsPage"));
+const FinanceBankingPage = lazy(() => import("@/pages/FinanceBankingPage"));
+const FinanceBankMovementsPage = lazy(() => import("@/pages/FinanceBankMovementsPage"));
+const FinanceChequesPage = lazy(() => import("@/pages/FinanceChequesPage"));
+const FinanceReconciliationPage = lazy(() => import("@/pages/FinanceReconciliationPage"));
+const FinanceBankingReportsPage = lazy(() => import("@/pages/FinanceBankingReportsPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -477,6 +482,46 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <FinanceArApReportsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/banking",
+            element: (
+              <Lazy>
+                <FinanceBankingPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/banking/movements",
+            element: (
+              <Lazy>
+                <FinanceBankMovementsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/banking/cheques",
+            element: (
+              <Lazy>
+                <FinanceChequesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/banking/reconciliation",
+            element: (
+              <Lazy>
+                <FinanceReconciliationPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/banking/reports",
+            element: (
+              <Lazy>
+                <FinanceBankingReportsPage />
               </Lazy>
             ),
           },

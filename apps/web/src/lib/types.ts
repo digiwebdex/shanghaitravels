@@ -685,3 +685,61 @@ export type AgingRow = {
   "90+": number;
   total: number;
 };
+
+export type BankMaster = {
+  id: string;
+  code: string;
+  name: string;
+  swiftBic?: string | null;
+  countryCode?: string | null;
+  isActive?: boolean;
+  _count?: { accounts?: number };
+};
+
+export type BankAccountRow = {
+  id: string;
+  branchId?: string | null;
+  bankMasterId?: string | null;
+  kind: string;
+  name: string;
+  accountNo?: string | null;
+  iban?: string | null;
+  currencyCode: string;
+  glAccountId: string;
+  cashAccountId?: string | null;
+  openingBalancePoisha: number;
+  isActive?: boolean;
+  bankMaster?: { id: string; code: string; name: string } | null;
+  glAccount?: { id: string; code: string; name: string };
+  cashAccount?: { id: string; name: string; type?: string; currentBalance?: number } | null;
+};
+
+export type BankMovement = {
+  id: string;
+  movementNo: string;
+  type: string;
+  status: string;
+  fromBankAccountId?: string | null;
+  toBankAccountId?: string | null;
+  amountPoisha: number;
+  movementDate: string;
+  memo?: string | null;
+  reference?: string | null;
+  journalId?: string | null;
+  fromBankAccount?: { id: string; name: string; kind: string; accountNo?: string | null } | null;
+  toBankAccount?: { id: string; name: string; kind: string; accountNo?: string | null } | null;
+  journal?: { id: string; journalNo: string; status: string } | null;
+};
+
+export type ChequeRow = {
+  id: string;
+  bankAccountId: string;
+  direction: string;
+  chequeNo: string;
+  chequeDate: string;
+  amountPoisha: number;
+  payeeOrDrawer?: string | null;
+  status: string;
+  printedAt?: string | null;
+  bankAccount?: { id: string; name: string; accountNo?: string | null };
+};

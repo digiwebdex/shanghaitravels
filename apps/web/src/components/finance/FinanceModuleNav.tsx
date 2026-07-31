@@ -10,6 +10,11 @@ const LINKS: { to: string; label: string; end?: boolean }[] = [
   { to: "/finance/ar", label: "AR" },
   { to: "/finance/ap", label: "AP" },
   { to: "/finance/ar-ap-reports", label: "AR/AP Reports" },
+  { to: "/finance/banking", label: "Banking" },
+  { to: "/finance/banking/movements", label: "Movements" },
+  { to: "/finance/banking/cheques", label: "Cheques" },
+  { to: "/finance/banking/reconciliation", label: "Reconciliation" },
+  { to: "/finance/banking/reports", label: "Bank Reports" },
   { to: "/finance/reports", label: "GL Reports" },
 ];
 
