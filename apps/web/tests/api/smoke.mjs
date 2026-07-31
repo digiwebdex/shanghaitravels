@@ -1224,6 +1224,150 @@ async function main() {
     ok("sales: forecast-accuracy report", okHttp(r.status) && r.data?.sampleSize != null, `status=${r.status}`);
   }
 
+  // ---------- Phase D3 — Communications ----------
+  let commsLeadId = crmLeadId;
+  if (!commsLeadId) {
+    const r = await req("POST", "/crm/leads", {
+      name: `Comms smoke ${Date.now()}`,
+      phone: "01710000099",
+      email: `comms-smoke-${Date.now()}@example.com`,
+      source: "whatsapp",
+      serviceInterest: "visa",
+    });
+    commsLeadId = r.data?.id || null;
+    ok("comms: ensure lead", okHttp(r.status) && !!commsLeadId, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/comms/bootstrap", {});
+    ok("comms: bootstrap templates", okHttp(r.status) && r.data?.ok === true, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/comms/templates");
+    ok("comms: list templates", okHttp(r.status) && Array.isArray(r.data) && r.data.length >= 5, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/comms/log", {
+      relatedType: "lead",
+      relatedId: commsLeadId,
+      channel: "call",
+      summary: "Discovery call logged",
+      body: "Discussed Schengen visa options",
+      partyKind: "prospect",
+      attachments: [{ fileName: "notes.txt", mimeType: "text/plain", sizeBytes: 12, storageKey: "local/notes.txt" }],
+    });
+    ok("comms: log timeline entry", okHttp(r.status) && r.data?.channel === "call", `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", `/comms/timeline?relatedType=lead&relatedId=${encodeURIComponent(commsLeadId)}`);
+    ok("comms: unified timeline", okHttp(r.status) && Array.isArray(r.data?.items), `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/comms/send", {
+      channel: "email",
+      to: `guest-${Date.now()}@example.com`,
+      relatedType: "lead",
+      relatedId: commsLeadId,
+      partyKind: "prospect",
+      templateCode: "email_quotation",
+      vars: { customerName: "Guest", quoteNo: "QT-SMOKE", totalAmount: "৳1,000.00" },
+    });
+    ok(
+      "comms: send email",
+      okHttp(r.status) && !!r.data?.message?.id && ["sent", "queued", "delivered"].includes(r.data?.message?.status),
+      `status=${r.status} msg=${r.data?.message?.status}`,
+    );
+  }
+  {
+    const r = await req("POST", "/comms/send", {
+      channel: "whatsapp",
+      to: "8801712345678",
+      relatedType: "lead",
+      relatedId: commsLeadId,
+      partyKind: "prospect",
+      templateCode: "wa_payment_reminder",
+      vars: { amount: "৳500", referenceNo: "APP-SMOKE" },
+    });
+    ok(
+      "comms: send whatsapp",
+      okHttp(r.status) && !!r.data?.message?.id,
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("POST", "/comms/send", {
+      channel: "sms",
+      to: "8801712345678",
+      relatedType: "lead",
+      relatedId: commsLeadId,
+      partyKind: "prospect",
+      templateCode: "sms_otp",
+      vars: { otp: "654321", minutes: "5" },
+    });
+    ok("comms: send sms otp", okHttp(r.status) && !!r.data?.message?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/comms/delivery");
+    ok("comms: delivery history", okHttp(r.status) && Array.isArray(r.data), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/comms/threads?channel=email");
+    ok("comms: email threads", okHttp(r.status) && Array.isArray(r.data), `status=${r.status}`);
+  }
+  let commsActivityId = null;
+  {
+    const r = await req("POST", "/comms/activities", {
+      subject: `Follow-up ${Date.now()}`,
+      type: "follow_up",
+      relatedType: "lead",
+      relatedId: commsLeadId,
+      dueAt: new Date(Date.now() + 3600_000).toISOString(),
+      recurrenceRule: "weekly",
+      slaHours: 24,
+    });
+    commsActivityId = r.data?.id || null;
+    ok("comms: create activity", okHttp(r.status) && !!commsActivityId, `status=${r.status}`);
+  }
+  if (commsActivityId) {
+    const r = await req("POST", `/comms/activities/${commsActivityId}/escalate`, {});
+    ok("comms: escalate activity", okHttp(r.status) && r.data?.status === "escalated", `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/comms/calendar");
+    ok("comms: calendar", okHttp(r.status) && Array.isArray(r.data), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/comms/sla");
+    ok("comms: sla dashboard", okHttp(r.status) && r.data?.compliancePct != null, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", `/comms/portal/prospect/${encodeURIComponent(commsLeadId)}/timeline`);
+    ok(
+      "comms: portal timeline API",
+      okHttp(r.status) && r.data?.meta?.forPortal === true && Array.isArray(r.data?.items),
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("GET", "/comms/reports/volume");
+    ok("comms: volume report", okHttp(r.status) && Array.isArray(r.data?.messages), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/comms/reports/response-time");
+    ok("comms: response-time report", okHttp(r.status) && r.data?.avgResponseHours != null, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/comms/reports/sla-compliance");
+    ok("comms: sla-compliance report", okHttp(r.status) && r.data?.open != null, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/comms/reports/activity-completion");
+    ok("comms: activity-completion report", okHttp(r.status) && Array.isArray(r.data?.rows), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/comms/reports/executive-productivity");
+    ok("comms: executive-productivity report", okHttp(r.status) && Array.isArray(r.data?.rows), `status=${r.status}`);
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);

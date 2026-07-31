@@ -88,6 +88,12 @@ const SalesQuotationsPage = lazy(() => import("@/pages/SalesQuotationsPage"));
 const SalesPricingPage = lazy(() => import("@/pages/SalesPricingPage"));
 const SalesTasksPage = lazy(() => import("@/pages/SalesTasksPage"));
 const SalesReportsPage = lazy(() => import("@/pages/SalesReportsPage"));
+const CommsTimelinePage = lazy(() => import("@/pages/CommsTimelinePage"));
+const CommsEmailPage = lazy(() => import("@/pages/CommsEmailPage"));
+const CommsWhatsAppPage = lazy(() => import("@/pages/CommsWhatsAppPage"));
+const CommsSmsPage = lazy(() => import("@/pages/CommsSmsPage"));
+const CommsActivitiesPage = lazy(() => import("@/pages/CommsActivitiesPage"));
+const CommsReportsPage = lazy(() => import("@/pages/CommsReportsPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -666,6 +672,54 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <SalesReportsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "comms",
+            element: (
+              <Lazy>
+                <CommsTimelinePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "comms/email",
+            element: (
+              <Lazy>
+                <CommsEmailPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "comms/whatsapp",
+            element: (
+              <Lazy>
+                <CommsWhatsAppPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "comms/sms",
+            element: (
+              <Lazy>
+                <CommsSmsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "comms/activities",
+            element: (
+              <Lazy>
+                <CommsActivitiesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "comms/reports",
+            element: (
+              <Lazy>
+                <CommsReportsPage />
               </Lazy>
             ),
           },

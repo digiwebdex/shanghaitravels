@@ -967,3 +967,127 @@ export const salesApi = {
       "/sales/reports/forecast-accuracy",
     ),
 };
+
+export type CommTemplate = {
+  id: string;
+  code: string;
+  name: string;
+  channel: string;
+  category: string;
+  subject?: string | null;
+  body: string;
+  mergeFields?: string[] | null;
+};
+
+export type CommThread = {
+  id: string;
+  channel: string;
+  subject?: string | null;
+  relatedType: string;
+  relatedId: string;
+  partyKind: string;
+  partyLabel?: string | null;
+  status: string;
+  messages?: CommMessage[];
+};
+
+export type CommMessage = {
+  id: string;
+  threadId: string;
+  channel: string;
+  direction: string;
+  subject?: string | null;
+  body: string;
+  status: string;
+  provider?: string | null;
+  createdAt: string;
+};
+
+export type CommTimelineItem = {
+  kind: string;
+  id: string;
+  channel: string;
+  direction: string;
+  summary: string;
+  subject?: string | null;
+  body?: string | null;
+  status: string;
+  createdAt: string;
+};
+
+export type CommActivity = {
+  id: string;
+  type: string;
+  subject: string;
+  status: string;
+  dueAt?: string | null;
+  slaDueAt?: string | null;
+  recurrenceRule?: string | null;
+  assignedTo?: string | null;
+};
+
+export const commsApi = {
+  bootstrap: () => apiFetch("/comms/bootstrap", { method: "POST", body: {} }),
+  timeline: (relatedType: string, relatedId: string) =>
+    apiFetch<{ relatedType: string; relatedId: string; items: CommTimelineItem[] }>(
+      `/comms/timeline?relatedType=${encodeURIComponent(relatedType)}&relatedId=${encodeURIComponent(relatedId)}`,
+    ),
+  log: (body: Record<string, unknown>) => apiFetch("/comms/log", { method: "POST", body }),
+  listTemplates: (q?: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(q || {})) if (v) p.set(k, v);
+    const qs = p.toString();
+    return apiFetch<CommTemplate[]>(`/comms/templates${qs ? `?${qs}` : ""}`);
+  },
+  createTemplate: (body: Record<string, unknown>) =>
+    apiFetch<CommTemplate>("/comms/templates", { method: "POST", body }),
+  renderTemplate: (id: string, vars: Record<string, string>) =>
+    apiFetch(`/comms/templates/${id}/render`, { method: "POST", body: { vars } }),
+  listThreads: (q?: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(q || {})) if (v) p.set(k, v);
+    const qs = p.toString();
+    return apiFetch<CommThread[]>(`/comms/threads${qs ? `?${qs}` : ""}`);
+  },
+  getThread: (id: string) => apiFetch<CommThread>(`/comms/threads/${id}`),
+  createThread: (body: Record<string, unknown>) => apiFetch<CommThread>("/comms/threads", { method: "POST", body }),
+  send: (body: Record<string, unknown>) =>
+    apiFetch<{ message: CommMessage; delivery: Record<string, unknown>; threadId: string }>("/comms/send", {
+      method: "POST",
+      body,
+    }),
+  listDelivery: (q?: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(q || {})) if (v) p.set(k, v);
+    const qs = p.toString();
+    return apiFetch<CommMessage[]>(`/comms/delivery${qs ? `?${qs}` : ""}`);
+  },
+  processOutbox: () => apiFetch("/comms/process-outbox", { method: "POST", body: {} }),
+  listActivities: (q?: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(q || {})) if (v) p.set(k, v);
+    const qs = p.toString();
+    return apiFetch<CommActivity[]>(`/comms/activities${qs ? `?${qs}` : ""}`);
+  },
+  createActivity: (body: Record<string, unknown>) =>
+    apiFetch<CommActivity>("/comms/activities", { method: "POST", body }),
+  completeActivity: (id: string) => apiFetch(`/comms/activities/${id}/complete`, { method: "POST", body: {} }),
+  escalateActivity: (id: string) => apiFetch(`/comms/activities/${id}/escalate`, { method: "POST", body: {} }),
+  calendar: (q?: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(q || {})) if (v) p.set(k, v);
+    const qs = p.toString();
+    return apiFetch<CommActivity[]>(`/comms/calendar${qs ? `?${qs}` : ""}`);
+  },
+  sla: () =>
+    apiFetch<{ open: number; overdue: number; escalated: number; done: number; compliancePct: number }>("/comms/sla"),
+  portalTimeline: (partyKind: string, partyId: string) =>
+    apiFetch(`/comms/portal/${encodeURIComponent(partyKind)}/${encodeURIComponent(partyId)}/timeline`),
+  reportVolume: () => apiFetch<{ messages: { channel: string; count: number }[]; timeline: { channel: string; count: number }[] }>("/comms/reports/volume"),
+  reportResponseTime: () => apiFetch<{ sampleSize: number; avgResponseHours: number }>("/comms/reports/response-time"),
+  reportSlaCompliance: () => apiFetch<Record<string, number>>("/comms/reports/sla-compliance"),
+  reportActivityCompletion: () =>
+    apiFetch<{ rows: { status: string; count: number }[] }>("/comms/reports/activity-completion"),
+  reportExecutiveProductivity: () =>
+    apiFetch<{ rows: Record<string, unknown>[] }>("/comms/reports/executive-productivity"),
+};

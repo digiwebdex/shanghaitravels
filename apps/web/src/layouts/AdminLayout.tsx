@@ -23,6 +23,7 @@ import {
   Landmark,
   Handshake,
   TrendingUp,
+  MessagesSquare,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
@@ -43,6 +44,7 @@ const NAV: NavItem[] = [
   { id: "finance", label: "Finance ERP", to: "/finance", icon: Landmark, perm: "gl:read" },
   { id: "crm", label: "CRM", to: "/crm", icon: Handshake, perm: "crm:read" },
   { id: "sales", label: "Sales", to: "/sales", icon: TrendingUp, perm: "opportunity:read" },
+  { id: "comms", label: "Communications", to: "/comms", icon: MessagesSquare, perm: "comms:read" },
   { id: "passports", label: "Passport Management", to: "/passports", icon: BookOpen, perm: "customer:read" },
   { id: "case-journey", label: "Case Journey Map", to: "/case-journey", icon: GitBranch, perm: "application:read" },
 ];
