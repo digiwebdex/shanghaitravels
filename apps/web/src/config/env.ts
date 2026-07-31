@@ -12,6 +12,7 @@ export const LIVE_MODULES = new Set<string>([
   "hotels",
   "transport",
   "tours",
+  "products",
   "hajj",
   "finance",
   "crm",

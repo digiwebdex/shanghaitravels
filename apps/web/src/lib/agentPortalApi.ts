@@ -103,4 +103,15 @@ export const agentPortalApi = {
   support: (body: Record<string, unknown>) =>
     agentFetch("/portal/agent/support", { method: "POST", body }),
   reports: () => agentFetch<Record<string, any>>("/portal/agent/reports"),
+
+  listPackages: (q?: { q?: string }) => {
+    const qs = q?.q ? `?q=${encodeURIComponent(q.q)}` : "";
+    return agentFetch<Record<string, any>[]>(`/portal/agent/packages${qs}`);
+  },
+  getPackage: (id: string) => agentFetch<Record<string, any>>(`/portal/agent/packages/${id}`),
+  bookPackage: (body: Record<string, unknown>) =>
+    agentFetch<{ ok: boolean; id?: string; reference?: string }>("/portal/agent/packages/book", {
+      method: "POST",
+      body,
+    }),
 };

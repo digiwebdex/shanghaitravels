@@ -127,4 +127,15 @@ export const corporatePortalApi = {
   putApprovalChain: (body: Record<string, unknown>) =>
     corporateFetch("/portal/corporate/approval-chain", { method: "PUT", body }),
   reports: () => corporateFetch<Record<string, any>>("/portal/corporate/reports"),
+
+  listPackages: (q?: { q?: string }) => {
+    const qs = q?.q ? `?q=${encodeURIComponent(q.q)}` : "";
+    return corporateFetch<Record<string, any>[]>(`/portal/corporate/packages${qs}`);
+  },
+  getPackage: (id: string) => corporateFetch<Record<string, any>>(`/portal/corporate/packages/${id}`),
+  requestPackage: (body: Record<string, unknown>) =>
+    corporateFetch<{ ok: boolean; id?: string; reference?: string }>("/portal/corporate/packages/request", {
+      method: "POST",
+      body,
+    }),
 };

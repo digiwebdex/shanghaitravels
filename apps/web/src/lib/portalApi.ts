@@ -128,4 +128,23 @@ export const customerPortalApi = {
   addEmergency: (body: Record<string, unknown>) =>
     portalFetch("/portal/customer/profile/emergency", { method: "POST", body }),
   reports: () => portalFetch<Record<string, unknown>>("/portal/customer/reports"),
+
+  listPackages: (q?: { q?: string; collection?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.q) p.set("q", q.q);
+    if (q?.collection) p.set("collection", q.collection);
+    const qs = p.toString();
+    return portalFetch<Record<string, unknown>[]>(`/portal/customer/packages${qs ? `?${qs}` : ""}`);
+  },
+  getPackage: (id: string) => portalFetch<Record<string, unknown>>(`/portal/customer/packages/${id}`),
+  wishlist: () => portalFetch<Record<string, unknown>[]>("/portal/customer/packages/wishlist"),
+  addWishlist: (packageId: string) =>
+    portalFetch("/portal/customer/packages/wishlist", { method: "POST", body: { packageId } }),
+  removeWishlist: (packageId: string) =>
+    portalFetch(`/portal/customer/packages/wishlist/${packageId}`, { method: "DELETE" }),
+  enquirePackage: (body: Record<string, unknown>) =>
+    portalFetch<{ ok: boolean; id?: string }>("/portal/customer/packages/enquire", { method: "POST", body }),
+  packageApplications: () =>
+    portalFetch<Record<string, unknown>[]>("/portal/customer/packages/applications"),
+  packageHistory: () => portalFetch<Record<string, unknown>[]>("/portal/customer/packages/history"),
 };

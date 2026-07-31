@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import {
-  LayoutDashboard, Briefcase, Users, Landmark, Upload, MessageSquare, BarChart2, LogOut,
+  LayoutDashboard, Briefcase, Users, Landmark, Upload, MessageSquare, BarChart2, LogOut, Package,
 } from "lucide-react";
 import { agentPortalApi } from "@/lib/agentPortalApi";
 
 const NAV = [
   { to: "/portal/agent", label: "Dashboard", end: true, icon: LayoutDashboard },
+  { to: "/portal/agent/packages", label: "Browse Packages", icon: Package },
   { to: "/portal/agent/bookings", label: "Bookings", icon: Briefcase },
   { to: "/portal/agent/customers", label: "Customers", icon: Users },
   { to: "/portal/agent/finance", label: "Finance", icon: Landmark },

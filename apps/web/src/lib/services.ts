@@ -1,5 +1,16 @@
 import { ApiError, apiFetch, listOf } from "@/lib/api";
 import type {
+  PackageAvailability,
+  PackageCategory,
+  PackageFaq,
+  PackageGalleryItem,
+  PackageListFilters,
+  PackageMaster,
+  PackageReportSummary,
+  PackageSearchFilters,
+} from "@/lib/packages";
+import { buildPackageListQuery, buildPackageSearchQuery } from "@/lib/packages";
+import type {
   Account,
   AppDocument,
   Application,
@@ -1333,4 +1344,106 @@ export const siteApi = {
       skipRefresh: true,
       quietAuth: true,
     }),
+};
+
+/** Phase E3 — Package Engine (staff). PackageID is SoT for bookings/leads. */
+export const packagesApi = {
+  listCategories: (q?: { q?: string; active?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.q) p.set("q", q.q);
+    if (q?.active) p.set("active", q.active);
+    const qs = p.toString();
+    return apiFetch<{ data: PackageCategory[]; total: number } | PackageCategory[]>(
+      `/packages/categories${qs ? `?${qs}` : ""}`,
+    );
+  },
+  getCategory: (id: string) => apiFetch<PackageCategory>(`/packages/categories/${id}`),
+  createCategory: (body: Partial<PackageCategory> & { code: string; name: string }) =>
+    apiFetch<PackageCategory>("/packages/categories", { method: "POST", body }),
+  updateCategory: (id: string, body: Partial<PackageCategory>) =>
+    apiFetch<PackageCategory>(`/packages/categories/${id}`, { method: "PATCH", body }),
+  removeCategory: (id: string) => apiFetch(`/packages/categories/${id}`, { method: "DELETE" }),
+
+  list: (q?: PackageListFilters) => {
+    const qs = buildPackageListQuery(q || {}).toString();
+    return apiFetch<{ data: PackageMaster[]; total: number } | PackageMaster[]>(
+      `/packages${qs ? `?${qs}` : ""}`,
+    );
+  },
+  get: (id: string) => apiFetch<PackageMaster>(`/packages/${id}`),
+  create: (body: Record<string, unknown>) =>
+    apiFetch<PackageMaster>("/packages", { method: "POST", body }),
+  update: (id: string, body: Record<string, unknown>) =>
+    apiFetch<PackageMaster>(`/packages/${id}`, { method: "PATCH", body }),
+  remove: (id: string) => apiFetch(`/packages/${id}`, { method: "DELETE" }),
+
+  publish: (id: string) => apiFetch<PackageMaster>(`/packages/${id}/publish`, { method: "POST", body: {} }),
+  unpublish: (id: string) => apiFetch<PackageMaster>(`/packages/${id}/unpublish`, { method: "POST", body: {} }),
+  archive: (id: string) => apiFetch<PackageMaster>(`/packages/${id}/archive`, { method: "POST", body: {} }),
+  clone: (id: string) => apiFetch<PackageMaster>(`/packages/${id}/clone`, { method: "POST", body: {} }),
+  schedule: (id: string, publishAt: string, expireAt?: string) =>
+    apiFetch<PackageMaster>(`/packages/${id}/schedule`, {
+      method: "POST",
+      body: { publishAt, ...(expireAt ? { expireAt } : {}) },
+    }),
+
+  listGallery: (packageId: string) =>
+    apiFetch<PackageGalleryItem[] | { data: PackageGalleryItem[] }>(`/packages/${packageId}/gallery`),
+  addGalleryItem: (packageId: string, body: Partial<PackageGalleryItem> & { url: string }) =>
+    apiFetch<PackageGalleryItem>(`/packages/${packageId}/gallery`, { method: "POST", body }),
+  updateGalleryItem: (packageId: string, itemId: string, body: Partial<PackageGalleryItem>) =>
+    apiFetch<PackageGalleryItem>(`/packages/${packageId}/gallery/${itemId}`, { method: "PATCH", body }),
+  removeGalleryItem: (packageId: string, itemId: string) =>
+    apiFetch(`/packages/${packageId}/gallery/${itemId}`, { method: "DELETE" }),
+
+  listAvailability: (packageId: string) =>
+    apiFetch<PackageAvailability[] | { data: PackageAvailability[] }>(`/packages/${packageId}/availability`),
+  upsertAvailability: (packageId: string, body: Partial<PackageAvailability>) =>
+    apiFetch<PackageAvailability>(`/packages/${packageId}/availability`, { method: "POST", body }),
+  removeAvailability: (packageId: string, slotId: string) =>
+    apiFetch(`/packages/${packageId}/availability/${slotId}`, { method: "DELETE" }),
+
+  listFaqs: (packageId: string) =>
+    apiFetch<PackageFaq[] | { data: PackageFaq[] }>(`/packages/${packageId}/faqs`),
+  upsertFaq: (packageId: string, body: Partial<PackageFaq> & { question: string; answer: string }) =>
+    apiFetch<PackageFaq>(`/packages/${packageId}/faqs`, { method: "POST", body }),
+  removeFaq: (packageId: string, faqId: string) =>
+    apiFetch(`/packages/${packageId}/faqs/${faqId}`, { method: "DELETE" }),
+
+  reports: () => apiFetch<PackageReportSummary>("/packages/reports/summary"),
+  exportCsv: () => apiFetch<string>("/packages/export.csv"),
+  importCsv: (body: { csv?: string; rows?: Record<string, unknown>[] }) =>
+    apiFetch<{ imported: number; skipped: number }>("/packages/import.csv", { method: "POST", body }),
+};
+
+export const sitePackagesApi = {
+  list: (q?: PackageListFilters) => {
+    const qs = buildPackageListQuery(q || {}).toString();
+    return apiFetch<{ data: PackageMaster[]; total: number } | PackageMaster[]>(
+      `/site/packages${qs ? `?${qs}` : ""}`,
+      { skipRefresh: true, quietAuth: true },
+    );
+  },
+  search: (q: PackageSearchFilters) => {
+    const qs = buildPackageSearchQuery(q).toString();
+    return apiFetch<{ data: PackageMaster[]; total: number }>(
+      `/site/packages/search${qs ? `?${qs}` : ""}`,
+      { skipRefresh: true, quietAuth: true },
+    );
+  },
+  getBySlug: (slug: string) =>
+    apiFetch<PackageMaster & { gallery?: PackageGalleryItem[]; faqs?: PackageFaq[]; related?: PackageMaster[] }>(
+      `/site/packages/${encodeURIComponent(slug)}`,
+      { skipRefresh: true, quietAuth: true },
+    ),
+  enquire: (slug: string, body: Record<string, unknown>) =>
+    apiFetch<{ ok: boolean; leadId?: string | null; enquiryId?: string }>(
+      `/site/packages/${encodeURIComponent(slug)}/enquire`,
+      {
+        method: "POST",
+        body,
+        skipRefresh: true,
+        quietAuth: true,
+      },
+    ),
 };

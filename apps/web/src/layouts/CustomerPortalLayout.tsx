@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import {
-  LayoutDashboard, FileText, Upload, Landmark, MessageSquare, User, BarChart2, LogOut,
+  LayoutDashboard, FileText, Upload, Landmark, MessageSquare, User, BarChart2, LogOut, Package, Heart, Briefcase, History,
 } from "lucide-react";
 import { customerPortalApi } from "@/lib/portalApi";
 
 const NAV = [
   { to: "/portal/customer", label: "Dashboard", end: true, icon: LayoutDashboard },
+  { to: "/portal/customer/packages", label: "Browse Packages", icon: Package },
+  { to: "/portal/customer/packages/wishlist", label: "Wishlist", icon: Heart },
+  { to: "/portal/customer/packages/my", label: "My Packages", icon: Briefcase },
+  { to: "/portal/customer/packages/history", label: "Package History", icon: History },
   { to: "/portal/customer/applications", label: "Applications", icon: FileText },
   { to: "/portal/customer/documents", label: "Documents", icon: Upload },
   { to: "/portal/customer/finance", label: "Finance", icon: Landmark },

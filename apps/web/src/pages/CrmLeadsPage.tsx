@@ -9,6 +9,7 @@ import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CrmModuleNav } from "@/components/crm/CrmModuleNav";
+import { PackagePicker } from "@/components/packages/PackagePicker";
 import { LEAD_SOURCES, QUOTE_SERVICES, validateLead } from "@/lib/crm";
 
 export default function CrmLeadsPage() {
@@ -20,6 +21,7 @@ export default function CrmLeadsPage() {
   const [phone, setPhone] = useState("");
   const [source, setSource] = useState<string>("walkin");
   const [serviceInterest, setServiceInterest] = useState("visa");
+  const [packageId, setPackageId] = useState("");
   const [convertLeadId, setConvertLeadId] = useState("");
   const [convertService, setConvertService] = useState("visa");
 
@@ -48,7 +50,14 @@ export default function CrmLeadsPage() {
       return;
     }
     try {
-      const lead = await crmApi.createLead({ name: name.trim(), phone, source, serviceInterest, priority: "warm" });
+      const lead = await crmApi.createLead({
+        name: name.trim(),
+        phone,
+        source,
+        serviceInterest,
+        priority: "warm",
+        packageId: packageId || undefined,
+      });
       setOk(`Lead ${lead.leadNo || lead.name} created`);
       setName("");
       setPhone("");
@@ -117,6 +126,9 @@ export default function CrmLeadsPage() {
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="sm:col-span-2">
+              <PackagePicker value={packageId} onChange={(id) => setPackageId(id)} label="Package (optional)" />
             </div>
             <div className="sm:col-span-4">
               <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>

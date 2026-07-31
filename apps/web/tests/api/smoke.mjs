@@ -1595,6 +1595,14 @@ async function main() {
     );
   }
   {
+    const r = await req("GET", "/site/packages?collection=featured&limit=6");
+    ok(
+      "site: packages list",
+      okHttp(r.status) && (Array.isArray(r.data) || Array.isArray(r.data?.data)),
+      `status=${r.status}`,
+    );
+  }
+  {
     const r = await req("POST", "/site/forms", {
       formType: "enquiry",
       name: `Smoke Enquirer ${Date.now()}`,

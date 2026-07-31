@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import {
-  LayoutDashboard, Building2, Users, FileText, CheckSquare, Briefcase, Landmark, MessageSquare, BarChart2, LogOut,
+  LayoutDashboard, Building2, Users, FileText, CheckSquare, Briefcase, Landmark, MessageSquare, BarChart2, LogOut, Package,
 } from "lucide-react";
 import { corporatePortalApi } from "@/lib/corporatePortalApi";
 
 const NAV = [
   { to: "/portal/corporate", label: "Dashboard", end: true, icon: LayoutDashboard },
   { to: "/portal/corporate/company", label: "Company", icon: Building2 },
+  { to: "/portal/corporate/packages", label: "Packages", icon: Package },
   { to: "/portal/corporate/employees", label: "Employees", icon: Users },
   { to: "/portal/corporate/requests", label: "Requests", icon: FileText },
   { to: "/portal/corporate/approvals", label: "Approvals", icon: CheckSquare },

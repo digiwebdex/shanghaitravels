@@ -1,8 +1,11 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { siteApi, type CmsBanner, type CmsContent, type CmsMenu, type CmsTravelOffer } from "@/lib/services";
-import { ApiError } from "@/lib/api";
+import { siteApi, sitePackagesApi, type CmsBanner, type CmsContent, type CmsMenu, type CmsTravelOffer } from "@/lib/services";
+import { ApiError, listOf } from "@/lib/api";
 import { HeroServicesGrid } from "@/components/cms/HeroServicesGrid";
+import { PackageCard } from "@/components/packages/PackageCard";
+import { PackageQuickView } from "@/components/packages/PackageQuickView";
+import type { PackageMaster } from "@/lib/packages";
 import {
   DEFAULT_HERO_SERVICES,
   HERO_SERVICE_TYPE,
@@ -26,8 +29,11 @@ export default function SiteHomePage() {
   const [banners, setBanners] = useState<CmsBanner[]>([]);
   const [travel, setTravel] = useState<CmsTravelOffer[]>([]);
   const [heroServices, setHeroServices] = useState<HeroServiceItem[]>([]);
+  const [packages, setPackages] = useState<PackageMaster[]>([]);
+  const [quickView, setQuickView] = useState<PackageMaster | null>(null);
   const [q, setQ] = useState("");
   const [error, setError] = useState("");
+  const [packagesError, setPackagesError] = useState("");
 
   useEffect(() => {
     void (async () => {
@@ -45,6 +51,24 @@ export default function SiteHomePage() {
         setHeroServices(parsed.filter((x) => x.enabled));
       } catch (e) {
         setError(e instanceof ApiError ? e.message : "Failed to load site");
+      }
+    })();
+    void (async () => {
+      try {
+        let list = listOf<PackageMaster>(await sitePackagesApi.list({ collection: "home", limit: 6 }));
+        if (!list.length) {
+          list = listOf<PackageMaster>(
+            await sitePackagesApi.list({ homeFeatured: true, limit: 6 }),
+          );
+        }
+        if (!list.length) {
+          list = listOf<PackageMaster>(
+            await sitePackagesApi.list({ popular: true, limit: 6 }),
+          );
+        }
+        setPackages(list);
+      } catch (e) {
+        setPackagesError(e instanceof ApiError ? e.message : "Failed to load packages");
       }
     })();
   }, []);
@@ -125,22 +149,49 @@ export default function SiteHomePage() {
       </section>
 
       <section className="px-4 pb-16 max-w-6xl mx-auto">
-        <h2 className="text-[14px] font-bold mb-3">Featured travel</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {travel.map((t) => (
-            <Link
-              key={t.id}
-              to={`/site/travel/${t.serviceType}/${t.slug}`}
-              className="rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition-colors"
-            >
-              <div className="text-[10px] uppercase tracking-wide text-amber-300">{t.serviceType}</div>
-              <div className="font-semibold text-[13px] mt-1">{t.title}</div>
-              <div className="text-[11px] text-white/60 mt-1">{t.destination || t.summary || ""}</div>
-            </Link>
-          ))}
-          {!travel.length && <p className="text-[12px] text-white/50">No published offers yet.</p>}
+        <div className="flex items-end justify-between mb-4">
+          <h2 className="text-[14px] font-bold">Featured packages</h2>
+          <Link to="/site/search" className="text-[11px] text-amber-300 font-semibold">
+            View all
+          </Link>
         </div>
+        {packagesError && <p className="text-red-300 text-[11px] mb-3">{packagesError}</p>}
+        {packages.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {packages.map((p) => (
+              <PackageCard
+                key={p.id}
+                pkg={p}
+                onQuickView={setQuickView}
+                bookPath={`/site/packages/${p.slug}/book`}
+              />
+            ))}
+          </div>
+        ) : !packagesError ? (
+          <p className="text-[12px] text-white/50">No published packages yet — check back soon.</p>
+        ) : null}
+
+        {travel.length > 0 && (
+          <>
+            <h2 className="text-[14px] font-bold mb-3 mt-10">Featured travel</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {travel.map((t) => (
+                <Link
+                  key={t.id}
+                  to={`/site/travel/${t.serviceType}/${t.slug}`}
+                  className="rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition-colors"
+                >
+                  <div className="text-[10px] uppercase tracking-wide text-amber-300">{t.serviceType}</div>
+                  <div className="font-semibold text-[13px] mt-1">{t.title}</div>
+                  <div className="text-[11px] text-white/60 mt-1">{t.destination || t.summary || ""}</div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
       </section>
+
+      <PackageQuickView pkg={quickView} onClose={() => setQuickView(null)} />
     </div>
   );
 }

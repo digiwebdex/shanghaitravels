@@ -110,7 +110,16 @@ const CmsTravelPage = lazy(() => import("@/pages/CmsTravelPage"));
 const CmsFormsPage = lazy(() => import("@/pages/CmsFormsPage"));
 const CmsSeoPage = lazy(() => import("@/pages/CmsSeoPage"));
 const CmsReportsPage = lazy(() => import("@/pages/CmsReportsPage"));
+const CmsPackagesPage = lazy(() => import("@/pages/CmsPackagesPage"));
+const PackagesListPage = lazy(() => import("@/pages/PackagesListPage"));
+const PackagesPricingPage = lazy(() => import("@/pages/PackagesPricingPage"));
+const PackageCategoriesPage = lazy(() => import("@/pages/PackageCategoriesPage"));
+const PackageAvailabilityPage = lazy(() => import("@/pages/PackageAvailabilityPage"));
+const PackageGalleryPage = lazy(() => import("@/pages/PackageGalleryPage"));
+const PackageReportsPage = lazy(() => import("@/pages/PackageReportsPage"));
 const SiteHomePage = lazy(() => import("@/pages/SiteHomePage"));
+const SitePackageDetailPage = lazy(() => import("@/pages/SitePackageDetailPage"));
+const SitePackageBookPage = lazy(() => import("@/pages/SitePackageBookPage"));
 const SitePageView = lazy(() => import("@/pages/SitePageView"));
 const SiteEnquirePage = lazy(() => import("@/pages/SiteEnquirePage"));
 const SiteSearchPage = lazy(() => import("@/pages/SiteSearchPage"));
@@ -128,6 +137,11 @@ const PortalFinancePage = lazy(() => import("@/pages/portal/PortalFinancePage"))
 const PortalCommunicationsPage = lazy(() => import("@/pages/portal/PortalCommunicationsPage"));
 const PortalProfilePage = lazy(() => import("@/pages/portal/PortalProfilePage"));
 const PortalReportsPage = lazy(() => import("@/pages/portal/PortalReportsPage"));
+const PortalCustomerPackagesPage = lazy(() => import("@/pages/portal/PortalCustomerPackagesPage"));
+const PortalCustomerWishlistPage = lazy(() => import("@/pages/portal/PortalCustomerWishlistPage"));
+const PortalCustomerPackageBookPage = lazy(() => import("@/pages/portal/PortalCustomerPackageBookPage"));
+const PortalMyPackagesPage = lazy(() => import("@/pages/portal/PortalMyPackagesPage"));
+const PortalPackageHistoryPage = lazy(() => import("@/pages/portal/PortalPackageHistoryPage"));
 const AgentPortalLayout = lazy(() => import("@/layouts/AgentPortalLayout"));
 const AgentLoginPage = lazy(() => import("@/pages/portal/agent/AgentLoginPage"));
 const AgentForgotPage = lazy(() => import("@/pages/portal/agent/AgentForgotPage"));
@@ -141,6 +155,8 @@ const AgentFinancePage = lazy(() => import("@/pages/portal/agent/AgentFinancePag
 const AgentDocumentsPage = lazy(() => import("@/pages/portal/agent/AgentDocumentsPage"));
 const AgentCommunicationsPage = lazy(() => import("@/pages/portal/agent/AgentCommunicationsPage"));
 const AgentReportsPage = lazy(() => import("@/pages/portal/agent/AgentReportsPage"));
+const AgentPackagesBrowsePage = lazy(() => import("@/pages/portal/agent/AgentPackagesBrowsePage"));
+const AgentPackageBookPage = lazy(() => import("@/pages/portal/agent/AgentPackageBookPage"));
 const CorporatePortalLayout = lazy(() => import("@/layouts/CorporatePortalLayout"));
 const CorporateLoginPage = lazy(() => import("@/pages/portal/corporate/CorporateLoginPage"));
 const CorporateForgotPage = lazy(() => import("@/pages/portal/corporate/CorporateForgotPage"));
@@ -156,6 +172,8 @@ const CorporateBookingDetailPage = lazy(() => import("@/pages/portal/corporate/C
 const CorporateFinancePage = lazy(() => import("@/pages/portal/corporate/CorporateFinancePage"));
 const CorporateCommunicationsPage = lazy(() => import("@/pages/portal/corporate/CorporateCommunicationsPage"));
 const CorporateReportsPage = lazy(() => import("@/pages/portal/corporate/CorporateReportsPage"));
+const CorporatePackagesBrowsePage = lazy(() => import("@/pages/portal/corporate/CorporatePackagesBrowsePage"));
+const CorporatePackageRequestPage = lazy(() => import("@/pages/portal/corporate/CorporatePackageRequestPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -205,6 +223,22 @@ export const router = createHashRouter([
     element: (
       <Lazy>
         <SiteSearchPage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/site/packages/:slug/book",
+    element: (
+      <Lazy>
+        <SitePackageBookPage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/site/packages/:slug",
+    element: (
+      <Lazy>
+        <SitePackageDetailPage />
       </Lazy>
     ),
   },
@@ -320,6 +354,46 @@ export const router = createHashRouter([
           </Lazy>
         ),
       },
+      {
+        path: "packages",
+        element: (
+          <Lazy>
+            <PortalCustomerPackagesPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "packages/wishlist",
+        element: (
+          <Lazy>
+            <PortalCustomerWishlistPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "packages/my",
+        element: (
+          <Lazy>
+            <PortalMyPackagesPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "packages/history",
+        element: (
+          <Lazy>
+            <PortalPackageHistoryPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "packages/:slug/book",
+        element: (
+          <Lazy>
+            <PortalCustomerPackageBookPage />
+          </Lazy>
+        ),
+      },
     ],
   },
   {
@@ -423,6 +497,22 @@ export const router = createHashRouter([
         element: (
           <Lazy>
             <AgentReportsPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "packages",
+        element: (
+          <Lazy>
+            <AgentPackagesBrowsePage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "packages/:slug/book",
+        element: (
+          <Lazy>
+            <AgentPackageBookPage />
           </Lazy>
         ),
       },
@@ -545,6 +635,22 @@ export const router = createHashRouter([
         element: (
           <Lazy>
             <CorporateReportsPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "packages",
+        element: (
+          <Lazy>
+            <CorporatePackagesBrowsePage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "packages/:slug/request",
+        element: (
+          <Lazy>
+            <CorporatePackageRequestPage />
           </Lazy>
         ),
       },
@@ -780,6 +886,54 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <TourCasePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "products/packages",
+            element: (
+              <Lazy>
+                <PackagesListPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "products/packages/pricing",
+            element: (
+              <Lazy>
+                <PackagesPricingPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "products/categories",
+            element: (
+              <Lazy>
+                <PackageCategoriesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "products/availability",
+            element: (
+              <Lazy>
+                <PackageAvailabilityPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "products/gallery",
+            element: (
+              <Lazy>
+                <PackageGalleryPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "products/reports",
+            element: (
+              <Lazy>
+                <PackageReportsPage />
               </Lazy>
             ),
           },
@@ -1244,6 +1398,14 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <CmsHeroServicesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "cms/packages",
+            element: (
+              <Lazy>
+                <CmsPackagesPage />
               </Lazy>
             ),
           },
