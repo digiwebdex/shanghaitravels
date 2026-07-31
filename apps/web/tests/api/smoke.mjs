@@ -2202,6 +2202,260 @@ async function main() {
     ok("agent-sec: staff invite RBAC ok for test user", okHttp(r.status) && !!r.data?.tempPassword, `status=${r.status}`);
   }
 
+  // ---------- Phase H1 Corporate Portal ----------
+  jar.delete("st_agent");
+  jar.delete("st_agent_refresh");
+  jar.delete("st_customer");
+  jar.delete("st_customer_refresh");
+  await req("POST", "/auth/login", { email: EMAIL, password: PASS });
+
+  const corpTs = Date.now();
+  const corpEmail = `corp.portal.${corpTs}@example.com`;
+  let corpClientId = null;
+  let corpTemp = null;
+  let corpEmpId = null;
+  let corpReqId = null;
+  let corpAppId = null;
+  {
+    const r = await req("POST", "/corporate-clients", {
+      companyName: "Portal Smoke Corp",
+      phone: `018${String(corpTs).slice(-8)}`,
+      email: corpEmail,
+      creditLimit: 5000000,
+      paymentTermsDays: 45,
+      branchId: "br-corporate",
+    });
+    corpClientId = r.data?.id || null;
+    ok("corp-portal: create client", okHttp(r.status) && !!corpClientId, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", `/corporate-accounts/${corpClientId}`, { email: corpEmail, role: "admin" });
+    corpTemp = r.data?.tempPassword || null;
+    ok("corp-portal: invite", okHttp(r.status) && r.data?.invited === true && !!corpTemp, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/portal/corporate/login", { email: corpEmail, password: corpTemp });
+    ok(
+      "corp-portal: login",
+      okHttp(r.status) && r.data?.ok === true && r.data?.mustChangePassword === true,
+      `status=${r.status}`,
+    );
+    ok("corp-portal: corporate cookie", jar.has("st_corporate"), `cookies=${[...jar.keys()].join(",")}`);
+  }
+  {
+    const r = await req("POST", "/portal/corporate/change-password", {
+      currentPassword: corpTemp,
+      newPassword: "CorpSmoke1!",
+    });
+    ok("corp-portal: change password", okHttp(r.status) && r.data?.ok === true, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/portal/corporate/me");
+    ok(
+      "corp-portal: me",
+      okHttp(r.status) && r.data?.company?.id === corpClientId && r.data?.user?.role === "admin",
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("GET", "/portal/corporate/dashboard");
+    ok(
+      "corp-portal: dashboard",
+      okHttp(r.status) && r.data?.travelRequests && r.data?.finance,
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("PATCH", "/portal/corporate/company", {
+      billingAddress: "123 Smoke Road, Dhaka",
+      preferredServices: ["visa", "air_ticket", "hotel"],
+      contactPerson: "Smoke Admin",
+    });
+    ok("corp-portal: patch company", okHttp(r.status) && r.data?.billingAddress, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/portal/corporate/employees", {
+      fullName: "Corp Traveller One",
+      phone: `016${String(corpTs).slice(-8)}`,
+      department: "Sales",
+      designation: "Executive",
+      passportNo: `CP${String(corpTs).slice(-7)}`,
+      isFrequentTraveller: true,
+    });
+    corpEmpId = r.data?.id || null;
+    ok("corp-portal: create employee", okHttp(r.status) && !!corpEmpId, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", `/portal/corporate/employees/${corpEmpId}/emergency`, {
+      fullName: "Emergency Contact",
+      phone: "01700009999",
+      relationship: "spouse",
+    });
+    ok("corp-portal: emergency contact", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/portal/corporate/travel-requests", {
+      employeeId: corpEmpId,
+      serviceType: "visa",
+      title: "Smoke visa request",
+      destination: "China",
+      message: "Business trip",
+    });
+    corpReqId = r.data?.id || null;
+    ok("corp-portal: create travel request", okHttp(r.status) && !!corpReqId, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", `/portal/corporate/travel-requests/${corpReqId}/submit`);
+    ok("corp-portal: submit request", okHttp(r.status) && r.data?.status === "submitted", `status=${r.status}`);
+  }
+  {
+    // Admin can approve every chain step (list returns requests with nested approvals)
+    for (let i = 0; i < 6; i++) {
+      const pending = await req("GET", "/portal/corporate/approvals");
+      const rows = Array.isArray(pending.data) ? pending.data : [];
+      const travel = rows.find((r) => r.id === corpReqId) || rows[0];
+      const step = (travel?.approvals || []).find(
+        (a) => a.levelNo === travel.currentLevel && a.decision === "pending",
+      );
+      if (!step?.id) {
+        ok("corp-portal: approval chain → ERP booking", false, `no pending step at i=${i}`);
+        break;
+      }
+      const d = await req("POST", `/portal/corporate/approvals/${step.id}/decide`, {
+        decision: "approved",
+        note: `smoke level ${i + 1}`,
+      });
+      if (!okHttp(d.status)) {
+        ok("corp-portal: approval chain → ERP booking", false, `failed at step ${i} status=${d.status}`);
+        break;
+      }
+      const reqRow = await req("GET", `/portal/corporate/travel-requests/${corpReqId}`);
+      if (reqRow.data?.status === "approved") {
+        corpAppId = reqRow.data?.applicationId || null;
+        ok("corp-portal: approval chain → ERP booking", !!corpAppId, `applicationId=${corpAppId}`);
+        break;
+      }
+      if (i === 5) ok("corp-portal: approval chain → ERP booking", false, `status=${reqRow.data?.status}`);
+    }
+  }
+  {
+    const r = await req("GET", "/portal/corporate/bookings");
+    ok(
+      "corp-portal: list bookings",
+      okHttp(r.status) && Array.isArray(r.data) && (!corpAppId || r.data.some((b) => b.id === corpAppId)),
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("GET", "/portal/corporate/finance");
+    ok(
+      "corp-portal: finance",
+      okHttp(r.status) && r.data?.creditLimit != null && Array.isArray(r.data?.invoices),
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("POST", "/portal/corporate/support", {
+      subject: "Corp smoke support",
+      body: "Need consolidated invoice copy",
+    });
+    ok("corp-portal: support", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/portal/corporate/communications");
+    ok(
+      "corp-portal: communications",
+      okHttp(r.status) && (Array.isArray(r.data?.support) || Array.isArray(r.data?.messages)),
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("GET", "/portal/corporate/reports");
+    ok(
+      "corp-portal: reports",
+      okHttp(r.status) && r.data?.travel && r.data?.bookings && r.data?.finance,
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("GET", "/portal/corporate/approval-chain");
+    ok(
+      "corp-portal: approval chain config",
+      okHttp(r.status) && Array.isArray(r.data?.steps) && r.data.steps.length >= 4,
+      `status=${r.status} n=${r.data?.steps?.length}`,
+    );
+  }
+  // Tenant isolation: company B cannot see company A request
+  const corpBEmail = `corp.portal.b.${corpTs}@example.com`;
+  let corpBId = null;
+  let corpBTemp = null;
+  {
+    const c = await req("POST", "/corporate-clients", {
+      companyName: "Portal Smoke Corp B",
+      phone: `019${String(corpTs).slice(-8)}`,
+      email: corpBEmail,
+      creditLimit: 100000,
+      paymentTermsDays: 15,
+      branchId: "br-head",
+    });
+    corpBId = c.data?.id || null;
+    const inv = await req("POST", `/corporate-accounts/${corpBId}`, { email: corpBEmail, role: "admin" });
+    corpBTemp = inv.data?.tempPassword || null;
+    ok("corp-portal: create/invite company B", !!corpBId && !!corpBTemp, `status=${c.status}/${inv.status}`);
+  }
+  {
+    await req("POST", "/portal/corporate/logout");
+    await req("POST", "/portal/corporate/login", { email: corpBEmail, password: corpBTemp });
+    await req("POST", "/portal/corporate/change-password", {
+      currentPassword: corpBTemp,
+      newPassword: "CorpSmokeB1!",
+    });
+    const r = await req("GET", `/portal/corporate/travel-requests/${corpReqId}`);
+    ok("corp-portal: B cannot read A request", r.status === 404, `status=${r.status}`);
+    if (corpAppId) {
+      const b = await req("GET", `/portal/corporate/bookings/${corpAppId}`);
+      ok("corp-portal: B cannot read A booking", b.status === 404, `status=${b.status}`);
+    } else {
+      ok("corp-portal: B cannot read A booking", true, "skipped — no app");
+    }
+  }
+  {
+    const r = await req("POST", "/portal/corporate/forgot-password", { email: corpBEmail });
+    const code = r.data?.devCode;
+    ok("corp-portal: forgot password", okHttp(r.status) && r.data?.ok === true, `status=${r.status}`);
+    if (code) {
+      const reset = await req("POST", "/portal/corporate/reset-password", {
+        email: corpBEmail,
+        code,
+        newPassword: "CorpSmokeB2!",
+      });
+      ok("corp-portal: reset password", okHttp(reset.status) && reset.data?.ok === true, `status=${reset.status}`);
+    } else {
+      ok("corp-portal: reset password", false, "no devCode");
+    }
+  }
+  {
+    const r = await req("POST", "/portal/corporate/otp/request", { email: corpBEmail });
+    const code = r.data?.devCode;
+    ok("corp-portal: otp request", okHttp(r.status) && r.data?.ok === true, `status=${r.status}`);
+    if (code) {
+      const v = await req("POST", "/portal/corporate/otp/verify", { email: corpBEmail, code });
+      ok("corp-portal: otp verify", okHttp(v.status) && v.data?.ok === true, `status=${v.status}`);
+    } else {
+      ok("corp-portal: otp verify", false, "no devCode");
+    }
+  }
+  {
+    jar.delete("st_corporate");
+    jar.delete("st_corporate_refresh");
+    const r = await req("GET", "/portal/corporate/me");
+    ok("corp-portal: staff cookie ≠ corporate", r.status === 401, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/portal/corporate/logout");
+    ok("corp-portal: logout", okHttp(r.status) || r.status === 201 || r.status === 200, `status=${r.status}`);
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);

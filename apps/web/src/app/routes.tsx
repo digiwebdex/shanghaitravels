@@ -139,6 +139,21 @@ const AgentFinancePage = lazy(() => import("@/pages/portal/agent/AgentFinancePag
 const AgentDocumentsPage = lazy(() => import("@/pages/portal/agent/AgentDocumentsPage"));
 const AgentCommunicationsPage = lazy(() => import("@/pages/portal/agent/AgentCommunicationsPage"));
 const AgentReportsPage = lazy(() => import("@/pages/portal/agent/AgentReportsPage"));
+const CorporatePortalLayout = lazy(() => import("@/layouts/CorporatePortalLayout"));
+const CorporateLoginPage = lazy(() => import("@/pages/portal/corporate/CorporateLoginPage"));
+const CorporateForgotPage = lazy(() => import("@/pages/portal/corporate/CorporateForgotPage"));
+const CorporateDashboardPage = lazy(() => import("@/pages/portal/corporate/CorporateDashboardPage"));
+const CorporateCompanyPage = lazy(() => import("@/pages/portal/corporate/CorporateCompanyPage"));
+const CorporateEmployeesPage = lazy(() => import("@/pages/portal/corporate/CorporateEmployeesPage"));
+const CorporateEmployeeDetailPage = lazy(() => import("@/pages/portal/corporate/CorporateEmployeeDetailPage"));
+const CorporateRequestsPage = lazy(() => import("@/pages/portal/corporate/CorporateRequestsPage"));
+const CorporateRequestDetailPage = lazy(() => import("@/pages/portal/corporate/CorporateRequestDetailPage"));
+const CorporateApprovalsPage = lazy(() => import("@/pages/portal/corporate/CorporateApprovalsPage"));
+const CorporateBookingsPage = lazy(() => import("@/pages/portal/corporate/CorporateBookingsPage"));
+const CorporateBookingDetailPage = lazy(() => import("@/pages/portal/corporate/CorporateBookingDetailPage"));
+const CorporateFinancePage = lazy(() => import("@/pages/portal/corporate/CorporateFinancePage"));
+const CorporateCommunicationsPage = lazy(() => import("@/pages/portal/corporate/CorporateCommunicationsPage"));
+const CorporateReportsPage = lazy(() => import("@/pages/portal/corporate/CorporateReportsPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -398,6 +413,128 @@ export const router = createHashRouter([
         element: (
           <Lazy>
             <AgentReportsPage />
+          </Lazy>
+        ),
+      },
+    ],
+  },
+  {
+    path: "/portal/corporate/login",
+    element: (
+      <Lazy>
+        <CorporateLoginPage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/portal/corporate/forgot",
+    element: (
+      <Lazy>
+        <CorporateForgotPage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/portal/corporate",
+    element: (
+      <Lazy>
+        <CorporatePortalLayout />
+      </Lazy>
+    ),
+    children: [
+      {
+        index: true,
+        element: (
+          <Lazy>
+            <CorporateDashboardPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "company",
+        element: (
+          <Lazy>
+            <CorporateCompanyPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "employees",
+        element: (
+          <Lazy>
+            <CorporateEmployeesPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "employees/:id",
+        element: (
+          <Lazy>
+            <CorporateEmployeeDetailPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "requests",
+        element: (
+          <Lazy>
+            <CorporateRequestsPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "requests/:id",
+        element: (
+          <Lazy>
+            <CorporateRequestDetailPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "approvals",
+        element: (
+          <Lazy>
+            <CorporateApprovalsPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "bookings",
+        element: (
+          <Lazy>
+            <CorporateBookingsPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "bookings/:id",
+        element: (
+          <Lazy>
+            <CorporateBookingDetailPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "finance",
+        element: (
+          <Lazy>
+            <CorporateFinancePage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "communications",
+        element: (
+          <Lazy>
+            <CorporateCommunicationsPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "reports",
+        element: (
+          <Lazy>
+            <CorporateReportsPage />
           </Lazy>
         ),
       },
