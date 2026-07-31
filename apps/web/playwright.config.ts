@@ -17,7 +17,10 @@ loadEnvTest();
 export default defineConfig({
   testDir: "./tests/e2e",
   timeout: 90_000,
-  retries: 0,
+  // Serial workers + one retry: full platform suite shares one QA IP / rate-limit bucket
+  fullyParallel: false,
+  workers: 1,
+  retries: 1,
   reporter: [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]],
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL || "https://shanghaitravels.com.bd/erp/",
