@@ -87,19 +87,33 @@
     return null;
   }
 
+  function clearHeroClutter(root) {
+    // Package inject sometimes landed inside the hero — remove it from this section only.
+    var section = root.closest("section") || root.parentElement;
+    if (!section) return;
+    section.querySelectorAll(".st-packages-home").forEach(function (n) {
+      n.remove();
+    });
+  }
+
   function mount() {
     var current = document.querySelector('.st-hero-services[data-st-hero-nav="pills"]');
-    if (current && isPillNav(current)) return true;
+    if (current && isPillNav(current)) {
+      clearHeroClutter(current);
+      return true;
+    }
 
     var next = build();
     var cards = findCardHost();
     if (cards) {
       cards.replaceWith(next);
+      clearHeroClutter(next);
       return true;
     }
     var host = findBookingHost();
     if (!host) return false;
     host.replaceWith(next);
+    clearHeroClutter(next);
     return true;
   }
 

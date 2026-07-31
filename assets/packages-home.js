@@ -104,16 +104,11 @@
   function mount(items) {
     if (document.querySelector(".st-packages-home")) return true;
     var host = findFeaturedSection();
-    if (host) {
-      host.replaceWith(build(items));
-      return true;
-    }
-    var hero = document.querySelector(".st-hero-services");
-    if (hero && hero.parentElement) {
-      hero.parentElement.insertBefore(build(items), hero.nextSibling);
-      return true;
-    }
-    return false;
+    if (!host) return false;
+    // Never inject into the hero — keep title/subtitle/nav as the primary focus.
+    if (host.closest("section.relative") || host.closest(".st-hero-services")) return false;
+    host.replaceWith(build(items));
+    return true;
   }
 
   function start(items) {

@@ -76,3 +76,8 @@ Linked from root `index.html` as `/assets/hero-services.css` + `/assets/hero-ser
 - Each pill is a focusable link with `aria-label`
 - Visible focus ring on keyboard focus
 - Decorative emoji icons marked `aria-hidden`
+
+## Deploy notes
+
+- Live inject cache-busted via `?v=` on `index.html` asset URLs.
+- Packages inject must not mount inside the hero section.
