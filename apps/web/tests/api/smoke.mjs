@@ -55,6 +55,23 @@ async function req(method, p, body) {
   return { status: res.status, data, res };
 }
 
+async function reqForm(method, p, form) {
+  const res = await fetch(`${BASE}${p}`, {
+    method,
+    headers: { Cookie: cookieHeader() },
+    body: form,
+  });
+  storeCookies(res);
+  const text = await res.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = { raw: text };
+  }
+  return { status: res.status, data, res };
+}
+
 const results = [];
 function ok(name, pass, detail = "") {
   results.push({ name, pass, detail });
@@ -1944,6 +1961,245 @@ async function main() {
   {
     const r = await req("POST", "/portal/agent/logout");
     ok("agent-portal: logout", okHttp(r.status), `status=${r.status}`);
+  }
+
+  // ---------- Phase G1 Agent Portal security regression ----------
+  const secTs = Date.now();
+  const secAEmail = `agent.sec.a.${secTs}@example.com`;
+  const secBEmail = `agent.sec.b.${secTs}@example.com`;
+  let secAgentA = null;
+  let secAgentB = null;
+  let secATemp = null;
+  let secBTemp = null;
+  let secACustomerId = null;
+  let secAPhone = `013${String(secTs).slice(-8)}`;
+  let secACaseId = null;
+  let secADocId = null;
+  let secAInvoiceId = null;
+  {
+    const a = await req("POST", "/agents", {
+      name: "Sec Agent A",
+      phone: `011${String(secTs).slice(-8)}`,
+      email: secAEmail,
+      commissionRateBps: 100,
+    });
+    secAgentA = a.data?.id || null;
+    const b = await req("POST", "/agents", {
+      name: "Sec Agent B",
+      phone: `012${String(secTs).slice(-8)}`,
+      email: secBEmail,
+      commissionRateBps: 100,
+    });
+    secAgentB = b.data?.id || null;
+    ok("agent-sec: create two agents", !!secAgentA && !!secAgentB, `a=${secAgentA} b=${secAgentB}`);
+  }
+  {
+    const a = await req("POST", `/agent-accounts/${secAgentA}`, { email: secAEmail, branchId: "br-corporate" });
+    const b = await req("POST", `/agent-accounts/${secAgentB}`, { email: secBEmail, branchId: "br-head" });
+    secATemp = a.data?.tempPassword || null;
+    secBTemp = b.data?.tempPassword || null;
+    ok("agent-sec: invite A/B multi-branch", !!secATemp && !!secBTemp, `status=${a.status}/${b.status}`);
+  }
+  {
+    await req("POST", "/portal/agent/login", { email: secAEmail, password: secATemp });
+    await req("POST", "/portal/agent/change-password", {
+      currentPassword: secATemp,
+      newPassword: "AgentSecA1!",
+    });
+    const me = await req("GET", "/portal/agent/me");
+    ok(
+      "agent-sec: A branch bound",
+      okHttp(me.status) && me.data?.agent?.branchId === "br-corporate",
+      `branchId=${me.data?.agent?.branchId}`,
+    );
+  }
+  {
+    const r = await req("POST", "/portal/agent/customers", {
+      fullName: "Sec Customer A",
+      phone: secAPhone,
+    });
+    secACustomerId = r.data?.id || null;
+    ok("agent-sec: A create customer", okHttp(r.status) && !!secACustomerId, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/portal/agent/cases", {
+      serviceType: "visa",
+      customerName: "Sec Customer A",
+      customerPhone: secAPhone,
+      title: "Sec booking A",
+    });
+    secACaseId = r.data?.id || null;
+    ok(
+      "agent-sec: A create booking on own branch",
+      okHttp(r.status) && !!secACaseId,
+      `status=${r.status}`,
+    );
+    const detail = await req("GET", `/portal/agent/cases/${secACaseId}`);
+    ok(
+      "agent-sec: A booking branchId=corporate",
+      okHttp(detail.status) && detail.data?.branchId === "br-corporate",
+      `branchId=${detail.data?.branchId}`,
+    );
+  }
+  {
+    const form = new FormData();
+    const pdf = Buffer.from("%PDF-1.1\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n");
+    form.append("file", new Blob([pdf], { type: "application/pdf" }), "sec-a.pdf");
+    form.append("applicationId", secACaseId);
+    form.append("category", "passport");
+    const r = await reqForm("POST", "/portal/agent/documents", form);
+    secADocId = r.data?.id || null;
+    ok("agent-sec: A upload document", okHttp(r.status) && !!secADocId, `status=${r.status}`);
+  }
+  {
+    // Staff creates invoice for A's customer — B must not see it
+    const inv = await req("POST", "/invoices", {
+      customerId: secACustomerId,
+      applicationId: secACaseId,
+      items: [{ description: "Sec visa fee", quantity: 1, unitPrice: 50000 }],
+    });
+    secAInvoiceId = inv.data?.id || null;
+    if (secAInvoiceId) await req("POST", `/invoices/${secAInvoiceId}/issue`);
+    ok("agent-sec: staff invoice for A customer", !!secAInvoiceId, `status=${inv.status}`);
+  }
+  {
+    const fin = await req("GET", "/portal/agent/finance");
+    const ids = (fin.data?.invoices || []).map((i) => i.id);
+    ok(
+      "agent-sec: A sees own customer invoice",
+      okHttp(fin.status) && ids.includes(secAInvoiceId),
+      `n=${ids.length}`,
+    );
+  }
+  {
+    await req("POST", "/portal/agent/logout");
+    await req("POST", "/portal/agent/login", { email: secBEmail, password: secBTemp });
+    await req("POST", "/portal/agent/change-password", {
+      currentPassword: secBTemp,
+      newPassword: "AgentSecB1!",
+    });
+    const me = await req("GET", "/portal/agent/me");
+    ok(
+      "agent-sec: B branch bound",
+      okHttp(me.status) && me.data?.agent?.branchId === "br-head" && me.data?.agent?.id === secAgentB,
+      `branchId=${me.data?.agent?.branchId}`,
+    );
+  }
+  {
+    const r = await req("GET", `/portal/agent/customers/${secACustomerId}`);
+    ok("agent-sec: B cannot read A customer", r.status === 404, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", `/portal/agent/cases/${secACaseId}`);
+    ok("agent-sec: B cannot read A booking", r.status === 404, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", `/portal/agent/documents/${secADocId}/download`);
+    ok("agent-sec: B cannot download A document", r.status === 404, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", `/portal/agent/documents/${secADocId}/versions`);
+    ok("agent-sec: B cannot list A document versions", r.status === 404, `status=${r.status}`);
+  }
+  {
+    const fin = await req("GET", "/portal/agent/finance");
+    const ids = (fin.data?.invoices || []).map((i) => i.id);
+    ok(
+      "agent-sec: B cannot see A customer invoices",
+      okHttp(fin.status) && !ids.includes(secAInvoiceId),
+      `ids=${ids.join(",")}`,
+    );
+  }
+  {
+    const r = await req("POST", "/portal/agent/cases", {
+      serviceType: "hotel",
+      customerName: "Hijack Attempt",
+      customerPhone: secAPhone,
+      title: "Should fail",
+    });
+    ok(
+      "agent-sec: B cannot hijack A customer via phone",
+      r.status >= 400 && r.status < 500,
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("POST", "/portal/agent/cases", {
+      serviceType: "visa",
+      customerId: secACustomerId,
+      customerName: "IDOR Attempt",
+      customerPhone: `014${String(secTs).slice(-8)}`,
+      title: "Should reject customerId",
+    });
+    ok(
+      "agent-sec: B cannot pass foreign customerId",
+      r.status >= 400 && r.status < 500,
+      `status=${r.status}`,
+    );
+  }
+  {
+    const form = new FormData();
+    const pdf = Buffer.from("%PDF-1.1\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n");
+    form.append("file", new Blob([pdf], { type: "application/pdf" }), "sec-b.pdf");
+    form.append("applicationId", secACaseId);
+    form.append("category", "passport");
+    const r = await reqForm("POST", "/portal/agent/documents", form);
+    ok(
+      "agent-sec: B cannot upload to A applicationId",
+      r.status >= 400 && r.status < 500,
+      `status=${r.status}`,
+    );
+  }
+  {
+    // Cookie isolation: agent session must not satisfy staff APIs
+    const staffBefore = jar.has("st_access");
+    jar.delete("st_access");
+    jar.delete("st_refresh");
+    const meStaff = await req("GET", "/auth/me");
+    ok("agent-sec: agent cookie ≠ staff", meStaff.status === 401, `status=${meStaff.status} hadStaff=${staffBefore}`);
+    // Restore staff via re-login for remaining checks
+    await req("POST", "/auth/login", { email: EMAIL, password: PASS });
+  }
+  {
+    // Staff session must not satisfy agent portal APIs
+    jar.delete("st_agent");
+    jar.delete("st_agent_refresh");
+    const meAgent = await req("GET", "/portal/agent/me");
+    ok("agent-sec: staff cookie ≠ agent", meAgent.status === 401, `status=${meAgent.status}`);
+  }
+  {
+    // Customer cookie must not satisfy agent portal
+    const regEmail = `agent.sec.cust.${secTs}@example.com`;
+    const regPass = "PortalSec1!";
+    const reg = await req("POST", "/portal/customer/register", {
+      email: regEmail,
+      password: regPass,
+      fullName: "Sec Cust",
+      phone: `017${String(secTs).slice(-8)}`,
+    });
+    const code = reg.data?.devCode;
+    if (code) {
+      await req("POST", "/portal/customer/verify-email", { email: regEmail, code });
+      await req("POST", "/portal/customer/login", { email: regEmail, password: regPass });
+    }
+    jar.delete("st_agent");
+    jar.delete("st_agent_refresh");
+    const meAgent = await req("GET", "/portal/agent/me");
+    ok(
+      "agent-sec: customer cookie ≠ agent",
+      meAgent.status === 401 && jar.has("st_customer"),
+      `status=${meAgent.status}`,
+    );
+    await req("POST", "/portal/customer/logout");
+  }
+  {
+    const r = await req("GET", "/portal/agent/dashboard");
+    ok("agent-sec: unauthenticated agent API → 401", r.status === 401, `status=${r.status}`);
+  }
+  {
+    // Staff invite endpoint requires agent:manage (RBAC)
+    const r = await req("POST", `/agent-accounts/${secAgentA}`, { email: secAEmail });
+    ok("agent-sec: staff invite RBAC ok for test user", okHttp(r.status) && !!r.data?.tempPassword, `status=${r.status}`);
   }
 
   {
