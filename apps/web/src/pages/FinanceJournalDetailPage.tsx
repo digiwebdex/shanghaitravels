@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
-import { glApi } from "@/lib/services";
+import { fsApi, glApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { JournalEntry } from "@/lib/types";
 import { Can } from "@/auth/Can";
@@ -180,6 +180,16 @@ export default function FinanceJournalDetailPage() {
                 onClick={() => run(() => glApi.voidJournal(je.id, "Voided in UI"), "Voided")}
               >
                 Void
+              </button>
+            )}
+            {je.status === "posted" && (
+              <button
+                type="button"
+                disabled={busy}
+                className="px-3 py-1.5 rounded-lg border border-amber-200 text-[10.5px] font-semibold text-amber-800 disabled:opacity-50"
+                onClick={() => run(() => fsApi.reverseJournal(je.id), "Reversal posted")}
+              >
+                Reverse (adjustment)
               </button>
             )}
           </Can>

@@ -906,6 +906,81 @@ async function main() {
     );
   }
 
+  // ---------- Phase C4 — Financial statements ----------
+  {
+    const r = await req("GET", "/fs/trial-balance");
+    ok("fs: trial balance", okHttp(r.status) && r.data?.balanced === true, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", `/fs/balance-sheet?asOf=${encodeURIComponent(new Date().toISOString())}`);
+    ok(
+      "fs: balance sheet",
+      okHttp(r.status) && r.data?.totals?.balanced === true,
+      `status=${r.status} bal=${r.data?.totals?.balanced}`,
+    );
+  }
+  {
+    const y = new Date().getUTCFullYear();
+    const r = await req("GET", `/fs/profit-loss?from=${y}-01-01&to=${y}-12-31`);
+    ok("fs: profit & loss", okHttp(r.status) && r.data?.totals != null, `status=${r.status}`);
+  }
+  {
+    const y = new Date().getUTCFullYear();
+    const r = await req("GET", `/fs/cash-flow?from=${y}-01-01&to=${y}-12-31`);
+    ok("fs: cash flow", okHttp(r.status) && r.data?.method === "simplified_indirect", `status=${r.status}`);
+  }
+  {
+    const y = new Date().getUTCFullYear();
+    const r = await req("GET", `/fs/equity?from=${y}-01-01&to=${y}-12-31`);
+    ok("fs: equity statement", okHttp(r.status) && r.data?.closingEquityPoisha != null, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/fs/ledger?limit=20");
+    ok("fs: ledger inquiry", okHttp(r.status) && Array.isArray(r.data?.entries), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/fs/analysis/branch");
+    ok("fs: branch analysis", okHttp(r.status) && Array.isArray(r.data?.rows), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/fs/analysis/currency");
+    ok("fs: currency analysis", okHttp(r.status) && Array.isArray(r.data?.rows), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/fs/travel-validation");
+    ok(
+      "fs: travel validation",
+      okHttp(r.status) && r.data?.trialBalanceBalanced === true,
+      `status=${r.status} tb=${r.data?.trialBalanceBalanced}`,
+    );
+  }
+  {
+    const r = await req("GET", "/fs/export/balance-sheet?format=csv&asOf=" + encodeURIComponent(new Date().toISOString()));
+    ok("fs: export csv", okHttp(r.status) && (typeof r.data?.raw === "string" || r.data != null), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/fs/closing-runs");
+    ok("fs: closing runs", okHttp(r.status) && Array.isArray(r.data), `status=${r.status}`);
+  }
+  let fsPeriodId = null;
+  {
+    const r = await req("GET", "/gl/fiscal-years");
+    const years = Array.isArray(r.data) ? r.data : r.data?.data || [];
+    const closed = years.flatMap((y) => (y.periods || []).filter((p) => p.status === "closed" || p.status === "locked"));
+    const open = years.flatMap((y) => (y.periods || []).filter((p) => p.status === "open"));
+    fsPeriodId = closed[0]?.id || open[0]?.id || null;
+    ok("fs: has period for controls", !!fsPeriodId, `period=${fsPeriodId || "none"}`);
+  }
+  if (fsPeriodId) {
+    const lock = await req("POST", `/fs/periods/${fsPeriodId}/lock`, {});
+    // open periods cannot lock — treat 400 as expected when still open
+    ok(
+      "fs: period lock (or already open/locked)",
+      okHttp(lock.status) || lock.status === 400,
+      `status=${lock.status}`,
+    );
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);

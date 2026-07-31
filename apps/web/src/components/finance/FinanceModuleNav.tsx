@@ -16,6 +16,10 @@ const LINKS: { to: string; label: string; end?: boolean }[] = [
   { to: "/finance/banking/reconciliation", label: "Reconciliation" },
   { to: "/finance/banking/reports", label: "Bank Reports" },
   { to: "/finance/reports", label: "GL Reports" },
+  { to: "/finance/statements", label: "Statements" },
+  { to: "/finance/ledger", label: "Ledger" },
+  { to: "/finance/analysis", label: "Analysis" },
+  { to: "/finance/closing", label: "Closing" },
 ];
 
 export function FinanceModuleNav() {

@@ -72,6 +72,10 @@ const FinanceBankMovementsPage = lazy(() => import("@/pages/FinanceBankMovements
 const FinanceChequesPage = lazy(() => import("@/pages/FinanceChequesPage"));
 const FinanceReconciliationPage = lazy(() => import("@/pages/FinanceReconciliationPage"));
 const FinanceBankingReportsPage = lazy(() => import("@/pages/FinanceBankingReportsPage"));
+const FinanceStatementsPage = lazy(() => import("@/pages/FinanceStatementsPage"));
+const FinanceLedgerPage = lazy(() => import("@/pages/FinanceLedgerPage"));
+const FinanceAnalysisPage = lazy(() => import("@/pages/FinanceAnalysisPage"));
+const FinanceClosingPage = lazy(() => import("@/pages/FinanceClosingPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -522,6 +526,38 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <FinanceBankingReportsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/statements",
+            element: (
+              <Lazy>
+                <FinanceStatementsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/ledger",
+            element: (
+              <Lazy>
+                <FinanceLedgerPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/analysis",
+            element: (
+              <Lazy>
+                <FinanceAnalysisPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/closing",
+            element: (
+              <Lazy>
+                <FinanceClosingPage />
               </Lazy>
             ),
           },

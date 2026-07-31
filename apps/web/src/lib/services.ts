@@ -1,4 +1,4 @@
-import { apiFetch, listOf } from "@/lib/api";
+import { ApiError, apiFetch, listOf } from "@/lib/api";
 import type {
   Account,
   AppDocument,
@@ -544,6 +544,125 @@ export const apApi = {
   reportOutstanding: () => apiFetch<Record<string, unknown>>("/ap/reports/outstanding"),
 };
 
+
+export const fsApi = {
+  ledger: (q?: Record<string, string | number | undefined>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(q || {})) if (v != null && v !== "") p.set(k, String(v));
+    const qs = p.toString();
+    return apiFetch<{ entries: unknown[]; closingPoisha: number; total: number }>(`/fs/ledger${qs ? `?${qs}` : ""}`);
+  },
+  ledgerDrilldown: (glAccountId: string, q?: { periodId?: string; from?: string; to?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.periodId) p.set("periodId", q.periodId);
+    if (q?.from) p.set("from", q.from);
+    if (q?.to) p.set("to", q.to);
+    const qs = p.toString();
+    return apiFetch<{ account: unknown; entries: unknown[]; closingPoisha: number }>(
+      `/fs/ledger/${encodeURIComponent(glAccountId)}${qs ? `?${qs}` : ""}`,
+    );
+  },
+  trialBalance: (q?: { periodId?: string; asOf?: string; from?: string; to?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.periodId) p.set("periodId", q.periodId);
+    if (q?.asOf) p.set("asOf", q.asOf);
+    if (q?.from) p.set("from", q.from);
+    if (q?.to) p.set("to", q.to);
+    const qs = p.toString();
+    return apiFetch(`/fs/trial-balance${qs ? `?${qs}` : ""}`);
+  },
+  balanceSheet: (q?: { asOf?: string; periodId?: string; compareAsOf?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.asOf) p.set("asOf", q.asOf);
+    if (q?.periodId) p.set("periodId", q.periodId);
+    if (q?.compareAsOf) p.set("compareAsOf", q.compareAsOf);
+    const qs = p.toString();
+    return apiFetch(`/fs/balance-sheet${qs ? `?${qs}` : ""}`);
+  },
+  profitLoss: (q?: { from?: string; to?: string; periodId?: string; compareFrom?: string; compareTo?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.from) p.set("from", q.from);
+    if (q?.to) p.set("to", q.to);
+    if (q?.periodId) p.set("periodId", q.periodId);
+    if (q?.compareFrom) p.set("compareFrom", q.compareFrom);
+    if (q?.compareTo) p.set("compareTo", q.compareTo);
+    const qs = p.toString();
+    return apiFetch(`/fs/profit-loss${qs ? `?${qs}` : ""}`);
+  },
+  cashFlow: (q?: { from?: string; to?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.from) p.set("from", q.from);
+    if (q?.to) p.set("to", q.to);
+    const qs = p.toString();
+    return apiFetch(`/fs/cash-flow${qs ? `?${qs}` : ""}`);
+  },
+  equity: (q?: { from?: string; to?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.from) p.set("from", q.from);
+    if (q?.to) p.set("to", q.to);
+    const qs = p.toString();
+    return apiFetch(`/fs/equity${qs ? `?${qs}` : ""}`);
+  },
+  comparative: (q: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(q)) if (v) p.set(k, v);
+    return apiFetch(`/fs/comparative?${p}`);
+  },
+  multiPeriod: (q: { report: string; periodIds: string }) =>
+    apiFetch(`/fs/multi-period?report=${encodeURIComponent(q.report)}&periodIds=${encodeURIComponent(q.periodIds)}`),
+  analysisAccount: (glAccountId: string, q?: { from?: string; to?: string }) => {
+    const p = new URLSearchParams({ glAccountId });
+    if (q?.from) p.set("from", q.from);
+    if (q?.to) p.set("to", q.to);
+    return apiFetch(`/fs/analysis/account?${p}`);
+  },
+  analysisCostCenter: (q?: { costCenterId?: string; from?: string; to?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.costCenterId) p.set("costCenterId", q.costCenterId);
+    if (q?.from) p.set("from", q.from);
+    if (q?.to) p.set("to", q.to);
+    const qs = p.toString();
+    return apiFetch(`/fs/analysis/cost-center${qs ? `?${qs}` : ""}`);
+  },
+  analysisBranch: (q?: { from?: string; to?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.from) p.set("from", q.from);
+    if (q?.to) p.set("to", q.to);
+    const qs = p.toString();
+    return apiFetch(`/fs/analysis/branch${qs ? `?${qs}` : ""}`);
+  },
+  analysisCurrency: (q?: { from?: string; to?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.from) p.set("from", q.from);
+    if (q?.to) p.set("to", q.to);
+    const qs = p.toString();
+    return apiFetch(`/fs/analysis/currency${qs ? `?${qs}` : ""}`);
+  },
+  travelValidation: () => apiFetch("/fs/travel-validation"),
+  lockPeriod: (id: string) => apiFetch(`/fs/periods/${id}/lock`, { method: "POST", body: {} }),
+  reopenRequest: (id: string, reason: string) =>
+    apiFetch(`/fs/periods/${id}/reopen-request`, { method: "POST", body: { reason } }),
+  reopenApprove: (id: string, note?: string) =>
+    apiFetch(`/fs/periods/${id}/reopen-approve`, { method: "POST", body: { note } }),
+  reopenReject: (id: string, note?: string) =>
+    apiFetch(`/fs/periods/${id}/reopen-reject`, { method: "POST", body: { note } }),
+  listReopenRequests: (status?: string) =>
+    apiFetch(`/fs/reopen-requests${status ? `?status=${encodeURIComponent(status)}` : ""}`),
+  reverseJournal: (id: string, memo?: string) =>
+    apiFetch(`/fs/journals/${id}/reverse`, { method: "POST", body: { memo } }),
+  yearEndClose: (fiscalYearId: string) =>
+    apiFetch("/fs/year-end/close", { method: "POST", body: { fiscalYearId } }),
+  rollForward: (fiscalYearId: string) =>
+    apiFetch("/fs/year-end/roll-forward", { method: "POST", body: { fiscalYearId } }),
+  closingRuns: () => apiFetch("/fs/closing-runs"),
+  exportRaw: async (report: string, q: Record<string, string>) => {
+    const p = new URLSearchParams(q);
+    const { ERP } = await import("@/config/env");
+    const res = await fetch(`${ERP}/fs/export/${encodeURIComponent(report)}?${p}`, { credentials: "include" });
+    if (!res.ok) throw new ApiError(`Export failed (${res.status})`, res.status);
+    return res.text();
+  },
+};
 
 export const bankingApi = {
   bootstrap: () => apiFetch<{ bootstrapped: boolean; message?: string }>("/banking/bootstrap", { method: "POST", body: {} }),
