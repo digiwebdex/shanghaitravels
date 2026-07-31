@@ -29,6 +29,9 @@ blob-report/
 !.env.example
 !**/.env.example
 
+# One-time staff password report (admin-only; never commit plaintext)
+docs/INITIAL_STAFF_ACCOUNTS.md
+
 # Editors / IDE
 .vscode/
 .idea/

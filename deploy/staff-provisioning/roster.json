@@ -1,0 +1,127 @@
+{
+  "meta": {
+    "org": "Shanghai Travels",
+    "domain": "shanghaitravels.com.bd",
+    "branchId": "br-head",
+    "notes": [
+      "Source of truth for initial staff designations (employee list).",
+      "Mohammad Liton appears once as Chairman (single identity — not duplicated).",
+      "Emails/phones/departments are placeholders — update from Staff Profile after first login.",
+      "Passwords are NEVER stored in this file; generated only by provision-staff.mjs."
+    ]
+  },
+  "roleMap": {
+    "Super Admin": "super_admin",
+    "Chairman": "super_admin",
+    "General Manager": "general_manager",
+    "Office In Charge": "office_incharge",
+    "Office Manager": "office_incharge",
+    "Manager Accounts": "accounts_manager",
+    "Accounts Manager": "accounts_manager",
+    "Marketing Manager": "marketing_manager",
+    "Visa Consultant Officer": "visa_consultant",
+    "Visa Consultant": "visa_consultant",
+    "Visa Executive Officer": "visa_executive",
+    "Visa Executive": "visa_executive"
+  },
+  "staff": [
+    {
+      "employeeName": "Super Admin",
+      "username": "super-admin",
+      "designation": "Super Admin",
+      "department": "Administration",
+      "legacyEmails": ["breakglass@shanghaitravels.com.bd", "admin@shanghaitravels.com.bd"]
+    },
+    {
+      "employeeName": "Mohammad Liton",
+      "username": "mohammad-liton",
+      "designation": "Chairman",
+      "department": "Leadership",
+      "legacyEmails": ["chairman@shanghaitravels.com.bd", "liton@shanghaitravels.com.bd"]
+    },
+    {
+      "employeeName": "Liza Akter Bina",
+      "username": "liza-akter-bina",
+      "designation": "General Manager",
+      "department": "Management",
+      "legacyEmails": ["gm@shanghaitravels.com.bd", "liza@shanghaitravels.com.bd"]
+    },
+    {
+      "employeeName": "Porimal Bayda",
+      "username": "porimal-bayda",
+      "designation": "Office In Charge",
+      "department": "Operations",
+      "legacyEmails": ["office@shanghaitravels.com.bd", "porimal@shanghaitravels.com.bd"]
+    },
+    {
+      "employeeName": "Md Jasim Uddin",
+      "username": "md-jasim-uddin",
+      "designation": "Manager Accounts",
+      "department": "Finance",
+      "legacyEmails": ["accounts@shanghaitravels.com.bd", "jasim@shanghaitravels.com.bd"]
+    },
+    {
+      "employeeName": "Md Rasel Hossain",
+      "username": "md-rasel-hossain",
+      "designation": "Marketing Manager",
+      "department": "Marketing",
+      "legacyEmails": ["marketing@shanghaitravels.com.bd", "rasel@shanghaitravels.com.bd"]
+    },
+    {
+      "employeeName": "Bappi Biswas",
+      "username": "bappi-biswas",
+      "designation": "Visa Consultant Officer",
+      "department": "Visa",
+      "legacyEmails": ["bappi@shanghaitravels.com.bd"]
+    },
+    {
+      "employeeName": "Manash Mondal",
+      "username": "manash-mondal",
+      "designation": "Visa Consultant Officer",
+      "department": "Visa",
+      "legacyEmails": ["manash@shanghaitravels.com.bd"]
+    },
+    {
+      "employeeName": "Abu Rayhan",
+      "username": "abu-rayhan",
+      "designation": "Visa Executive Officer",
+      "department": "Visa",
+      "legacyEmails": ["rayhan@shanghaitravels.com.bd"]
+    },
+    {
+      "employeeName": "Md Asidul Islam",
+      "username": "md-asidul-islam",
+      "designation": "Visa Executive Officer",
+      "department": "Visa",
+      "legacyEmails": ["asidul@shanghaitravels.com.bd"]
+    },
+    {
+      "employeeName": "Shakil Ahmmed",
+      "username": "shakil-ahmmed",
+      "designation": "Visa Executive Officer",
+      "department": "Visa",
+      "legacyEmails": ["shakil@shanghaitravels.com.bd"]
+    },
+    {
+      "employeeName": "Md Arafat Islam",
+      "username": "md-arafat-islam",
+      "designation": "Visa Executive Officer",
+      "department": "Visa",
+      "legacyEmails": ["arafat@shanghaitravels.com.bd"]
+    },
+    {
+      "employeeName": "Shihab Islam",
+      "username": "shihab-islam",
+      "designation": "Visa Executive Officer",
+      "department": "Visa",
+      "legacyEmails": ["shihab@shanghaitravels.com.bd"]
+    },
+    {
+      "employeeName": "Md Shahol",
+      "username": "md-shahol",
+      "designation": "Visa Executive Officer",
+      "department": "Visa",
+      "legacyEmails": ["shahol@shanghaitravels.com.bd"]
+    }
+  ]
+}
