@@ -25,6 +25,7 @@ import {
   TrendingUp,
   MessagesSquare,
   PieChart,
+  Globe,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
@@ -47,6 +48,7 @@ const NAV: NavItem[] = [
   { id: "sales", label: "Sales", to: "/sales", icon: TrendingUp, perm: "opportunity:read" },
   { id: "comms", label: "Communications", to: "/comms", icon: MessagesSquare, perm: "comms:read" },
   { id: "analytics", label: "Analytics", to: "/analytics", icon: PieChart, perm: "analytics:read" },
+  { id: "cms", label: "Website & CMS", to: "/cms", icon: Globe, perm: "cms:read" },
   { id: "passports", label: "Passport Management", to: "/passports", icon: BookOpen, perm: "customer:read" },
   { id: "case-journey", label: "Case Journey Map", to: "/case-journey", icon: GitBranch, perm: "application:read" },
 ];

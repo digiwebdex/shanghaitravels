@@ -1446,6 +1446,178 @@ async function main() {
     ok("analytics: export html/pdf", okHttp(r.status) && String(body).includes("<html"), `status=${r.status}`);
   }
 
+  // ---------- Phase E1 Website & CMS ----------
+  {
+    const r = await req("POST", "/cms/bootstrap", {});
+    ok("cms: bootstrap", okHttp(r.status) && r.data?.ok === true, `status=${r.status}`);
+  }
+  let cmsPageId = null;
+  {
+    const r = await req("GET", "/cms/pages");
+    ok("cms: list pages", okHttp(r.status) && Array.isArray(r.data) && r.data.length >= 1, `status=${r.status} n=${r.data?.length}`);
+    cmsPageId = r.data?.[0]?.id || null;
+  }
+  {
+    const slug = `smoke-page-${Date.now().toString().slice(-6)}`;
+    const r = await req("POST", "/cms/pages", {
+      title: "CMS Smoke Page",
+      slug,
+      body: "Smoke body",
+      seoTitle: "CMS Smoke",
+      seoDescription: "SEO smoke",
+      blocks: [{ type: "richtext", props: { html: "<p>Smoke</p>" } }],
+    });
+    cmsPageId = r.data?.id || cmsPageId;
+    ok("cms: create page", okHttp(r.status) && !!cmsPageId, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", `/cms/pages/${cmsPageId}/submit-review`, {});
+    ok("cms: submit review", okHttp(r.status) && (r.data?.status === "in_review" || r.data?.status === "published"), `status=${r.status} pageStatus=${r.data?.status}`);
+  }
+  {
+    const r = await req("POST", `/cms/pages/${cmsPageId}/publish`, {});
+    ok("cms: publish page", okHttp(r.status) && (r.data?.status === "published" || r.data?.published === true), `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/cms/menus", {
+      code: "smoke-main",
+      name: "Smoke menu",
+      items: [{ label: "Home", href: "/#/site", sortOrder: 10 }],
+    });
+    ok("cms: upsert menu", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/cms/media", {
+      fileName: `smoke-${Date.now()}.jpg`,
+      storageKey: `https://example.com/smoke-${Date.now()}.jpg`,
+      mimeType: "image/jpeg",
+      altText: "smoke",
+    });
+    ok("cms: create media", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/cms/banners", {
+      code: `smoke-banner-${Date.now().toString().slice(-6)}`,
+      title: "Smoke banner",
+      placement: "hero",
+      linkHref: "/#/site/enquire",
+    });
+    ok("cms: create banner", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/cms/redirects", {
+      fromPath: `/p/smoke-old-${Date.now().toString().slice(-6)}`,
+      toPath: "/#/site/p/home",
+      statusCode: 301,
+    });
+    ok("cms: create redirect", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/cms/content", {
+      type: "blog",
+      title: `Smoke blog ${Date.now()}`,
+      summary: "smoke",
+      body: "body",
+    });
+    const id = r.data?.id;
+    ok("cms: create content", okHttp(r.status) && !!id, `status=${r.status}`);
+    if (id) {
+      const p = await req("POST", `/cms/content/${id}/publish`, {});
+      ok("cms: publish content", okHttp(p.status) && p.data?.status === "published", `status=${p.status}`);
+    }
+  }
+  {
+    const r = await req("POST", "/cms/travel", {
+      serviceType: "tour",
+      title: `Smoke Tour ${Date.now()}`,
+      destination: "Shanghai",
+      summary: "smoke tour",
+      status: "published",
+      priceFromPoisha: 5000000,
+    });
+    ok("cms: create travel offer", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/cms/forms");
+    ok("cms: list forms", okHttp(r.status) && Array.isArray(r.data), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/cms/reports");
+    ok(
+      "cms: reports",
+      okHttp(r.status) && r.data?.publishing && Array.isArray(r.data?.pageViews),
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("GET", "/site/pages/home");
+    ok("site: public page", okHttp(r.status) && !!r.data?.page?.slug, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/site/menus/main");
+    ok("site: public menu", okHttp(r.status) && (r.data?.code === "main" || r.data === null || !!r.data?.id), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/site/banners?placement=hero");
+    ok("site: public banners", okHttp(r.status) && Array.isArray(r.data), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/site/content?type=blog");
+    ok("site: public content", okHttp(r.status) && Array.isArray(r.data), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/site/travel?serviceType=tour");
+    ok("site: public travel", okHttp(r.status) && Array.isArray(r.data), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/site/search?q=visa");
+    ok(
+      "site: search",
+      okHttp(r.status) && Array.isArray(r.data?.pages) && Array.isArray(r.data?.packages),
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("POST", "/site/forms", {
+      formType: "enquiry",
+      name: `Smoke Enquirer ${Date.now()}`,
+      phone: "01700000999",
+      email: `cms-smoke-${Date.now()}@example.com`,
+      message: "Phase E1 smoke enquiry",
+      pageSlug: "enquire",
+      serviceInterest: "visa",
+    });
+    ok(
+      "site: form creates CRM lead",
+      okHttp(r.status) && r.data?.ok === true && !!r.data?.leadId,
+      `status=${r.status} leadId=${r.data?.leadId}`,
+    );
+  }
+  {
+    const r = await req("POST", "/site/forms", {
+      formType: "career",
+      name: `Smoke Applicant ${Date.now()}`,
+      email: `career-smoke-${Date.now()}@example.com`,
+      message: "CV attached (smoke)",
+      pageSlug: "careers",
+    });
+    ok(
+      "site: career form no lead",
+      okHttp(r.status) && r.data?.ok === true && (r.data?.leadId == null || r.data?.leadId === null),
+      `status=${r.status} leadId=${r.data?.leadId}`,
+    );
+  }
+  {
+    const r = await req("GET", "/site/robots.txt");
+    const body = typeof r.data === "string" ? r.data : r.data?.raw || "";
+    ok("site: robots.txt", okHttp(r.status) && String(body).includes("Sitemap:"), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/site/sitemap.xml");
+    const body = typeof r.data === "string" ? r.data : r.data?.raw || "";
+    ok("site: sitemap.xml", okHttp(r.status) && String(body).includes("<urlset"), `status=${r.status}`);
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);

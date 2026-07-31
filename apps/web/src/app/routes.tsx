@@ -100,6 +100,20 @@ const AnalyticsSalesPage = lazy(() => import("@/pages/AnalyticsSalesPage"));
 const AnalyticsCommsPage = lazy(() => import("@/pages/AnalyticsCommsPage"));
 const AnalyticsFinancePage = lazy(() => import("@/pages/AnalyticsFinancePage"));
 const AnalyticsReportsPage = lazy(() => import("@/pages/AnalyticsReportsPage"));
+const CmsPagesPage = lazy(() => import("@/pages/CmsPagesPage"));
+const CmsMenusPage = lazy(() => import("@/pages/CmsMenusPage"));
+const CmsMediaPage = lazy(() => import("@/pages/CmsMediaPage"));
+const CmsBannersPage = lazy(() => import("@/pages/CmsBannersPage"));
+const CmsContentPage = lazy(() => import("@/pages/CmsContentPage"));
+const CmsTravelPage = lazy(() => import("@/pages/CmsTravelPage"));
+const CmsFormsPage = lazy(() => import("@/pages/CmsFormsPage"));
+const CmsSeoPage = lazy(() => import("@/pages/CmsSeoPage"));
+const CmsReportsPage = lazy(() => import("@/pages/CmsReportsPage"));
+const SiteHomePage = lazy(() => import("@/pages/SiteHomePage"));
+const SitePageView = lazy(() => import("@/pages/SitePageView"));
+const SiteEnquirePage = lazy(() => import("@/pages/SiteEnquirePage"));
+const SiteSearchPage = lazy(() => import("@/pages/SiteSearchPage"));
+const SiteTravelView = lazy(() => import("@/pages/SiteTravelView"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -120,6 +134,46 @@ const NewVisaCasePage = lazy(() =>
  */
 export const router = createHashRouter([
   { path: "/login", element: <LoginPage /> },
+  {
+    path: "/site",
+    element: (
+      <Lazy>
+        <SiteHomePage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/site/p/:slug",
+    element: (
+      <Lazy>
+        <SitePageView />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/site/enquire",
+    element: (
+      <Lazy>
+        <SiteEnquirePage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/site/search",
+    element: (
+      <Lazy>
+        <SiteSearchPage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/site/travel/:serviceType/:slug",
+    element: (
+      <Lazy>
+        <SiteTravelView />
+      </Lazy>
+    ),
+  },
   {
     element: <RequireAuth />,
     errorElement: <NotFoundPage />,
@@ -774,6 +828,78 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <AnalyticsReportsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "cms",
+            element: (
+              <Lazy>
+                <CmsPagesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "cms/menus",
+            element: (
+              <Lazy>
+                <CmsMenusPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "cms/media",
+            element: (
+              <Lazy>
+                <CmsMediaPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "cms/banners",
+            element: (
+              <Lazy>
+                <CmsBannersPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "cms/content",
+            element: (
+              <Lazy>
+                <CmsContentPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "cms/travel",
+            element: (
+              <Lazy>
+                <CmsTravelPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "cms/forms",
+            element: (
+              <Lazy>
+                <CmsFormsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "cms/seo",
+            element: (
+              <Lazy>
+                <CmsSeoPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "cms/reports",
+            element: (
+              <Lazy>
+                <CmsReportsPage />
               </Lazy>
             ),
           },

@@ -1145,3 +1145,186 @@ export const analyticsApi = {
   patchSchedule: (id: string, body: Record<string, unknown>) =>
     apiFetch(`/analytics/schedules/${id}`, { method: "PATCH", body }),
 };
+
+/* ---------- Phase E1 Website & CMS ---------- */
+
+export type CmsPage = {
+  id: string;
+  slug: string;
+  title: string;
+  body?: string | null;
+  blocks?: unknown;
+  status: string;
+  published: boolean;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  seoKeywords?: string | null;
+  canonicalUrl?: string | null;
+  ogImage?: string | null;
+  structuredData?: unknown;
+  branchId?: string | null;
+  publishedAt?: string | null;
+  updatedAt?: string;
+  versions?: { id: string; version: number; createdAt: string; createdBy: string }[];
+};
+
+export type CmsMenu = {
+  id: string;
+  code: string;
+  name: string;
+  isActive: boolean;
+  items?: { id: string; label: string; href: string; sortOrder: number; isActive: boolean }[];
+};
+
+export type CmsMedia = {
+  id: string;
+  fileName: string;
+  storageKey: string;
+  mimeType?: string | null;
+  altText?: string | null;
+  folder?: string | null;
+  branchId?: string | null;
+};
+
+export type CmsBanner = {
+  id: string;
+  code: string;
+  title: string;
+  subtitle?: string | null;
+  imageUrl?: string | null;
+  linkHref?: string | null;
+  placement: string;
+  sortOrder: number;
+  isActive: boolean;
+};
+
+export type CmsRedirect = {
+  id: string;
+  fromPath: string;
+  toPath: string;
+  statusCode: number;
+  isActive: boolean;
+};
+
+export type CmsContent = {
+  id: string;
+  type: string;
+  slug: string;
+  title: string;
+  summary?: string | null;
+  body?: string | null;
+  status: string;
+  publishedAt?: string | null;
+};
+
+export type CmsTravelOffer = {
+  id: string;
+  serviceType: string;
+  slug: string;
+  title: string;
+  summary?: string | null;
+  destination?: string | null;
+  priceFromPoisha?: number | null;
+  currencyCode?: string | null;
+  status: string;
+};
+
+export type CmsFormSubmission = {
+  id: string;
+  formType: string;
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+  message?: string | null;
+  pageSlug?: string | null;
+  leadId?: string | null;
+  status: string;
+  createdAt: string;
+};
+
+export type CmsReports = {
+  pageViews: { path: string; count: number }[];
+  formSubmissions: { formType: string; count: number }[];
+  leadGenerationByPage: { pageSlug: string; count: number }[];
+  publishing: { publishedPages: number; publishedContent: number; leadsFromForms: number };
+};
+
+export const cmsApi = {
+  bootstrap: () => apiFetch<{ ok: boolean; createdPages: number }>("/cms/bootstrap", { method: "POST", body: {} }),
+  listPages: (q?: { status?: string; branchId?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.status) p.set("status", q.status);
+    if (q?.branchId) p.set("branchId", q.branchId);
+    const qs = p.toString();
+    return apiFetch<CmsPage[]>(`/cms/pages${qs ? `?${qs}` : ""}`);
+  },
+  getPage: (id: string) => apiFetch<CmsPage>(`/cms/pages/${id}`),
+  upsertPage: (body: Record<string, unknown>) => apiFetch<CmsPage>("/cms/pages", { method: "POST", body }),
+  submitReview: (id: string) => apiFetch(`/cms/pages/${id}/submit-review`, { method: "POST", body: {} }),
+  publishPage: (id: string) => apiFetch(`/cms/pages/${id}/publish`, { method: "POST", body: {} }),
+  unpublishPage: (id: string) => apiFetch(`/cms/pages/${id}/unpublish`, { method: "POST", body: {} }),
+  deletePage: (id: string) => apiFetch(`/cms/pages/${id}`, { method: "DELETE" }),
+  listMenus: () => apiFetch<CmsMenu[]>("/cms/menus"),
+  upsertMenu: (body: Record<string, unknown>) => apiFetch<CmsMenu>("/cms/menus", { method: "POST", body }),
+  listMedia: () => apiFetch<CmsMedia[]>("/cms/media"),
+  createMedia: (body: Record<string, unknown>) => apiFetch<CmsMedia>("/cms/media", { method: "POST", body }),
+  listBanners: () => apiFetch<CmsBanner[]>("/cms/banners"),
+  createBanner: (body: Record<string, unknown>) => apiFetch<CmsBanner>("/cms/banners", { method: "POST", body }),
+  listRedirects: () => apiFetch<CmsRedirect[]>("/cms/redirects"),
+  createRedirect: (body: Record<string, unknown>) =>
+    apiFetch<CmsRedirect>("/cms/redirects", { method: "POST", body }),
+  listContent: (q?: { type?: string }) => {
+    const qs = q?.type ? `?type=${encodeURIComponent(q.type)}` : "";
+    return apiFetch<CmsContent[]>(`/cms/content${qs}`);
+  },
+  createContent: (body: Record<string, unknown>) => apiFetch<CmsContent>("/cms/content", { method: "POST", body }),
+  publishContent: (id: string) => apiFetch(`/cms/content/${id}/publish`, { method: "POST", body: {} }),
+  listTravel: (q?: { serviceType?: string }) => {
+    const qs = q?.serviceType ? `?serviceType=${encodeURIComponent(q.serviceType)}` : "";
+    return apiFetch<CmsTravelOffer[]>(`/cms/travel${qs}`);
+  },
+  createTravel: (body: Record<string, unknown>) =>
+    apiFetch<CmsTravelOffer>("/cms/travel", { method: "POST", body }),
+  listForms: (q?: { formType?: string }) => {
+    const qs = q?.formType ? `?formType=${encodeURIComponent(q.formType)}` : "";
+    return apiFetch<CmsFormSubmission[]>(`/cms/forms${qs}`);
+  },
+  reports: () => apiFetch<CmsReports>("/cms/reports"),
+};
+
+export const siteApi = {
+  page: (slug: string) =>
+    apiFetch<{ page?: Record<string, unknown>; redirect?: { to: string; statusCode: number } }>(
+      `/site/pages/${encodeURIComponent(slug)}`,
+      { skipRefresh: true, quietAuth: true },
+    ),
+  menu: (code: string) =>
+    apiFetch<CmsMenu | null>(`/site/menus/${encodeURIComponent(code)}`, { skipRefresh: true, quietAuth: true }),
+  banners: (placement?: string) => {
+    const qs = placement ? `?placement=${encodeURIComponent(placement)}` : "";
+    return apiFetch<CmsBanner[]>(`/site/banners${qs}`, { skipRefresh: true, quietAuth: true });
+  },
+  content: (type?: string) => {
+    const qs = type ? `?type=${encodeURIComponent(type)}` : "";
+    return apiFetch<CmsContent[]>(`/site/content${qs}`, { skipRefresh: true, quietAuth: true });
+  },
+  travel: (serviceType?: string) => {
+    const qs = serviceType ? `?serviceType=${encodeURIComponent(serviceType)}` : "";
+    return apiFetch<CmsTravelOffer[]>(`/site/travel${qs}`, { skipRefresh: true, quietAuth: true });
+  },
+  search: (q: string) =>
+    apiFetch<{
+      query: string;
+      pages: Record<string, unknown>[];
+      content: Record<string, unknown>[];
+      packages: Record<string, unknown>[];
+      services: Record<string, unknown>[];
+    }>(`/site/search?q=${encodeURIComponent(q)}`, { skipRefresh: true, quietAuth: true }),
+  submitForm: (body: Record<string, unknown>) =>
+    apiFetch<{ ok: boolean; submissionId: string; leadId: string | null }>("/site/forms", {
+      method: "POST",
+      body,
+      skipRefresh: true,
+      quietAuth: true,
+    }),
+};
