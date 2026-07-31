@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import {
   Plane, Building2, FileText, Map, Star, Shield, Award,
   Users, Globe, ArrowRight, CheckCircle2, Phone,
   TrendingUp, Clock, Heart, Quote, Zap, BadgeCheck, Headphones,
-  GraduationCap, Stethoscope, Bus, Hotel, ScrollText,
+  GraduationCap, Stethoscope,
 } from "lucide-react";
 
 const SERVICES = [
@@ -39,79 +38,14 @@ const TESTIMONIALS = [
   { name: "Carlos Mendez",     title: "Corporate Client",   avatar: "C", rating: 5, text: "We manage travel for 200+ employees and TravelOS has transformed our booking process. Real-time status, automated approvals, and incredible support." },
 ];
 
-type HeroSvc = {
-  icon: string;
-  title: string;
-  description: string;
-  buttonText: string;
-  url: string;
-  sortOrder: number;
-};
-
-const DEFAULT_HERO_SVCS: HeroSvc[] = [
-  { icon: "passport", title: "Visa Services", description: "Tourist, business, student and family visas — prepared carefully for destinations worldwide.", buttonText: "Apply Now", url: "/inquiry?service=visa", sortOrder: 10 },
-  { icon: "kaaba", title: "Hajj & Umrah", description: "Complete pilgrimage packages with flights, hotels, transport and on-ground guidance.", buttonText: "View Packages", url: "/tours", sortOrder: 20 },
-  { icon: "plane", title: "Air Ticket", description: "Domestic and international tickets for individuals, families and groups.", buttonText: "Book Now", url: "/inquiry?service=air_ticket", sortOrder: 30 },
-  { icon: "globe", title: "Tour Packages", description: "Curated itineraries for families, honeymoons and groups — built around you.", buttonText: "Explore Tours", url: "/tours", sortOrder: 40 },
-];
-
-function heroIcon(key: string) {
-  const cls = "text-accent";
-  if (key === "passport") return <ScrollText size={22} className={cls} aria-hidden />;
-  if (key === "plane") return <Plane size={22} className={cls} aria-hidden />;
-  if (key === "hotel") return <Hotel size={22} className={cls} aria-hidden />;
-  if (key === "bus") return <Bus size={22} className={cls} aria-hidden />;
-  if (key === "kaaba") {
-    return (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={cls} aria-hidden>
-        <path d="M4 8.5 12 4l8 4.5v11L12 24 4 19.5v-11Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-        <path d="M4 8.5 12 13l8-4.5M12 13v11" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-      </svg>
-    );
-  }
-  return <Globe size={22} className={cls} aria-hidden />;
-}
+const HERO_NAV = [
+  { icon: "🛂", title: "Visa Services", url: "/visa" },
+  { icon: "✈️", title: "Air Tickets", url: "/air-ticket" },
+  { icon: "🕋", title: "Hajj & Umrah", url: "/hajj" },
+  { icon: "🌍", title: "Tour Packages", url: "/tours" },
+] as const;
 
 export default function Home() {
-  const [heroSvcs, setHeroSvcs] = useState<HeroSvc[]>(DEFAULT_HERO_SVCS);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api2/site/content?type=hero_service");
-        if (!res.ok) return;
-        const rows = (await res.json()) as Array<{
-          title: string;
-          summary?: string;
-          body?: string;
-          coverUrl?: string;
-          meta?: { url?: string; icon?: string };
-          sortOrder?: number;
-          status?: string;
-        }>;
-        const mapped = rows
-          .filter((r) => r.status === "published" || !r.status)
-          .map((r) => ({
-            icon: r.coverUrl || r.meta?.icon || "globe",
-            title: r.title,
-            description: r.summary || "",
-            buttonText: r.body || "Learn more",
-            url: r.meta?.url || "/inquiry",
-            sortOrder: r.sortOrder || 0,
-          }))
-          .sort((a, b) => a.sortOrder - b.sortOrder)
-          .slice(0, 6);
-        if (!cancelled && mapped.length) setHeroSvcs(mapped);
-      } catch {
-        /* keep defaults */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   return (
     <div>
       {/* ── Hero ── */}
@@ -129,33 +63,32 @@ export default function Home() {
             Visa, air tickets, hotels, tours, Hajj & Umrah and more — for every country, handled by our specialists in Dhaka, Bangladesh.
           </p>
 
-          {/* Premium Hero Services */}
-          <ul className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4 max-w-5xl mx-auto text-left" aria-label="Featured travel services">
-            {heroSvcs.map((svc) => (
-              <li key={svc.title}>
-                <Link
-                  to={svc.url}
-                  className="group flex h-full flex-col rounded-2xl border border-white/15 bg-white/10 p-4 md:p-5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white/16 hover:border-white/30 hover:shadow-xl hover:shadow-black/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                  aria-label={`${svc.title}: ${svc.buttonText}`}
-                >
-                  <span className="mb-3 inline-flex size-11 items-center justify-center rounded-xl bg-accent/15 transition-colors group-hover:bg-accent/25" aria-hidden>
-                    {heroIcon(svc.icon)}
-                  </span>
-                  <span className="text-[15px] font-bold text-white">{svc.title}</span>
-                  <span className="mt-1.5 text-[12px] leading-relaxed text-white/70 flex-1">{svc.description}</span>
-                  <span className="mt-4 inline-flex items-center gap-1.5 text-[12px] font-bold text-accent">
-                    {svc.buttonText}
-                    <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden />
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {/* Premium horizontal quick-access navigation */}
+          <nav className="st-hero-services max-w-4xl mx-auto" aria-label="Quick access travel services">
+            <ul className="st-hero-nav grid grid-cols-2 lg:grid-cols-4 gap-2.5 md:gap-3">
+              {HERO_NAV.map((item) => (
+                <li key={item.url} className="min-w-0">
+                  <Link
+                    to={item.url}
+                    className="group relative inline-flex h-[50px] w-full items-center justify-center gap-2 rounded-full border border-white/35 bg-white/12 px-4 text-[13px] font-bold text-white backdrop-blur-md shadow-[0_8px_24px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all duration-300 hover:border-orange-500 hover:bg-white/16 hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                    aria-label={item.title}
+                  >
+                    <span className="text-[1.05rem] leading-none transition-all duration-300 group-hover:scale-105 group-hover:text-orange-500" aria-hidden>
+                      {item.icon}
+                    </span>
+                    <span className="relative inline-block truncate after:absolute after:left-0 after:right-0 after:-bottom-[3px] after:h-[1.5px] after:origin-left after:scale-x-0 after:rounded-full after:bg-orange-500 after:transition-transform after:duration-300 group-hover:after:scale-x-100">
+                      {item.title}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
           <div className="mt-8">
             <Link
               to="/inquiry"
-              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-accent text-white font-bold text-sm hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/25 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-accent text-white font-bold text-sm hover:bg-orange-600 transition-all duration-300 shadow-lg shadow-orange-500/25 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               Request a Free Consultation
               <ArrowRight size={16} aria-hidden />
