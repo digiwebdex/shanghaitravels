@@ -840,3 +840,130 @@ export type CrmQuotation = {
   opportunityId?: string | null;
   leadId?: string | null;
 };
+
+export type SalesStage = {
+  id: string;
+  code: string;
+  name: string;
+  sortOrder: number;
+  defaultProbabilityBps: number;
+  isWon: boolean;
+  isLost: boolean;
+  isConverted: boolean;
+};
+
+export type LostReason = { id: string; code: string; label: string; sortOrder: number };
+
+export type SalesQuotation = CrmQuotation & {
+  version: number;
+  rootQuoteId?: string | null;
+  discountPoisha?: number;
+  discountBps?: number;
+  taxPoisha?: number;
+  subtotalPoisha?: number;
+  validUntil?: string | null;
+  applicationId?: string | null;
+  lines?: {
+    id?: string;
+    lineNo: number;
+    productCode?: string | null;
+    description: string;
+    quantity: number;
+    unitPricePoisha: number;
+    discountPoisha?: number;
+    amountPoisha: number;
+  }[];
+};
+
+export type PriceTemplate = {
+  id: string;
+  code: string;
+  name: string;
+  serviceType: string;
+  lines?: { lineNo: number; productCode?: string | null; description: string; unitPricePoisha: number }[];
+};
+
+export type PriceBook = {
+  id: string;
+  code: string;
+  name: string;
+  kind: string;
+  serviceType?: string | null;
+  discountBps: number;
+  unitPricePoisha?: number | null;
+};
+
+export type SalesTask = {
+  id: string;
+  title: string;
+  type: string;
+  status: string;
+  dueAt?: string | null;
+  slaDueAt?: string | null;
+  opportunityId?: string | null;
+  opportunity?: { id: string; opportunityNo: string; title: string } | null;
+};
+
+export const salesApi = {
+  bootstrap: () => apiFetch("/sales/bootstrap", { method: "POST", body: {} }),
+  listStages: () => apiFetch<SalesStage[]>("/sales/stages"),
+  listLostReasons: () => apiFetch<LostReason[]>("/sales/lost-reasons"),
+  setOpportunityStage: (id: string, body: Record<string, unknown>) =>
+    apiFetch(`/sales/opportunities/${id}/stage`, { method: "POST", body }),
+  opportunityHistory: (id: string) => apiFetch(`/sales/opportunities/${id}/history`),
+  listQuotations: (q?: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(q || {})) if (v) p.set(k, v);
+    const qs = p.toString();
+    return apiFetch<SalesQuotation[]>(`/sales/quotations${qs ? `?${qs}` : ""}`);
+  },
+  getQuotation: (id: string) => apiFetch<SalesQuotation>(`/sales/quotations/${id}`),
+  createQuotation: (body: Record<string, unknown>) =>
+    apiFetch<SalesQuotation>("/sales/quotations", { method: "POST", body }),
+  submitQuotation: (id: string) => apiFetch(`/sales/quotations/${id}/submit`, { method: "POST", body: {} }),
+  approveQuotation: (id: string) => apiFetch(`/sales/quotations/${id}/approve`, { method: "POST", body: {} }),
+  rejectQuotation: (id: string, reason: string) =>
+    apiFetch(`/sales/quotations/${id}/reject`, { method: "POST", body: { reason } }),
+  sendQuotation: (id: string) =>
+    apiFetch<{ quotation: SalesQuotation; emailReady: { subject: string; html: string } }>(
+      `/sales/quotations/${id}/send`,
+      { method: "POST", body: {} },
+    ),
+  reviseQuotation: (id: string, body?: Record<string, unknown>) =>
+    apiFetch<SalesQuotation>(`/sales/quotations/${id}/revise`, { method: "POST", body: body || {} }),
+  exportQuotationUrl: (id: string) => `/sales/quotations/${id}/export`,
+  listPriceTemplates: () => apiFetch<PriceTemplate[]>("/sales/price-templates"),
+  createPriceTemplate: (body: Record<string, unknown>) =>
+    apiFetch<PriceTemplate>("/sales/price-templates", { method: "POST", body }),
+  listPriceBooks: () => apiFetch<PriceBook[]>("/sales/price-books"),
+  createPriceBook: (body: Record<string, unknown>) =>
+    apiFetch<PriceBook>("/sales/price-books", { method: "POST", body }),
+  resolvePricing: (body: Record<string, unknown>) => apiFetch("/sales/pricing/resolve", { method: "POST", body }),
+  listTasks: (q?: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(q || {})) if (v) p.set(k, v);
+    const qs = p.toString();
+    return apiFetch<SalesTask[]>(`/sales/tasks${qs ? `?${qs}` : ""}`);
+  },
+  createTask: (body: Record<string, unknown>) => apiFetch<SalesTask>("/sales/tasks", { method: "POST", body }),
+  completeTask: (id: string) => apiFetch(`/sales/tasks/${id}/complete`, { method: "POST", body: {} }),
+  escalateTask: (id: string) => apiFetch(`/sales/tasks/${id}/escalate`, { method: "POST", body: {} }),
+  convert: (body: Record<string, unknown>) =>
+    apiFetch<{ application: { id: string; referenceNo: string; serviceType: string }; quotationId: string }>(
+      "/sales/convert",
+      { method: "POST", body },
+    ),
+  reportQuoteStatus: () =>
+    apiFetch<{ rows: { status: string; count: number; totalPoisha: number }[] }>("/sales/reports/quote-status"),
+  reportWinLoss: () => apiFetch<{ won: number; lost: number; open: number; winRate: number }>("/sales/reports/win-loss"),
+  reportFunnel: () =>
+    apiFetch<{ rows: { stage: string; name: string; count: number; expectedRevenuePoisha: number }[] }>(
+      "/sales/reports/funnel",
+    ),
+  reportByExecutive: () => apiFetch<{ rows: Record<string, unknown>[] }>("/sales/reports/by-executive"),
+  reportConversionTime: () => apiFetch<{ sampleSize: number; avgDays: number }>("/sales/reports/conversion-time"),
+  reportForecastAccuracy: () =>
+    apiFetch<{ sampleSize: number; forecastedPoisha: number; actualPoisha: number; accuracyPct: number | null }>(
+      "/sales/reports/forecast-accuracy",
+    ),
+};

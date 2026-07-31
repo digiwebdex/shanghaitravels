@@ -8,6 +8,7 @@ const LINKS: { to: string; label: string; end?: boolean }[] = [
   { to: "/crm/activities", label: "Activities" },
   { to: "/crm/quotations", label: "Quotations" },
   { to: "/crm/reports", label: "Reports" },
+  { to: "/sales", label: "Sales →" },
 ];
 
 export function CrmModuleNav() {

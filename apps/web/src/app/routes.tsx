@@ -83,6 +83,11 @@ const CrmOpportunitiesPage = lazy(() => import("@/pages/CrmOpportunitiesPage"));
 const CrmActivitiesPage = lazy(() => import("@/pages/CrmActivitiesPage"));
 const CrmQuotationsPage = lazy(() => import("@/pages/CrmQuotationsPage"));
 const CrmReportsPage = lazy(() => import("@/pages/CrmReportsPage"));
+const SalesPipelinePage = lazy(() => import("@/pages/SalesPipelinePage"));
+const SalesQuotationsPage = lazy(() => import("@/pages/SalesQuotationsPage"));
+const SalesPricingPage = lazy(() => import("@/pages/SalesPricingPage"));
+const SalesTasksPage = lazy(() => import("@/pages/SalesTasksPage"));
+const SalesReportsPage = lazy(() => import("@/pages/SalesReportsPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -621,6 +626,46 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <CrmReportsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "sales",
+            element: (
+              <Lazy>
+                <SalesPipelinePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "sales/quotations",
+            element: (
+              <Lazy>
+                <SalesQuotationsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "sales/pricing",
+            element: (
+              <Lazy>
+                <SalesPricingPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "sales/tasks",
+            element: (
+              <Lazy>
+                <SalesTasksPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "sales/reports",
+            element: (
+              <Lazy>
+                <SalesReportsPage />
               </Lazy>
             ),
           },

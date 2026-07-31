@@ -1073,6 +1073,157 @@ async function main() {
     ok("crm: forecast report", okHttp(r.status) && r.data?.weightedRevenuePoisha != null, `status=${r.status}`);
   }
 
+  // ---------- Phase D2 — Sales Automation ----------
+  let salesQuoteId = null;
+  let salesOppId = crmOppId;
+  {
+    const r = await req("POST", "/sales/bootstrap", {});
+    ok("sales: bootstrap", okHttp(r.status) && r.data?.ok === true, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/sales/stages");
+    ok("sales: list stages", okHttp(r.status) && Array.isArray(r.data) && r.data.length >= 5, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/sales/lost-reasons");
+    ok("sales: list lost reasons", okHttp(r.status) && Array.isArray(r.data) && r.data.length >= 3, `status=${r.status}`);
+  }
+  if (!salesOppId) {
+    const r = await req("POST", "/crm/opportunities", {
+      title: `Sales smoke opp ${Date.now()}`,
+      serviceType: "hotel",
+      expectedRevenuePoisha: 2500000,
+    });
+    salesOppId = r.data?.id || null;
+    ok("sales: ensure opportunity", okHttp(r.status) && !!salesOppId, `status=${r.status}`);
+  }
+  if (salesOppId) {
+    const r = await req("POST", `/sales/opportunities/${salesOppId}/stage`, { stage: "negotiation" });
+    ok("sales: set opportunity stage", okHttp(r.status) && r.data?.stage === "negotiation", `status=${r.status}`);
+  }
+  if (salesOppId) {
+    const r = await req("GET", `/sales/opportunities/${salesOppId}/history`);
+    ok("sales: stage history", okHttp(r.status) && Array.isArray(r.data), `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/sales/quotations", {
+      serviceType: "hotel",
+      opportunityId: salesOppId || undefined,
+      leadId: crmLeadId || undefined,
+      discountPoisha: 50000,
+      taxPoisha: 10000,
+      validUntil: new Date(Date.now() + 7 * 86400000).toISOString(),
+      lines: [{ description: "Deluxe room package", quantity: 2, unitPricePoisha: 800000, productCode: "HTL-DLX" }],
+    });
+    salesQuoteId = r.data?.id || null;
+    ok(
+      "sales: create quotation",
+      okHttp(r.status) && !!salesQuoteId && r.data?.version === 1 && r.data?.status === "draft",
+      `status=${r.status}`,
+    );
+  }
+  if (salesQuoteId) {
+    const r = await req("POST", `/sales/quotations/${salesQuoteId}/submit`, {});
+    ok("sales: submit quotation", okHttp(r.status) && r.data?.status === "pending_approval", `status=${r.status}`);
+  }
+  if (salesQuoteId) {
+    const r = await req("POST", `/sales/quotations/${salesQuoteId}/approve`, {});
+    ok("sales: approve quotation", okHttp(r.status) && r.data?.status === "approved", `status=${r.status}`);
+  }
+  if (salesQuoteId) {
+    const r = await req("POST", `/sales/quotations/${salesQuoteId}/send`, {});
+    ok(
+      "sales: send quotation email-ready",
+      okHttp(r.status) && !!r.data?.emailReady?.html && r.data?.quotation?.status === "sent",
+      `status=${r.status}`,
+    );
+  }
+  if (salesQuoteId) {
+    const r = await req("POST", `/sales/quotations/${salesQuoteId}/revise`, {});
+    ok("sales: revise quotation", okHttp(r.status) && r.data?.version >= 2 && r.data?.status === "draft", `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/sales/price-templates", {
+      name: `Visa template ${Date.now()}`,
+      serviceType: "visa",
+      lines: [{ description: "Standard visa fee", productCode: "VISA-STD", unitPricePoisha: 450000 }],
+    });
+    ok("sales: create price template", okHttp(r.status) && !!r.data?.code, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/sales/price-books", {
+      name: `Promo ${Date.now()}`,
+      kind: "promo",
+      serviceType: "visa",
+      unitPricePoisha: 400000,
+      discountBps: 500,
+    });
+    ok("sales: create price book", okHttp(r.status) && r.data?.kind === "promo", `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/sales/pricing/resolve", { serviceType: "visa" });
+    ok("sales: resolve pricing", okHttp(r.status) && r.data?.unitPricePoisha != null, `status=${r.status}`);
+  }
+  let salesTaskId = null;
+  {
+    const r = await req("POST", "/sales/tasks", {
+      title: `Follow up ${Date.now()}`,
+      type: "follow_up",
+      opportunityId: salesOppId || undefined,
+      slaHours: 24,
+    });
+    salesTaskId = r.data?.id || null;
+    ok("sales: create task", okHttp(r.status) && !!salesTaskId, `status=${r.status}`);
+  }
+  if (salesTaskId) {
+    const r = await req("POST", `/sales/tasks/${salesTaskId}/escalate`, {});
+    ok("sales: escalate task", okHttp(r.status) && r.data?.status === "escalated", `status=${r.status}`);
+  }
+  // Convert needs approved/accepted — create fresh approved quote for convert
+  let convertQuoteId = null;
+  {
+    const created = await req("POST", "/sales/quotations", {
+      serviceType: "tour",
+      opportunityId: salesOppId || undefined,
+      lines: [{ description: "Cox's Bazar 3D2N", quantity: 1, unitPricePoisha: 1500000 }],
+    });
+    convertQuoteId = created.data?.id || null;
+    if (convertQuoteId) {
+      await req("POST", `/sales/quotations/${convertQuoteId}/submit`, {});
+      await req("POST", `/sales/quotations/${convertQuoteId}/approve`, {});
+    }
+    const r = await req("POST", "/sales/convert", { quotationId: convertQuoteId, serviceType: "tour" });
+    ok(
+      "sales: convert approved quote to booking",
+      okHttp(r.status) && !!r.data?.application?.referenceNo,
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("GET", "/sales/reports/quote-status");
+    ok("sales: quote status report", okHttp(r.status) && Array.isArray(r.data?.rows), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/sales/reports/win-loss");
+    ok("sales: win-loss report", okHttp(r.status) && r.data?.winRate != null, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/sales/reports/funnel");
+    ok("sales: funnel report", okHttp(r.status) && Array.isArray(r.data?.rows), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/sales/reports/by-executive");
+    ok("sales: by-executive report", okHttp(r.status) && Array.isArray(r.data?.rows), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/sales/reports/conversion-time");
+    ok("sales: conversion-time report", okHttp(r.status) && r.data?.avgDays != null, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/sales/reports/forecast-accuracy");
+    ok("sales: forecast-accuracy report", okHttp(r.status) && r.data?.sampleSize != null, `status=${r.status}`);
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);
