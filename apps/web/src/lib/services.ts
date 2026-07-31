@@ -10,6 +10,15 @@ import type {
   PackageSearchFilters,
 } from "@/lib/packages";
 import { buildPackageListQuery, buildPackageSearchQuery } from "@/lib/packages";
+import {
+  buildDestinationBrowseQuery,
+  buildDestinationListQuery,
+  type DestinationBrowseFilters,
+  type DestinationGalleryItem,
+  type DestinationListFilters,
+  type DestinationMaster,
+  type DestinationShowcaseSettings,
+} from "@/lib/destinations";
 import type {
   Account,
   AppDocument,
@@ -1446,4 +1455,58 @@ export const sitePackagesApi = {
         quietAuth: true,
       },
     ),
+};
+
+export const destinationsApi = {
+  list: (q?: DestinationListFilters) => {
+    const qs = buildDestinationListQuery(q || {}).toString();
+    return apiFetch<{ data: DestinationMaster[]; total: number } | DestinationMaster[]>(
+      `/destinations${qs ? `?${qs}` : ""}`,
+    );
+  },
+  get: (id: string) => apiFetch<DestinationMaster>(`/destinations/${id}`),
+  create: (body: Record<string, unknown>) =>
+    apiFetch<DestinationMaster>("/destinations", { method: "POST", body }),
+  update: (id: string, body: Record<string, unknown>) =>
+    apiFetch<DestinationMaster>(`/destinations/${id}`, { method: "PATCH", body }),
+  remove: (id: string) => apiFetch(`/destinations/${id}`, { method: "DELETE" }),
+  publish: (id: string) =>
+    apiFetch<DestinationMaster>(`/destinations/${id}/publish`, { method: "POST", body: {} }),
+  unpublish: (id: string) =>
+    apiFetch<DestinationMaster>(`/destinations/${id}/unpublish`, { method: "POST", body: {} }),
+  archive: (id: string) =>
+    apiFetch<DestinationMaster>(`/destinations/${id}/archive`, { method: "POST", body: {} }),
+  getShowcaseSettings: () => apiFetch<DestinationShowcaseSettings>("/destinations/showcase-settings"),
+  updateShowcaseSettings: (body: Partial<DestinationShowcaseSettings>) =>
+    apiFetch<DestinationShowcaseSettings>("/destinations/showcase-settings", { method: "PUT", body }),
+};
+
+export const siteDestinationsApi = {
+  list: (q?: DestinationListFilters) => {
+    const qs = buildDestinationListQuery(q || {}).toString();
+    return apiFetch<{ data: DestinationMaster[]; total: number } | DestinationMaster[]>(
+      `/site/destinations${qs ? `?${qs}` : ""}`,
+      { skipRefresh: true, quietAuth: true },
+    );
+  },
+  browse: (q?: DestinationBrowseFilters) => {
+    const qs = buildDestinationBrowseQuery(q || {}).toString();
+    return apiFetch<{ data: DestinationMaster[]; total: number }>(
+      `/site/destinations/browse${qs ? `?${qs}` : ""}`,
+      { skipRefresh: true, quietAuth: true },
+    );
+  },
+  getBySlug: (slug: string) =>
+    apiFetch<
+      DestinationMaster & {
+        gallery?: DestinationGalleryItem[];
+        packages?: PackageMaster[];
+        related?: DestinationMaster[];
+      }
+    >(`/site/destinations/${encodeURIComponent(slug)}`, { skipRefresh: true, quietAuth: true }),
+  settings: () =>
+    apiFetch<DestinationShowcaseSettings>("/site/destinations/settings", {
+      skipRefresh: true,
+      quietAuth: true,
+    }),
 };

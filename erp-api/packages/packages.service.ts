@@ -257,6 +257,7 @@ export class PackagesService {
     if (dto.publishAt !== undefined) data.publishAt = dto.publishAt ? new Date(dto.publishAt) : null;
     if (dto.expireAt !== undefined) data.expireAt = dto.expireAt ? new Date(dto.expireAt) : null;
     if (dto.supplierId !== undefined) data.supplierId = dto.supplierId || null;
+    if (dto.destinationId !== undefined) data.destinationId = dto.destinationId || null;
     if (dto.itineraryJson !== undefined) data.itineraryJson = dto.itineraryJson ?? null;
     if (dto.faqJson !== undefined) data.faqJson = dto.faqJson ?? null;
     if (userId && !partial) data.createdBy = userId;

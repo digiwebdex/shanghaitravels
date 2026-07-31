@@ -1603,6 +1603,14 @@ async function main() {
     );
   }
   {
+    const r = await req("GET", "/site/destinations?collection=home");
+    ok(
+      "site: destinations list",
+      okHttp(r.status) && (Array.isArray(r.data) || Array.isArray(r.data?.data)),
+      `status=${r.status}`,
+    );
+  }
+  {
     const r = await req("POST", "/site/forms", {
       formType: "enquiry",
       name: `Smoke Enquirer ${Date.now()}`,

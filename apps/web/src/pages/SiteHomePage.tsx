@@ -1,11 +1,14 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { siteApi, sitePackagesApi, type CmsBanner, type CmsContent, type CmsMenu, type CmsTravelOffer } from "@/lib/services";
+import { siteApi, sitePackagesApi, siteDestinationsApi, type CmsBanner, type CmsContent, type CmsMenu, type CmsTravelOffer } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import { HeroServicesGrid } from "@/components/cms/HeroServicesGrid";
+import { DestinationShowcaseGrid } from "@/components/destinations/DestinationShowcaseGrid";
 import { PackageCard } from "@/components/packages/PackageCard";
 import { PackageQuickView } from "@/components/packages/PackageQuickView";
 import type { PackageMaster } from "@/lib/packages";
+import type { DestinationMaster, DestinationShowcaseSettings } from "@/lib/destinations";
+import { DEFAULT_SHOWCASE_SETTINGS, mergeShowcaseSettings } from "@/lib/destinations";
 import {
   DEFAULT_HERO_SERVICES,
   HERO_SERVICE_TYPE,
@@ -30,10 +33,14 @@ export default function SiteHomePage() {
   const [travel, setTravel] = useState<CmsTravelOffer[]>([]);
   const [heroServices, setHeroServices] = useState<HeroServiceItem[]>([]);
   const [packages, setPackages] = useState<PackageMaster[]>([]);
+  const [destinations, setDestinations] = useState<DestinationMaster[]>([]);
+  const [destSettings, setDestSettings] = useState<DestinationShowcaseSettings>(DEFAULT_SHOWCASE_SETTINGS);
+  const [destinationsLoading, setDestinationsLoading] = useState(true);
   const [quickView, setQuickView] = useState<PackageMaster | null>(null);
   const [q, setQ] = useState("");
   const [error, setError] = useState("");
   const [packagesError, setPackagesError] = useState("");
+  const [destinationsError, setDestinationsError] = useState("");
 
   useEffect(() => {
     void (async () => {
@@ -69,6 +76,28 @@ export default function SiteHomePage() {
         setPackages(list);
       } catch (e) {
         setPackagesError(e instanceof ApiError ? e.message : "Failed to load packages");
+      }
+    })();
+    void (async () => {
+      setDestinationsLoading(true);
+      try {
+        const [list, settings] = await Promise.all([
+          siteDestinationsApi.list({ collection: "home" }),
+          siteDestinationsApi.settings().catch(() => DEFAULT_SHOWCASE_SETTINGS),
+        ]);
+        let items = listOf<DestinationMaster>(list);
+        if (!items.length) {
+          items = listOf<DestinationMaster>(await siteDestinationsApi.list({ homepageFeatured: true }));
+        }
+        if (!items.length) {
+          items = listOf<DestinationMaster>(await siteDestinationsApi.list({ popular: true }));
+        }
+        setDestinations(items);
+        setDestSettings(mergeShowcaseSettings(settings));
+      } catch (e) {
+        setDestinationsError(e instanceof ApiError ? e.message : "Failed to load destinations");
+      } finally {
+        setDestinationsLoading(false);
       }
     })();
   }, []);
@@ -146,6 +175,19 @@ export default function SiteHomePage() {
           </div>
           {error && <p className="mt-3 text-red-300 text-[11px]">{error}</p>}
         </div>
+      </section>
+
+      <section className="px-4 pb-10 max-w-6xl mx-auto">
+        {destinationsError && <p className="text-red-300 text-[11px] mb-3">{destinationsError}</p>}
+        <DestinationShowcaseGrid
+          destinations={destinations}
+          settings={destSettings}
+          loading={destinationsLoading}
+          variant="site"
+          title="Popular Destinations"
+          subtitle="Where we can take you — live from Destination Master"
+          browseHref="/site/destinations"
+        />
       </section>
 
       <section className="px-4 pb-16 max-w-6xl mx-auto">

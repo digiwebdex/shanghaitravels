@@ -111,13 +111,17 @@ const CmsFormsPage = lazy(() => import("@/pages/CmsFormsPage"));
 const CmsSeoPage = lazy(() => import("@/pages/CmsSeoPage"));
 const CmsReportsPage = lazy(() => import("@/pages/CmsReportsPage"));
 const CmsPackagesPage = lazy(() => import("@/pages/CmsPackagesPage"));
+const CmsDestinationsPage = lazy(() => import("@/pages/CmsDestinationsPage"));
 const PackagesListPage = lazy(() => import("@/pages/PackagesListPage"));
+const DestinationsListPage = lazy(() => import("@/pages/DestinationsListPage"));
 const PackagesPricingPage = lazy(() => import("@/pages/PackagesPricingPage"));
 const PackageCategoriesPage = lazy(() => import("@/pages/PackageCategoriesPage"));
 const PackageAvailabilityPage = lazy(() => import("@/pages/PackageAvailabilityPage"));
 const PackageGalleryPage = lazy(() => import("@/pages/PackageGalleryPage"));
 const PackageReportsPage = lazy(() => import("@/pages/PackageReportsPage"));
 const SiteHomePage = lazy(() => import("@/pages/SiteHomePage"));
+const SiteDestinationsBrowsePage = lazy(() => import("@/pages/SiteDestinationsBrowsePage"));
+const SiteDestinationDetailPage = lazy(() => import("@/pages/SiteDestinationDetailPage"));
 const SitePackageDetailPage = lazy(() => import("@/pages/SitePackageDetailPage"));
 const SitePackageBookPage = lazy(() => import("@/pages/SitePackageBookPage"));
 const SitePageView = lazy(() => import("@/pages/SitePageView"));
@@ -223,6 +227,22 @@ export const router = createHashRouter([
     element: (
       <Lazy>
         <SiteSearchPage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/site/destinations/:slug",
+    element: (
+      <Lazy>
+        <SiteDestinationDetailPage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/site/destinations",
+    element: (
+      <Lazy>
+        <SiteDestinationsBrowsePage />
       </Lazy>
     ),
   },
@@ -898,6 +918,14 @@ export const router = createHashRouter([
             ),
           },
           {
+            path: "products/destinations",
+            element: (
+              <Lazy>
+                <DestinationsListPage />
+              </Lazy>
+            ),
+          },
+          {
             path: "products/packages/pricing",
             element: (
               <Lazy>
@@ -1406,6 +1434,14 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <CmsPackagesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "cms/destinations",
+            element: (
+              <Lazy>
+                <CmsDestinationsPage />
               </Lazy>
             ),
           },

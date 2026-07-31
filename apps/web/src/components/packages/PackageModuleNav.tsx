@@ -2,6 +2,7 @@ import { NavLink } from "react-router";
 
 const LINKS: { to: string; label: string; end?: boolean }[] = [
   { to: "/products/packages", label: "Packages", end: true },
+  { to: "/products/destinations", label: "Destinations" },
   { to: "/products/categories", label: "Categories" },
   { to: "/products/packages/pricing", label: "Pricing" },
   { to: "/products/gallery", label: "Gallery" },

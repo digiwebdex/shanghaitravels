@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { useEffect, useState } from "react";
 import {
   Plane, Building2, FileText, Map, Star, Shield, Award,
   Users, Globe, ArrowRight, CheckCircle2, Phone,
@@ -44,6 +45,173 @@ const HERO_NAV = [
   { icon: "🕋", title: "Hajj & Umrah", url: "/hajj" },
   { icon: "🌍", title: "Tour Packages", url: "/tours" },
 ] as const;
+
+] as const;
+
+type DestRow = {
+  id: string;
+  slug: string;
+  name: string;
+  countryName?: string | null;
+  country?: string | null;
+  countryCode?: string | null;
+  region?: string | null;
+  flagEmoji?: string | null;
+  flagUrl?: string | null;
+  heroImageUrl?: string | null;
+  coverImageUrl?: string | null;
+  packageCount?: number | null;
+};
+
+type DestSettings = {
+  enabled?: boolean;
+  maxCards?: number;
+  showPackageCount?: boolean;
+  showRegion?: boolean;
+  showFlag?: boolean;
+  showHeroImage?: boolean;
+  showCta?: boolean;
+  ctaLabel?: string;
+};
+
+function formatPkgCount(n?: number | null) {
+  const c = Math.max(0, Number(n) || 0);
+  return c === 1 ? "1 Package" : `${c} Packages`;
+}
+
+function DestinationsHomeSection() {
+  const [rows, setRows] = useState<DestRow[]>([]);
+  const [settings, setSettings] = useState<DestSettings>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const [listRes, settingsRes] = await Promise.all([
+          fetch("/api2/site/destinations?collection=home"),
+          fetch("/api2/site/destinations/settings").catch(() => null),
+        ]);
+        const listJson = listRes.ok ? await listRes.json() : { data: [] };
+        const settingsJson = settingsRes?.ok ? await settingsRes.json() : {};
+        let items: DestRow[] = Array.isArray(listJson) ? listJson : listJson.data || [];
+        if (!items.length) {
+          const fb = await fetch("/api2/site/destinations?homepageFeatured=true");
+          const fbJson = fb.ok ? await fb.json() : { data: [] };
+          items = Array.isArray(fbJson) ? fbJson : fbJson.data || [];
+        }
+        if (!cancelled) {
+          setRows(items);
+          setSettings(settingsJson || {});
+        }
+      } catch {
+        if (!cancelled) setRows([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (settings.enabled === false) return null;
+
+  const max = Math.max(1, settings.maxCards ?? 8);
+  const visible = rows
+    .slice()
+    .sort((a, b) => {
+      const ao = (a as DestRow & { displayOrder?: number; sortOrder?: number }).displayOrder
+        ?? (a as DestRow & { sortOrder?: number }).sortOrder
+        ?? 9999;
+      const bo = (b as DestRow & { displayOrder?: number; sortOrder?: number }).displayOrder
+        ?? (b as DestRow & { sortOrder?: number }).sortOrder
+        ?? 9999;
+      return ao - bo;
+    })
+    .slice(0, max);
+
+  return (
+    <section className="py-20 bg-muted/40 st-destinations-home-mount">
+      <div className="max-w-[1440px] mx-auto px-8">
+        <div className="flex items-end justify-between mb-10">
+          <div>
+            <p className="text-xs font-semibold tracking-widest text-accent uppercase mb-2">Explore</p>
+            <h2 className="text-foreground text-3xl font-bold">Popular Destinations</h2>
+            <p className="text-muted-foreground text-sm mt-2">Where we can take you — live from Destination Master.</p>
+          </div>
+          <a href="/erp/#/site/destinations" className="hidden md:flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-accent transition-colors">
+            Browse all countries <ArrowRight size={14} />
+          </a>
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-44 rounded-2xl border border-border bg-card animate-pulse" aria-hidden />
+            ))}
+          </div>
+        ) : visible.length ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            {visible.map((d) => {
+              const country = d.countryName || d.country || d.name;
+              const img = settings.showHeroImage !== false ? d.heroImageUrl || d.coverImageUrl : "";
+              const href = `/erp/#/site/destinations/${encodeURIComponent(d.slug)}`;
+              return (
+                <article
+                  key={d.id}
+                  className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-orange-400/50 hover:shadow-lg"
+                >
+                  <a href={href} className="flex min-h-[168px] outline-none" aria-label={`Explore ${country}`}>
+                    <div className="w-[42%] p-4 flex flex-col justify-center gap-2">
+                      {settings.showFlag !== false && (
+                        <div className="size-12 rounded-full border border-border bg-muted flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110 overflow-hidden">
+                          {d.flagUrl ? <img src={d.flagUrl} alt="" className="size-full object-cover" loading="lazy" /> : (d.flagEmoji || "🌍")}
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="font-bold text-[15px]">{country}</h3>
+                        {d.countryCode && <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mt-0.5">{d.countryCode}</p>}
+                        {settings.showRegion !== false && d.region && <p className="text-[11px] text-muted-foreground mt-1">{d.region}</p>}
+                      </div>
+                    </div>
+                    {settings.showHeroImage !== false && (
+                      <div className="relative w-[58%] overflow-hidden min-h-[168px]">
+                        {img ? (
+                          <img src={img} alt="" loading="lazy" className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        ) : (
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-primary" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-l from-black/10 via-black/25 to-black/50" />
+                      </div>
+                    )}
+                  </a>
+                  <div className="relative flex items-center border-t border-border px-4 py-3 bg-muted/30">
+                    <div>
+                      {settings.showPackageCount !== false && (
+                        <p className="text-[11px] font-semibold text-accent">{formatPkgCount(d.packageCount)}</p>
+                      )}
+                      {settings.showCta !== false && (
+                        <a href={href} className="text-[11px] font-bold text-foreground/80 hover:text-accent mt-0.5 inline-block">
+                          {settings.ctaLabel || "Explore Destination →"}
+                        </a>
+                      )}
+                    </div>
+                    <a href={href} className="absolute bottom-3 right-3 size-10 rounded-full bg-accent text-white flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:translate-x-0.5" aria-label={`Open ${country}`}>
+                      <ArrowRight size={18} />
+                    </a>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-center text-sm text-muted-foreground py-10 border border-dashed border-border rounded-xl">No published destinations yet.</p>
+        )}
+      </div>
+    </section>
+  );
+}
 
 export default function Home() {
   return (
@@ -199,6 +367,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <DestinationsHomeSection />
 
       {/* ── Featured Tours ── */}
       <section className="py-20 bg-background">

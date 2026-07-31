@@ -31,10 +31,32 @@ test.describe("Package Engine module", () => {
     await expect(page.getByText(/PackageID is the source of truth/i)).toBeVisible();
   });
 
+  test("login and open products destinations admin", async ({ page }) => {
+    const email = env("ERP_TEST_EMAIL");
+    const password = env("ERP_TEST_PASSWORD");
+    test.skip(!email || !password, "ERP_TEST_* missing");
+
+    await page.goto("./#/login");
+    await page.locator("#email").fill(email);
+    await page.locator("#password").fill(password);
+    await page.getByRole("button", { name: /Sign In/i }).click();
+    await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible({ timeout: 30_000 });
+
+    await page.goto("./#/products/destinations");
+    await expect(page.getByRole("heading", { name: /Destination Master/i })).toBeVisible({
+      timeout: 20_000,
+    });
+  });
+
   test("public site package route renders shell", async ({ page }) => {
     await page.goto("./#/site");
     await expect(page.getByText(/Shanghai Travels/i).first()).toBeVisible({ timeout: 15_000 });
     await page.goto("./#/site/search");
     await expect(page.getByRole("heading", { name: /Package search/i })).toBeVisible({ timeout: 15_000 });
+  });
+
+  test("public site destination browse route renders shell", async ({ page }) => {
+    await page.goto("./#/site/destinations");
+    await expect(page.getByRole("heading", { name: /Browse all countries/i })).toBeVisible({ timeout: 15_000 });
   });
 });

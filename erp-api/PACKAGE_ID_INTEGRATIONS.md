@@ -23,3 +23,8 @@ TourPackageDetail, HajjUmrahDetail, CmsTravelOffer, CorporateTravelRequest
 - `GET /api/site/packages/search`
 - `GET /api/site/packages/:slug`
 - `POST /api/site/packages/:slug/enquire` — Lead.packageId locked from slug
+
+## Destination Master (Phase E3)
+See `DESTINATION_INTEGRATIONS.md` and `SCHEMA_DESTINATION_MASTER.md`.
+- Optional `PackageMaster.destinationId` → `DestinationMaster`
+- Public: `GET /api/site/destinations?collection=home`

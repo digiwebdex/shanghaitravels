@@ -4,6 +4,7 @@ const LINKS = [
   { to: "/cms", label: "Pages", end: true },
   { to: "/cms/hero-services", label: "Hero Services" },
   { to: "/cms/packages", label: "Featured Packages" },
+  { to: "/cms/destinations", label: "Popular Destinations" },
   { to: "/cms/menus", label: "Menus" },
   { to: "/cms/media", label: "Media" },
   { to: "/cms/banners", label: "Banners" },
