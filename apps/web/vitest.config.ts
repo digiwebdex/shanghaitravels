@@ -13,7 +13,7 @@ export default defineConfig({
       reporter: ["text", "json-summary", "html"],
       reportsDirectory: "./coverage",
       // Pure helpers under unit test. API/UI covered by smoke + e2e, not v8.
-      include: ["src/lib/money.ts", "src/lib/api.ts"],
+      include: ["src/lib/money.ts", "src/lib/api.ts", "src/lib/airTicket.ts"],
       exclude: ["src/lib/types.ts", "src/lib/services.ts"],
     },
   },

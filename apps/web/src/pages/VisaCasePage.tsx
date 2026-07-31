@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
-import { CheckCircle2, Circle, Upload } from "lucide-react";
+import { CheckCircle2, Circle } from "lucide-react";
 import {
   applicationsApi,
   financeApi,
@@ -26,26 +26,14 @@ import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import {
   DEFAULT_CHINA_CHECKLIST,
-  DOC_CATEGORIES,
   VISA_TYPE_OPTIONS,
   type ChinaChecklist,
 } from "@/config/checklist";
-import { fmtBDTPlain, toPoisha } from "@/lib/money";
 import CaseTimeline from "@/admin/shared/CaseTimeline";
-
-const inputCls =
-  "w-full px-2.5 py-2 text-[11px] border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-amber-400";
-const labelCls = "block text-[10px] font-bold text-slate-500 mb-1";
-
-const STATUS_PILL: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-600",
-  in_progress: "bg-amber-100 text-amber-800",
-  docs_required: "bg-orange-100 text-orange-800",
-  approved: "bg-emerald-100 text-emerald-800",
-  rejected: "bg-red-100 text-red-800",
-  submitted: "bg-blue-100 text-blue-800",
-  completed: "bg-emerald-50 text-emerald-700",
-};
+import { CaseAssignCard } from "@/components/cases/CaseAssignCard";
+import { CaseDocumentsCard } from "@/components/cases/CaseDocumentsCard";
+import { CaseFinanceCard } from "@/components/cases/CaseFinanceCard";
+import { inputCls, labelCls, STATUS_PILL } from "@/components/cases/formStyles";
 
 export default function VisaCasePage() {
   const { id = "" } = useParams();
@@ -368,7 +356,7 @@ export default function VisaCasePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <VisaDetailCard app={app} onSaved={reload} setError={setError} setOk={setOk} />
-          <AssignCard
+          <CaseAssignCard
             app={app}
             staff={staff}
             onSaved={reload}
@@ -435,7 +423,7 @@ export default function VisaCasePage() {
           </ul>
         </section>
 
-        <DocumentsCard
+        <CaseDocumentsCard
           appId={app.id}
           docs={docs}
           onSaved={reload}
@@ -443,13 +431,14 @@ export default function VisaCasePage() {
           setOk={setOk}
         />
 
-        <FinanceCard
+        <CaseFinanceCard
           app={app}
           invoices={invoices}
           accounts={accounts}
           onSaved={reload}
           setError={setError}
           setOk={setOk}
+          defaultDescription={`${app.title || "China visa"} — service fee`}
         />
 
         {/* History */}
@@ -583,77 +572,6 @@ function VisaDetailCard({
   );
 }
 
-function AssignCard({
-  app,
-  staff,
-  onSaved,
-  setError,
-  setOk,
-}: {
-  app: Application;
-  staff: StaffUser[];
-  onSaved: () => Promise<void>;
-  setError: (s: string) => void;
-  setOk: (s: string) => void;
-}) {
-  const { can, user } = useAuth();
-  const [assignedTo, setAssignedTo] = useState(app.assignedTo || "");
-
-  useEffect(() => {
-    setAssignedTo(app.assignedTo || "");
-  }, [app.assignedTo]);
-
-  const options = staff.filter((u) => u.status === "active");
-
-  async function save() {
-    try {
-      await applicationsApi.assign(app.id, assignedTo || null);
-      setOk("Case assigned");
-      await onSaved();
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Assign failed");
-    }
-  }
-
-  return (
-    <section className="bg-white rounded-xl border border-slate-200 p-4">
-      <h2 className="text-[12px] font-bold text-slate-800 mb-3">Staff assignment</h2>
-      {!can("application:assign") ? (
-        <p className="text-[11px] text-slate-400">You do not have assign permission.</p>
-      ) : (
-        <>
-          <label className={labelCls}>Assigned officer</label>
-          <select className={inputCls} value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)}>
-            <option value="">— unassigned —</option>
-            {user && (
-              <option value={user.id}>{user.fullName || user.email} (me)</option>
-            )}
-            {options
-              .filter((u) => u.id !== user?.id)
-              .map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.fullName} ({u.role})
-                </option>
-              ))}
-          </select>
-          {options.length === 0 && (
-            <p className="text-[10px] text-slate-400 mt-1">
-              No other active staff returned — you can still assign to yourself.
-            </p>
-          )}
-          <button
-            type="button"
-            onClick={() => void save()}
-            className="mt-3 px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white"
-            style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
-          >
-            Save assignment
-          </button>
-        </>
-      )}
-    </section>
-  );
-}
 
 function PassportOcrCard({
   app,
@@ -787,275 +705,3 @@ function PassportOcrCard({
   );
 }
 
-function DocumentsCard({
-  appId,
-  docs,
-  onSaved,
-  setError,
-  setOk,
-}: {
-  appId: string;
-  docs: AppDocument[];
-  onSaved: () => Promise<void>;
-  setError: (s: string) => void;
-  setOk: (s: string) => void;
-}) {
-  const { can } = useAuth();
-  const [category, setCategory] = useState<string>("passport");
-  const [file, setFile] = useState<File | null>(null);
-
-  async function upload() {
-    if (!file) {
-      setError("Choose a file");
-      return;
-    }
-    const bad = validateUploadFile(file);
-    if (bad) {
-      setError(bad);
-      return;
-    }
-    try {
-      await applicationsApi.uploadDocument(appId, file, category);
-      setFile(null);
-      setOk("Document uploaded");
-      await onSaved();
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Upload failed");
-    }
-  }
-
-  return (
-    <section className="bg-white rounded-xl border border-slate-200 p-4">
-      <h2 className="text-[12px] font-bold text-slate-800 mb-3">Document collection</h2>
-      <Can perm="document:upload">
-        <div className="flex flex-wrap gap-2 items-end mb-3">
-          <div>
-            <label className={labelCls}>Type</label>
-            <select className={inputCls} value={category} onChange={(e) => setCategory(e.target.value)}>
-              {DOC_CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c.replace(/_/g, " ")}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex-1 min-w-[180px]">
-            <label className={labelCls}>File (JPG/PNG/WEBP/PDF, ≤15MB)</label>
-            <input type="file" accept="image/*,application/pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} className="text-[11px]" />
-          </div>
-          <button
-            type="button"
-            onClick={() => void upload()}
-            className="flex items-center gap-1 px-3 py-2 rounded-lg text-[10.5px] font-bold text-white"
-            style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
-          >
-            <Upload size={12} /> Upload
-          </button>
-        </div>
-      </Can>
-      {docs.length === 0 ? (
-        <p className="text-[11px] text-slate-400">No documents uploaded yet.</p>
-      ) : (
-        <table className="w-full">
-          <thead>
-            <tr className="text-left text-[9.5px] uppercase text-slate-400">
-              <th className="py-1 font-bold">Type</th>
-              <th className="py-1 font-bold">File</th>
-              <th className="py-1 font-bold">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {docs.map((d) => (
-              <tr key={d.id} className="text-[11px] border-t border-slate-50">
-                <td className="py-2">{(d.category || "").replace(/_/g, " ")}</td>
-                <td className="py-2">{d.fileName || "—"}</td>
-                <td className="py-2">
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100">{d.status || "uploaded"}</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      {!can("document:upload") && !can("document:read") && (
-        <p className="text-[11px] text-slate-400">No document permission.</p>
-      )}
-    </section>
-  );
-}
-
-function FinanceCard({
-  app,
-  invoices,
-  accounts,
-  onSaved,
-  setError,
-  setOk,
-}: {
-  app: Application;
-  invoices: Invoice[];
-  accounts: Account[];
-  onSaved: () => Promise<void>;
-  setError: (s: string) => void;
-  setOk: (s: string) => void;
-}) {
-  const { can } = useAuth();
-  const [desc, setDesc] = useState(`${app.title || "China visa"} — service fee`);
-  const [amount, setAmount] = useState("");
-  const [payAmount, setPayAmount] = useState("");
-  const [accountId, setAccountId] = useState("");
-  const [method, setMethod] = useState("cash");
-  const [activeInvoice, setActiveInvoice] = useState<Invoice | null>(null);
-
-  useEffect(() => {
-    if (!accountId && accounts[0]) setAccountId(accounts[0].id);
-  }, [accounts, accountId]);
-
-  useEffect(() => {
-    setActiveInvoice(invoices[0] || null);
-  }, [invoices]);
-
-  async function createInvoice() {
-    const unitPrice = toPoisha(amount);
-    if (unitPrice <= 0) {
-      setError("Enter an amount");
-      return;
-    }
-    try {
-      const inv = await financeApi.createInvoice({
-        customerId: app.customerId,
-        applicationId: app.id,
-        items: [{ description: desc.trim(), quantity: 1, unitPrice }],
-      });
-      setActiveInvoice(inv);
-      setOk(`Invoice ${inv.invoiceNo} created (draft)`);
-      await onSaved();
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Invoice failed");
-    }
-  }
-
-  async function issue() {
-    if (!activeInvoice) return;
-    try {
-      const inv = await financeApi.issueInvoice(activeInvoice.id);
-      setActiveInvoice(inv);
-      setOk(`Invoice ${inv.invoiceNo} issued`);
-      await onSaved();
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Issue failed");
-    }
-  }
-
-  async function pay() {
-    if (!activeInvoice) return;
-    const amt = toPoisha(payAmount);
-    if (amt <= 0 || !accountId) {
-      setError("Enter payment amount and account");
-      return;
-    }
-    try {
-      await financeApi.recordPayment({
-        invoiceId: activeInvoice.id,
-        customerId: app.customerId,
-        accountId,
-        amount: amt,
-        method,
-      });
-      setOk("Payment recorded");
-      setPayAmount("");
-      await onSaved();
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Payment failed");
-    }
-  }
-
-  if (!can("invoice:amount:read") && !can("invoice:manage")) {
-    return (
-      <section className="bg-white rounded-xl border border-slate-200 p-4">
-        <h2 className="text-[12px] font-bold text-slate-800 mb-2">Invoice & payment</h2>
-        <p className="text-[11px] text-slate-400">Finance module hidden for your role.</p>
-      </section>
-    );
-  }
-
-  return (
-    <section className="bg-white rounded-xl border border-slate-200 p-4">
-      <h2 className="text-[12px] font-bold text-slate-800 mb-3">Invoice & payment</h2>
-
-      {activeInvoice && (
-        <div className="mb-3 px-3 py-2 rounded-lg bg-slate-50 border border-slate-100 text-[11px]">
-          <p className="font-bold text-slate-800">
-            {activeInvoice.invoiceNo} · {fmtBDTPlain(activeInvoice.total)} ·{" "}
-            <span className="text-slate-500">{activeInvoice.status}</span>
-          </p>
-          {activeInvoice.paid != null && (
-            <p className="text-slate-500 mt-0.5">
-              Paid {fmtBDTPlain(activeInvoice.paid)} · Due {fmtBDTPlain(activeInvoice.due)}
-            </p>
-          )}
-        </div>
-      )}
-
-      <Can perm="invoice:manage">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
-          <div className="sm:col-span-2">
-            <label className={labelCls}>Line description</label>
-            <input className={inputCls} value={desc} onChange={(e) => setDesc(e.target.value)} />
-          </div>
-          <div>
-            <label className={labelCls}>Amount (৳)</label>
-            <input className={inputCls} type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="5000.00" />
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2 mb-4">
-          <button type="button" onClick={() => void createInvoice()} className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
-            Create invoice
-          </button>
-          {activeInvoice && activeInvoice.status === "draft" && (
-            <button type="button" onClick={() => void issue()} className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold">
-              Issue invoice
-            </button>
-          )}
-        </div>
-      </Can>
-
-      <Can perm="payment:record">
-        {activeInvoice && ["issued", "partially_paid"].includes(activeInvoice.status) && (
-          <div className="border-t border-slate-100 pt-3 space-y-2">
-            <p className="text-[10px] font-bold text-slate-500 uppercase">Record payment</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <div>
-                <label className={labelCls}>Amount (৳)</label>
-                <input className={inputCls} type="number" min="0" step="0.01" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} />
-              </div>
-              <div>
-                <label className={labelCls}>Account</label>
-                <select className={inputCls} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-                  {accounts.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className={labelCls}>Method</label>
-                <select className={inputCls} value={method} onChange={(e) => setMethod(e.target.value)}>
-                  {["cash", "bank_transfer", "bkash", "nagad", "card", "cheque", "other"].map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <button type="button" onClick={() => void pay()} className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
-              Record payment
-            </button>
-          </div>
-        )}
-      </Can>
-    </section>
-  );
-}

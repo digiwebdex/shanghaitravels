@@ -6,7 +6,7 @@ export default function NotFoundPage() {
       <p className="text-[28px] font-black text-slate-300">404</p>
       <h1 className="text-[16px] font-bold text-slate-800">Page not found</h1>
       <p className="text-[11px] text-slate-500 max-w-sm">
-        That route is not part of the Phase A ERP shell. Return to the dashboard or open a visa case from the sidebar.
+        That route is not part of the TravelOS ERP shell. Return to the dashboard or open a case from the sidebar.
       </p>
       <Link
         to="/"

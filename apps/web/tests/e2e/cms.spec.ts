@@ -1,0 +1,39 @@
+import { test, expect } from "@playwright/test";
+import fs from "node:fs";
+
+function env(k: string) {
+  if (process.env[k]) return process.env[k]!;
+  try {
+    const raw = fs.readFileSync(new URL("../../.env.test", import.meta.url), "utf8");
+    const m = new RegExp(`^${k}=(.*)$`, "m").exec(raw);
+    return m?.[1]?.trim() || "";
+  } catch {
+    return "";
+  }
+}
+
+test.describe("Website & CMS", () => {
+  test("public site home and enquire; admin CMS pages", async ({ page }) => {
+    await page.goto("./#/site");
+    await expect(page.getByText("Shanghai Travels").first()).toBeVisible({ timeout: 20_000 });
+
+    await page.goto("./#/site/enquire");
+    await expect(page.getByRole("heading", { name: /Enquiry/i })).toBeVisible({ timeout: 15_000 });
+
+    const email = env("ERP_TEST_EMAIL");
+    const password = env("ERP_TEST_PASSWORD");
+    test.skip(!email || !password, "ERP_TEST_* missing");
+
+    await page.goto("./#/login");
+    await page.locator("#email").fill(email);
+    await page.locator("#password").fill(password);
+    await page.getByRole("button", { name: /Sign In/i }).click();
+    await expect(page.getByRole("heading", { name: /Dashboard/i })).toBeVisible({ timeout: 30_000 });
+
+    await page.goto("./#/cms");
+    await expect(page.getByRole("heading", { name: /CMS pages/i })).toBeVisible({ timeout: 20_000 });
+
+    await page.goto("./#/cms/reports");
+    await expect(page.getByRole("heading", { name: /CMS reports/i })).toBeVisible({ timeout: 20_000 });
+  });
+});

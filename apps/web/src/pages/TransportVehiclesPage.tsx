@@ -1,0 +1,192 @@
+import { FormEvent, useCallback, useEffect, useState } from "react";
+import { Car } from "lucide-react";
+import { transportVehiclesApi } from "@/lib/services";
+import { ApiError, listOf } from "@/lib/api";
+import type { TransportVehicleType } from "@/lib/types";
+import { Can } from "@/auth/Can";
+import { DemoBadge } from "@/components/DemoBadge";
+import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
+import { InlineSpinner } from "@/components/FullPageSpinner";
+import { inputCls, labelCls } from "@/components/cases/formStyles";
+import { TransportModuleNav } from "@/components/transport/TransportModuleNav";
+import { VEHICLE_CATEGORIES } from "@/lib/transport";
+
+export default function TransportVehiclesPage() {
+  const [rows, setRows] = useState<TransportVehicleType[]>([]);
+  const [q, setQ] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [ok, setOk] = useState("");
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("sedan");
+  const [capacity, setCapacity] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const r = await transportVehiclesApi.list({ q: q || undefined, limit: 200 });
+      setRows(listOf<TransportVehicleType>(r));
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Failed to load vehicle catalog");
+    } finally {
+      setLoading(false);
+    }
+  }, [q]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function create(e: FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) {
+      setError("Name is required");
+      return;
+    }
+    setError("");
+    setOk("");
+    try {
+      await transportVehiclesApi.create({
+        name: name.trim(),
+        category,
+        capacity: capacity ? Number(capacity) : undefined,
+        notes: notes.trim() || undefined,
+      });
+      setOk("Vehicle offer added");
+      setName("");
+      setCapacity("");
+      setNotes("");
+      await load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Create failed");
+    }
+  }
+
+  return (
+    <div>
+      <DemoBadge moduleKey="transport" />
+      <div className="p-5 max-w-[1100px] space-y-4">
+        <div>
+          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
+            <Car size={16} className="text-amber-600" /> Vehicle catalog
+          </h1>
+          <p className="text-[11px] text-slate-500 mt-0.5">
+            Supplier vehicle offers by category ({VEHICLE_CATEGORIES.join(", ")}). Not owned fleet inventory.
+          </p>
+        </div>
+        <TransportModuleNav />
+        <ErrorBanner message={error} />
+        <SuccessBanner message={ok} />
+
+        <Can perm="settings:manage">
+          <form
+            onSubmit={(e) => void create(e)}
+            className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-3 gap-2"
+          >
+            <div className="sm:col-span-3">
+              <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Add vehicle offer</p>
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="tv-name">
+                Name *
+              </label>
+              <input id="tv-name" className={inputCls} value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="tv-cat">
+                Category
+              </label>
+              <select id="tv-cat" className={inputCls} value={category} onChange={(e) => setCategory(e.target.value)}>
+                {VEHICLE_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="tv-cap">
+                Capacity
+              </label>
+              <input
+                id="tv-cap"
+                className={inputCls}
+                type="number"
+                min="1"
+                value={capacity}
+                onChange={(e) => setCapacity(e.target.value)}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className={labelCls} htmlFor="tv-notes">
+                Notes
+              </label>
+              <input id="tv-notes" className={inputCls} value={notes} onChange={(e) => setNotes(e.target.value)} />
+            </div>
+            <div className="sm:col-span-3">
+              <button
+                type="submit"
+                className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white"
+                style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+              >
+                Add vehicle offer
+              </button>
+            </div>
+          </form>
+        </Can>
+
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-100 flex gap-2">
+            <input
+              className="flex-1 max-w-sm px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
+              placeholder="Search vehicles…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && void load()}
+              aria-label="Search vehicle catalog"
+            />
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="px-3 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold"
+            >
+              Refresh
+            </button>
+          </div>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <InlineSpinner />
+            </div>
+          ) : rows.length === 0 ? (
+            <EmptyState title="No vehicle offers" hint="Add supplier vehicle types used for transfers." />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                    <th className="px-4 py-2 font-bold">Name</th>
+                    <th className="px-4 py-2 font-bold">Category</th>
+                    <th className="px-4 py-2 font-bold">Capacity</th>
+                    <th className="px-4 py-2 font-bold">Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((v) => (
+                    <tr key={v.id} className="border-b border-slate-50 text-[11px]">
+                      <td className="px-4 py-2.5 font-semibold text-slate-800">{v.name}</td>
+                      <td className="px-4 py-2.5 text-slate-600">{v.category}</td>
+                      <td className="px-4 py-2.5 text-slate-600">{v.capacity ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-slate-600">{v.notes || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
