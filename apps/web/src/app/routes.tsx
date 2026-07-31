@@ -76,6 +76,13 @@ const FinanceStatementsPage = lazy(() => import("@/pages/FinanceStatementsPage")
 const FinanceLedgerPage = lazy(() => import("@/pages/FinanceLedgerPage"));
 const FinanceAnalysisPage = lazy(() => import("@/pages/FinanceAnalysisPage"));
 const FinanceClosingPage = lazy(() => import("@/pages/FinanceClosingPage"));
+const CrmLeadsPage = lazy(() => import("@/pages/CrmLeadsPage"));
+const CrmContactsPage = lazy(() => import("@/pages/CrmContactsPage"));
+const CrmOrganizationsPage = lazy(() => import("@/pages/CrmOrganizationsPage"));
+const CrmOpportunitiesPage = lazy(() => import("@/pages/CrmOpportunitiesPage"));
+const CrmActivitiesPage = lazy(() => import("@/pages/CrmActivitiesPage"));
+const CrmQuotationsPage = lazy(() => import("@/pages/CrmQuotationsPage"));
+const CrmReportsPage = lazy(() => import("@/pages/CrmReportsPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -558,6 +565,62 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <FinanceClosingPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "crm",
+            element: (
+              <Lazy>
+                <CrmLeadsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "crm/contacts",
+            element: (
+              <Lazy>
+                <CrmContactsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "crm/organizations",
+            element: (
+              <Lazy>
+                <CrmOrganizationsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "crm/opportunities",
+            element: (
+              <Lazy>
+                <CrmOpportunitiesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "crm/activities",
+            element: (
+              <Lazy>
+                <CrmActivitiesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "crm/quotations",
+            element: (
+              <Lazy>
+                <CrmQuotationsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "crm/reports",
+            element: (
+              <Lazy>
+                <CrmReportsPage />
               </Lazy>
             ),
           },

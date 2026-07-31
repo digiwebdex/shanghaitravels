@@ -708,3 +708,135 @@ export const bankingApi = {
     apiFetch(`/banking/reports/bank-book?bankAccountId=${encodeURIComponent(bankAccountId)}`),
   reportCashFlow: () => apiFetch("/banking/reports/cash-flow-summary"),
 };
+
+export const crmApi = {
+  listLeads: (q?: Record<string, string | number | undefined>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(q || {})) if (v != null && v !== "") p.set(k, String(v));
+    const qs = p.toString();
+    return apiFetch<{ data: CrmLead[]; total: number }>(`/crm/leads${qs ? `?${qs}` : ""}`);
+  },
+  createLead: (body: Record<string, unknown>) => apiFetch<CrmLead>("/crm/leads", { method: "POST", body }),
+  updateLead: (id: string, body: Record<string, unknown>) =>
+    apiFetch<CrmLead>(`/crm/leads/${id}`, { method: "PATCH", body }),
+  listContacts: (q?: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(q || {})) if (v) p.set(k, v);
+    const qs = p.toString();
+    return apiFetch<CrmContact[]>(`/crm/contacts${qs ? `?${qs}` : ""}`);
+  },
+  createContact: (body: Record<string, unknown>) => apiFetch<CrmContact>("/crm/contacts", { method: "POST", body }),
+  listOrganizations: (q?: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(q || {})) if (v) p.set(k, v);
+    const qs = p.toString();
+    return apiFetch<CrmOrganization[]>(`/crm/organizations${qs ? `?${qs}` : ""}`);
+  },
+  createOrganization: (body: Record<string, unknown>) =>
+    apiFetch<CrmOrganization>("/crm/organizations", { method: "POST", body }),
+  listOpportunities: (q?: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(q || {})) if (v) p.set(k, v);
+    const qs = p.toString();
+    return apiFetch<CrmOpportunity[]>(`/crm/opportunities${qs ? `?${qs}` : ""}`);
+  },
+  createOpportunity: (body: Record<string, unknown>) =>
+    apiFetch<CrmOpportunity>("/crm/opportunities", { method: "POST", body }),
+  setOpportunityStage: (id: string, stage: string, lostReason?: string) =>
+    apiFetch(`/crm/opportunities/${id}/stage`, { method: "POST", body: { stage, lostReason } }),
+  listActivities: (q?: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(q || {})) if (v) p.set(k, v);
+    const qs = p.toString();
+    return apiFetch<CrmActivity[]>(`/crm/activities${qs ? `?${qs}` : ""}`);
+  },
+  createActivity: (body: Record<string, unknown>) => apiFetch<CrmActivity>("/crm/activities", { method: "POST", body }),
+  completeActivity: (id: string) => apiFetch(`/crm/activities/${id}/complete`, { method: "POST", body: {} }),
+  listQuotations: (q?: Record<string, string | undefined>) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(q || {})) if (v) p.set(k, v);
+    const qs = p.toString();
+    return apiFetch<CrmQuotation[]>(`/crm/quotations${qs ? `?${qs}` : ""}`);
+  },
+  createQuotation: (body: Record<string, unknown>) =>
+    apiFetch<CrmQuotation>("/crm/quotations", { method: "POST", body }),
+  setQuotationStatus: (id: string, status: string) =>
+    apiFetch(`/crm/quotations/${id}/status`, { method: "POST", body: { status } }),
+  convert: (body: Record<string, unknown>) =>
+    apiFetch<{ application: { id: string; referenceNo: string; serviceType: string }; customerId: string }>(
+      "/crm/convert",
+      { method: "POST", body },
+    ),
+  reportLeadSources: () => apiFetch<{ rows: { source: string; count: number }[] }>("/crm/reports/lead-sources"),
+  reportConversion: () => apiFetch<Record<string, number>>("/crm/reports/conversion"),
+  reportPipeline: () =>
+    apiFetch<{ rows: { stage: string; count: number; expectedRevenuePoisha: number }[] }>("/crm/reports/pipeline"),
+  reportTeam: () => apiFetch<{ rows: Record<string, unknown>[] }>("/crm/reports/team"),
+  reportForecast: () => apiFetch<Record<string, unknown>>("/crm/reports/forecast"),
+};
+
+export type CrmLead = {
+  id: string;
+  leadNo?: string | null;
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+  source?: string | null;
+  serviceInterest?: string | null;
+  status: string;
+  priority?: string;
+  assignedTo?: string | null;
+  notes?: string | null;
+};
+
+export type CrmContact = {
+  id: string;
+  kind: string;
+  fullName: string;
+  phone?: string | null;
+  email?: string | null;
+  familyGroup?: string | null;
+  organizationId?: string | null;
+};
+
+export type CrmOrganization = {
+  id: string;
+  code: string;
+  name: string;
+  type: string;
+  phone?: string | null;
+  email?: string | null;
+  isActive: boolean;
+};
+
+export type CrmOpportunity = {
+  id: string;
+  opportunityNo: string;
+  title: string;
+  stage: string;
+  status: string;
+  probabilityBps: number;
+  expectedRevenuePoisha: number;
+  serviceType?: string | null;
+  leadId?: string | null;
+};
+
+export type CrmActivity = {
+  id: string;
+  type: string;
+  subject: string;
+  relatedType: string;
+  relatedId: string;
+  status: string;
+  dueAt?: string | null;
+};
+
+export type CrmQuotation = {
+  id: string;
+  quoteNo: string;
+  serviceType: string;
+  status: string;
+  totalPoisha: number;
+  opportunityId?: string | null;
+  leadId?: string | null;
+};

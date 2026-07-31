@@ -981,6 +981,98 @@ async function main() {
     );
   }
 
+  // ---------- Phase D1 — CRM foundation ----------
+  let crmLeadId = null;
+  let crmOppId = null;
+  let crmQuoteId = null;
+  {
+    const r = await req("POST", "/crm/leads", {
+      name: `CRM Smoke ${Date.now()}`,
+      phone: "01700000099",
+      source: "whatsapp",
+      serviceInterest: "visa",
+      priority: "hot",
+    });
+    crmLeadId = r.data?.id || null;
+    ok("crm: create lead", okHttp(r.status) && !!crmLeadId, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/crm/contacts", {
+      fullName: "CRM Contact Smoke",
+      kind: "individual",
+      phone: "01700000088",
+    });
+    ok("crm: create contact", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/crm/organizations", {
+      name: `Corp Smoke ${Date.now()}`,
+      type: "corporate",
+    });
+    ok("crm: create organization", okHttp(r.status) && !!r.data?.code, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/crm/opportunities", {
+      title: "China visa opportunity",
+      leadId: crmLeadId,
+      serviceType: "visa",
+      expectedRevenuePoisha: 2500000,
+    });
+    crmOppId = r.data?.id || null;
+    ok("crm: create opportunity", okHttp(r.status) && !!crmOppId, `status=${r.status}`);
+  }
+  if (crmOppId) {
+    const r = await req("POST", `/crm/opportunities/${crmOppId}/stage`, { stage: "proposal" });
+    ok("crm: advance opportunity stage", okHttp(r.status) && r.data?.stage === "proposal", `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/crm/activities", {
+      type: "follow_up",
+      subject: "Call back tomorrow",
+      relatedType: "lead",
+      relatedId: crmLeadId,
+    });
+    ok("crm: create activity", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/crm/quotations", {
+      serviceType: "visa",
+      leadId: crmLeadId,
+      opportunityId: crmOppId,
+      lines: [{ description: "Visa processing", quantity: 1, unitPricePoisha: 500000 }],
+    });
+    crmQuoteId = r.data?.id || null;
+    ok("crm: create quotation", okHttp(r.status) && !!crmQuoteId, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/crm/convert", {
+      opportunityId: crmOppId,
+      leadId: crmLeadId,
+      serviceType: "visa",
+    });
+    ok(
+      "crm: convert to visa case",
+      okHttp(r.status) && !!r.data?.application?.referenceNo,
+      `status=${r.status} ref=${r.data?.application?.referenceNo}`,
+    );
+  }
+  {
+    const r = await req("GET", "/crm/reports/lead-sources");
+    ok("crm: lead sources report", okHttp(r.status) && Array.isArray(r.data?.rows), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/crm/reports/conversion");
+    ok("crm: conversion report", okHttp(r.status) && r.data?.leadsTotal != null, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/crm/reports/pipeline");
+    ok("crm: pipeline report", okHttp(r.status) && Array.isArray(r.data?.rows), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/crm/reports/forecast");
+    ok("crm: forecast report", okHttp(r.status) && r.data?.weightedRevenuePoisha != null, `status=${r.status}`);
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);
