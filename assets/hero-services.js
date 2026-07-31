@@ -13,6 +13,10 @@
     { icon: "🌍", title: "Tour Packages", url: "/tours" },
   ];
 
+  function isPillNav(el) {
+    return !!(el && el.querySelector && el.querySelector(".st-hero-pill"));
+  }
+
   function pill(item) {
     return (
       '<li class="st-hero-nav-item">' +
@@ -34,6 +38,7 @@
   function build() {
     var root = document.createElement("div");
     root.className = "st-hero-services";
+    root.setAttribute("data-st-hero-nav", "pills");
     root.innerHTML =
       '<nav aria-label="Quick access travel services">' +
       '<ul class="st-hero-nav">' +
@@ -65,17 +70,27 @@
 
   function findCardHost() {
     var existing = document.querySelector(".st-hero-services");
-    if (existing) return existing;
+    if (existing && !isPillNav(existing)) return existing;
+
+    var card = document.querySelector("a.st-hero-card");
+    if (card) {
+      return card.closest(".st-hero-services") || card.closest("ul") || card.parentElement;
+    }
+
     var grids = document.querySelectorAll('ul[aria-label="Featured travel services"]');
     for (var i = 0; i < grids.length; i++) {
-      if (grids[i].querySelector(".st-hero-card") || grids[i].children.length >= 3) {
-        return grids[i].closest(".st-hero-services") || grids[i];
+      var g = grids[i];
+      if (g.querySelector(".st-hero-card") || /Apply Now|View Packages|Book Now|Explore Tours/.test(g.textContent || "")) {
+        return g.closest(".st-hero-services") || g;
       }
     }
     return null;
   }
 
   function mount() {
+    var current = document.querySelector('.st-hero-services[data-st-hero-nav="pills"]');
+    if (current && isPillNav(current)) return true;
+
     var next = build();
     var cards = findCardHost();
     if (cards) {
@@ -92,8 +107,23 @@
     if (mount()) return;
     var n = 0;
     var t = setInterval(function () {
-      if (mount() || ++n > 40) clearInterval(t);
-    }, 250);
+      if (mount() || ++n > 48) clearInterval(t);
+    }, 200);
+
+    // React SPA may remount hero content after first paint.
+    var obs = new MutationObserver(function () {
+      var stale = document.querySelector("a.st-hero-card");
+      var bare = document.querySelector(".st-hero-services:not([data-st-hero-nav='pills'])");
+      if (stale || bare) mount();
+    });
+    try {
+      obs.observe(document.documentElement, { childList: true, subtree: true });
+      setTimeout(function () {
+        obs.disconnect();
+      }, 15000);
+    } catch (e) {
+      /* ignore */
+    }
   }
 
   if (document.readyState === "loading") {
