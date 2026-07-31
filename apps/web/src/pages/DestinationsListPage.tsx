@@ -145,11 +145,11 @@ export default function DestinationsListPage() {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
-                <label className={labelCls}>Code *</label>
-                <input className={inputCls} value={form.code} onChange={(e) => patchForm("code", e.target.value)} required />
+                <label className={labelCls}>Internal code</label>
+                <input className={inputCls} value={form.code} onChange={(e) => patchForm("code", e.target.value)} placeholder="Optional" />
               </div>
               <div className="sm:col-span-2">
-                <label className={labelCls}>Country / name *</label>
+                <label className={labelCls}>Destination name *</label>
                 <input
                   className={inputCls}
                   value={form.name}
