@@ -7,10 +7,10 @@ const DEFAULT_HERO =
   "https://images.unsplash.com/photo-1488085061387-422e29b40080?w=1600&h=900&fit=crop&auto=format";
 
 const HERO_PILLS = [
-  { icon: "🛂", title: "Visa Services", tagline: "Tourist, business & student visas", url: "/visa" },
-  { icon: "✈️", title: "Air Tickets", tagline: "Best fares on 500+ airlines", url: "/flights" },
-  { icon: "🕋", title: "Hajj & Umrah", tagline: "VIP & economy pilgrimage packages", url: "/services" },
-  { icon: "🌍", title: "Tour Packages", tagline: "Curated itineraries worldwide", url: "/tours" },
+  { icon: "🛂", title: "Visa Services", tagline: "Fast & Reliable", url: "/visa" },
+  { icon: "✈️", title: "Air Tickets", tagline: "Best Fare Guarantee", url: "/air-ticket" },
+  { icon: "🕋", title: "Hajj & Umrah", tagline: "Spiritual Journey", url: "/hajj" },
+  { icon: "🌍", title: "Tour Packages", tagline: "Worldwide Tours", url: "/tours" },
 ] as const;
 
 type HeroPremiumProps = {
