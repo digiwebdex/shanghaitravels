@@ -114,6 +114,19 @@ const SitePageView = lazy(() => import("@/pages/SitePageView"));
 const SiteEnquirePage = lazy(() => import("@/pages/SiteEnquirePage"));
 const SiteSearchPage = lazy(() => import("@/pages/SiteSearchPage"));
 const SiteTravelView = lazy(() => import("@/pages/SiteTravelView"));
+const CustomerPortalLayout = lazy(() => import("@/layouts/CustomerPortalLayout"));
+const PortalLoginPage = lazy(() => import("@/pages/portal/PortalLoginPage"));
+const PortalRegisterPage = lazy(() => import("@/pages/portal/PortalRegisterPage"));
+const PortalVerifyPage = lazy(() => import("@/pages/portal/PortalVerifyPage"));
+const PortalForgotPage = lazy(() => import("@/pages/portal/PortalForgotPage"));
+const PortalDashboardPage = lazy(() => import("@/pages/portal/PortalDashboardPage"));
+const PortalApplicationsPage = lazy(() => import("@/pages/portal/PortalApplicationsPage"));
+const PortalApplicationDetailPage = lazy(() => import("@/pages/portal/PortalApplicationDetailPage"));
+const PortalDocumentsPage = lazy(() => import("@/pages/portal/PortalDocumentsPage"));
+const PortalFinancePage = lazy(() => import("@/pages/portal/PortalFinancePage"));
+const PortalCommunicationsPage = lazy(() => import("@/pages/portal/PortalCommunicationsPage"));
+const PortalProfilePage = lazy(() => import("@/pages/portal/PortalProfilePage"));
+const PortalReportsPage = lazy(() => import("@/pages/portal/PortalReportsPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -173,6 +186,112 @@ export const router = createHashRouter([
         <SiteTravelView />
       </Lazy>
     ),
+  },
+  {
+    path: "/portal/customer/login",
+    element: (
+      <Lazy>
+        <PortalLoginPage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/portal/customer/register",
+    element: (
+      <Lazy>
+        <PortalRegisterPage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/portal/customer/verify",
+    element: (
+      <Lazy>
+        <PortalVerifyPage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/portal/customer/forgot",
+    element: (
+      <Lazy>
+        <PortalForgotPage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/portal/customer",
+    element: (
+      <Lazy>
+        <CustomerPortalLayout />
+      </Lazy>
+    ),
+    children: [
+      {
+        index: true,
+        element: (
+          <Lazy>
+            <PortalDashboardPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "applications",
+        element: (
+          <Lazy>
+            <PortalApplicationsPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "applications/:id",
+        element: (
+          <Lazy>
+            <PortalApplicationDetailPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "documents",
+        element: (
+          <Lazy>
+            <PortalDocumentsPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "finance",
+        element: (
+          <Lazy>
+            <PortalFinancePage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "communications",
+        element: (
+          <Lazy>
+            <PortalCommunicationsPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <Lazy>
+            <PortalProfilePage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "reports",
+        element: (
+          <Lazy>
+            <PortalReportsPage />
+          </Lazy>
+        ),
+      },
+    ],
   },
   {
     element: <RequireAuth />,

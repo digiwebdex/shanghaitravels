@@ -1618,6 +1618,143 @@ async function main() {
     ok("site: sitemap.xml", okHttp(r.status) && String(body).includes("<urlset"), `status=${r.status}`);
   }
 
+  // ---------- Phase F1 Customer Portal ----------
+  const portalEmail = `portal.smoke.${Date.now()}@example.com`;
+  const portalPassword = "PortalSmoke1!";
+  let portalDevCode = null;
+  {
+    const r = await req("POST", "/portal/customer/register", {
+      email: portalEmail,
+      password: portalPassword,
+      fullName: "Portal Smoke User",
+      phone: `017${String(Date.now()).slice(-8)}`,
+    });
+    portalDevCode = r.data?.devCode || null;
+    ok("portal: register", okHttp(r.status) && r.data?.ok === true && !!r.data?.email, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/portal/customer/verify-email", { email: portalEmail, code: portalDevCode || "000000" });
+    ok("portal: verify email", okHttp(r.status) && r.data?.ok === true, `status=${r.status} code=${portalDevCode}`);
+  }
+  {
+    const r = await req("POST", "/portal/customer/login", { email: portalEmail, password: portalPassword });
+    ok("portal: login", okHttp(r.status) && r.data?.ok === true, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/portal/customer/me");
+    ok("portal: me", okHttp(r.status) && !!r.data?.customer?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/portal/customer/dashboard");
+    ok(
+      "portal: dashboard",
+      okHttp(r.status) && r.data?.applications && r.data?.invoices,
+      `status=${r.status}`,
+    );
+  }
+  let portalAppId = null;
+  {
+    const r = await req("POST", "/portal/customer/applications", {
+      serviceType: "visa",
+      title: "Portal smoke visa",
+      message: "smoke",
+    });
+    portalAppId = r.data?.id || null;
+    ok("portal: create application", okHttp(r.status) && !!portalAppId && !!r.data?.referenceNo, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/portal/customer/applications");
+    ok("portal: list applications", okHttp(r.status) && Array.isArray(r.data), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", `/portal/customer/applications/${portalAppId}`);
+    ok("portal: get application", okHttp(r.status) && r.data?.id === portalAppId, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/portal/customer/documents");
+    ok("portal: list documents", okHttp(r.status) && Array.isArray(r.data), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/portal/customer/finance");
+    ok("portal: finance", okHttp(r.status) && Array.isArray(r.data?.invoices), `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/portal/customer/support", {
+      subject: "Smoke support",
+      body: "Need assistance with visa documents",
+    });
+    ok("portal: support request", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/portal/customer/communications");
+    ok(
+      "portal: communications",
+      okHttp(r.status) && Array.isArray(r.data?.messages) && Array.isArray(r.data?.support),
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("POST", "/portal/customer/profile/passports", {
+      passportNo: `P${Date.now().toString().slice(-8)}`,
+      issuingCountry: "BD",
+      isPrimary: true,
+    });
+    ok("portal: upsert passport", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/portal/customer/profile/family", { fullName: "Family Smoke", relationship: "spouse" });
+    ok("portal: add family", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/portal/customer/profile/travellers", { fullName: "Traveller Smoke" });
+    ok("portal: add traveller", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/portal/customer/profile/emergency", {
+      fullName: "Emergency Smoke",
+      phone: "01700001111",
+    });
+    ok("portal: add emergency", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/portal/customer/reports");
+    ok(
+      "portal: reports",
+      okHttp(r.status) && Array.isArray(r.data?.bookingHistory) && Array.isArray(r.data?.paymentHistory),
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("POST", "/portal/customer/forgot-password", { email: portalEmail });
+    const code = r.data?.devCode;
+    ok("portal: forgot password", okHttp(r.status) && r.data?.ok === true, `status=${r.status}`);
+    if (code) {
+      const reset = await req("POST", "/portal/customer/reset-password", {
+        email: portalEmail,
+        code,
+        newPassword: "PortalSmoke2!",
+      });
+      ok("portal: reset password", okHttp(reset.status) && reset.data?.ok === true, `status=${reset.status}`);
+    } else {
+      ok("portal: reset password", false, "no devCode");
+    }
+  }
+  {
+    const r = await req("POST", "/portal/customer/otp/request", { email: portalEmail });
+    const code = r.data?.devCode;
+    ok("portal: otp request", okHttp(r.status) && r.data?.ok === true, `status=${r.status}`);
+    if (code) {
+      const v = await req("POST", "/portal/customer/otp/verify", { email: portalEmail, code });
+      ok("portal: otp verify login", okHttp(v.status) && v.data?.ok === true, `status=${v.status}`);
+    } else {
+      ok("portal: otp verify login", false, "no devCode");
+    }
+  }
+  {
+    const r = await req("POST", "/portal/customer/logout");
+    ok("portal: logout", okHttp(r.status), `status=${r.status}`);
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);
