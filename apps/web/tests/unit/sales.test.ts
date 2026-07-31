@@ -26,6 +26,7 @@ describe("sales helpers", () => {
     expect(canSubmitQuote("draft")).toBe(true);
     expect(canApproveQuote("pending_approval")).toBe(true);
     expect(canConvertQuote("approved")).toBe(true);
+    expect(canConvertQuote("sent")).toBe(true);
     expect(canConvertQuote("draft")).toBe(false);
   });
 });

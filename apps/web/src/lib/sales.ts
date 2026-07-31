@@ -56,5 +56,5 @@ export function canApproveQuote(status: string): boolean {
 }
 
 export function canConvertQuote(status: string): boolean {
-  return status === "approved" || status === "accepted";
+  return status === "approved" || status === "accepted" || status === "sent";
 }
