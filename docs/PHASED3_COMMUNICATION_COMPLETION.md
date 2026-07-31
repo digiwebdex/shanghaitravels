@@ -74,10 +74,10 @@ Sidebar: **Communications** (`comms:read`). Live module key: `comms`.
 ```
 npm run typecheck     ✅
 npm run lint          ✅
-npm run test:coverage ✅
-npm run test:api      ✅
-npm run test:api:prod ✅
-npm run test:e2e      ✅  (comms + prior specs)
+npm run test:coverage ✅  (38 unit tests)
+npm run test:api      ✅  176/176 staging
+npm run test:api:prod ✅  176/176
+npm run test:e2e      ✅  comms + crm + sales Playwright
 npm run build         ✅  synced to /erp/
 ```
 
