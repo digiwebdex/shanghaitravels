@@ -1091,3 +1091,57 @@ export const commsApi = {
   reportExecutiveProductivity: () =>
     apiFetch<{ rows: Record<string, unknown>[] }>("/comms/reports/executive-productivity"),
 };
+
+export type AnalyticsFilters = { from?: string; to?: string; branchId?: string };
+
+export type AnalyticsTemplate = {
+  id: string;
+  code: string;
+  name: string;
+  category: string;
+  description?: string | null;
+  definition: Record<string, unknown>;
+};
+
+export type AnalyticsSchedule = {
+  id: string;
+  name: string;
+  cronExpr: string;
+  format: string;
+  isActive: boolean;
+  template?: { id: string; code: string; name: string; category: string };
+};
+
+function analyticsQs(q?: AnalyticsFilters) {
+  const p = new URLSearchParams();
+  if (q?.from) p.set("from", q.from);
+  if (q?.to) p.set("to", q.to);
+  if (q?.branchId) p.set("branchId", q.branchId);
+  const qs = p.toString();
+  return qs ? `?${qs}` : "";
+}
+
+export const analyticsApi = {
+  bootstrap: () => apiFetch("/analytics/bootstrap", { method: "POST", body: {} }),
+  executive: (q?: AnalyticsFilters) => apiFetch<Record<string, unknown>>(`/analytics/executive${analyticsQs(q)}`),
+  customer: (q?: AnalyticsFilters) => apiFetch<Record<string, unknown>>(`/analytics/customer${analyticsQs(q)}`),
+  sales: (q?: AnalyticsFilters) => apiFetch<Record<string, unknown>>(`/analytics/sales${analyticsQs(q)}`),
+  comms: (q?: AnalyticsFilters) => apiFetch<Record<string, unknown>>(`/analytics/comms${analyticsQs(q)}`),
+  finance: (q?: AnalyticsFilters) => apiFetch<Record<string, unknown>>(`/analytics/finance${analyticsQs(q)}`),
+  exportUrl: (report: string, format: string, q?: AnalyticsFilters) => {
+    const p = new URLSearchParams();
+    p.set("format", format);
+    if (q?.from) p.set("from", q.from);
+    if (q?.to) p.set("to", q.to);
+    if (q?.branchId) p.set("branchId", q.branchId);
+    return `/analytics/export/${encodeURIComponent(report)}?${p}`;
+  },
+  listTemplates: () => apiFetch<AnalyticsTemplate[]>("/analytics/templates"),
+  createTemplate: (body: Record<string, unknown>) =>
+    apiFetch<AnalyticsTemplate>("/analytics/templates", { method: "POST", body }),
+  listSchedules: () => apiFetch<AnalyticsSchedule[]>("/analytics/schedules"),
+  createSchedule: (body: Record<string, unknown>) =>
+    apiFetch<AnalyticsSchedule>("/analytics/schedules", { method: "POST", body }),
+  patchSchedule: (id: string, body: Record<string, unknown>) =>
+    apiFetch(`/analytics/schedules/${id}`, { method: "PATCH", body }),
+};

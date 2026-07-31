@@ -94,6 +94,12 @@ const CommsWhatsAppPage = lazy(() => import("@/pages/CommsWhatsAppPage"));
 const CommsSmsPage = lazy(() => import("@/pages/CommsSmsPage"));
 const CommsActivitiesPage = lazy(() => import("@/pages/CommsActivitiesPage"));
 const CommsReportsPage = lazy(() => import("@/pages/CommsReportsPage"));
+const AnalyticsExecutivePage = lazy(() => import("@/pages/AnalyticsExecutivePage"));
+const AnalyticsCustomersPage = lazy(() => import("@/pages/AnalyticsCustomersPage"));
+const AnalyticsSalesPage = lazy(() => import("@/pages/AnalyticsSalesPage"));
+const AnalyticsCommsPage = lazy(() => import("@/pages/AnalyticsCommsPage"));
+const AnalyticsFinancePage = lazy(() => import("@/pages/AnalyticsFinancePage"));
+const AnalyticsReportsPage = lazy(() => import("@/pages/AnalyticsReportsPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -720,6 +726,54 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <CommsReportsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "analytics",
+            element: (
+              <Lazy>
+                <AnalyticsExecutivePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "analytics/customers",
+            element: (
+              <Lazy>
+                <AnalyticsCustomersPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "analytics/sales",
+            element: (
+              <Lazy>
+                <AnalyticsSalesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "analytics/comms",
+            element: (
+              <Lazy>
+                <AnalyticsCommsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "analytics/finance",
+            element: (
+              <Lazy>
+                <AnalyticsFinancePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "analytics/reports",
+            element: (
+              <Lazy>
+                <AnalyticsReportsPage />
               </Lazy>
             ),
           },

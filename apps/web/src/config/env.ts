@@ -17,6 +17,7 @@ export const LIVE_MODULES = new Set<string>([
   "crm",
   "sales",
   "comms",
+  "analytics",
 ]);
 
 export const APP_NAME = "TravelOS";

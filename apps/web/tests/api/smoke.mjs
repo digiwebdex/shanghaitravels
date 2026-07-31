@@ -1368,6 +1368,84 @@ async function main() {
     ok("comms: executive-productivity report", okHttp(r.status) && Array.isArray(r.data?.rows), `status=${r.status}`);
   }
 
+  // ---------- Phase D4 — Analytics ----------
+  {
+    const r = await req("POST", "/analytics/bootstrap", {});
+    ok("analytics: bootstrap", okHttp(r.status) && r.data?.ok === true, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/analytics/executive");
+    ok(
+      "analytics: executive dashboard",
+      okHttp(r.status) && r.data?.pipeline && r.data?.revenueForecast && r.data?.bookingConversion,
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("GET", "/analytics/customer");
+    ok(
+      "analytics: customer dashboard",
+      okHttp(r.status) && r.data?.lifetimeValue && r.data?.repeatCustomerRate != null,
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("GET", "/analytics/sales");
+    ok("analytics: sales dashboard", okHttp(r.status) && r.data?.winLoss && r.data?.quotationAcceptance, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/analytics/comms");
+    ok("analytics: comms dashboard", okHttp(r.status) && r.data?.slaCompliance && r.data?.emailMetrics, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/analytics/finance");
+    ok(
+      "analytics: finance dashboard",
+      okHttp(r.status) && Array.isArray(r.data?.revenueByService) && r.data?.collections != null,
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("GET", "/analytics/templates");
+    ok("analytics: list templates", okHttp(r.status) && Array.isArray(r.data) && r.data.length >= 3, `status=${r.status}`);
+  }
+  let analyticsTplId = null;
+  {
+    const r = await req("POST", "/analytics/templates", {
+      code: `custom_${Date.now()}`,
+      name: "Custom exec slice",
+      category: "executive",
+      definition: { metrics: ["pipeline"], defaultFilters: {} },
+    });
+    analyticsTplId = r.data?.id || null;
+    ok("analytics: create template", okHttp(r.status) && !!analyticsTplId, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/analytics/schedules", {
+      templateId: analyticsTplId,
+      name: `Weekly exec ${Date.now()}`,
+      cronExpr: "0 8 * * 1",
+      format: "csv",
+      filters: {},
+      recipients: ["ops@example.com"],
+    });
+    ok("analytics: create schedule definition", okHttp(r.status) && !!r.data?.id && r.data?.cronExpr === "0 8 * * 1", `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/analytics/schedules");
+    ok("analytics: list schedules", okHttp(r.status) && Array.isArray(r.data), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/analytics/export/executive?format=csv");
+    const body = typeof r.data === "string" ? r.data : r.data?.raw || "";
+    ok("analytics: export csv", okHttp(r.status) && String(body).includes("executive"), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/analytics/export/sales?format=html");
+    const body = typeof r.data === "string" ? r.data : r.data?.raw || "";
+    ok("analytics: export html/pdf", okHttp(r.status) && String(body).includes("<html"), `status=${r.status}`);
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);
