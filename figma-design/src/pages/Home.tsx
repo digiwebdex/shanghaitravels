@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { useEffect, useState } from "react";
+import { Link } from "react-router";
 import {
-  Search, Plane, Building2, FileText, Map, Star, Shield, Award,
-  Users, Globe, ArrowRight, ChevronDown, CheckCircle2, Phone,
+  Plane, Building2, FileText, Map, Star, Shield, Award,
+  Users, Globe, ArrowRight, CheckCircle2, Phone,
   TrendingUp, Clock, Heart, Quote, Zap, BadgeCheck, Headphones,
-  GraduationCap, Stethoscope,
+  GraduationCap, Stethoscope, Bus, Hotel, ScrollText,
 } from "lucide-react";
 
 const SERVICES = [
@@ -39,84 +39,135 @@ const TESTIMONIALS = [
   { name: "Carlos Mendez",     title: "Corporate Client",   avatar: "C", rating: 5, text: "We manage travel for 200+ employees and TravelOS has transformed our booking process. Real-time status, automated approvals, and incredible support." },
 ];
 
-const SEARCH_TABS = ["Visa", "Flights", "Hotels", "Tours", "Hajj & Umrah"];
+type HeroSvc = {
+  icon: string;
+  title: string;
+  description: string;
+  buttonText: string;
+  url: string;
+  sortOrder: number;
+};
+
+const DEFAULT_HERO_SVCS: HeroSvc[] = [
+  { icon: "passport", title: "Visa Services", description: "Tourist, business, student and family visas — prepared carefully for destinations worldwide.", buttonText: "Apply Now", url: "/inquiry?service=visa", sortOrder: 10 },
+  { icon: "kaaba", title: "Hajj & Umrah", description: "Complete pilgrimage packages with flights, hotels, transport and on-ground guidance.", buttonText: "View Packages", url: "/tours", sortOrder: 20 },
+  { icon: "plane", title: "Air Ticket", description: "Domestic and international tickets for individuals, families and groups.", buttonText: "Book Now", url: "/inquiry?service=air_ticket", sortOrder: 30 },
+  { icon: "globe", title: "Tour Packages", description: "Curated itineraries for families, honeymoons and groups — built around you.", buttonText: "Explore Tours", url: "/tours", sortOrder: 40 },
+];
+
+function heroIcon(key: string) {
+  const cls = "text-accent";
+  if (key === "passport") return <ScrollText size={22} className={cls} aria-hidden />;
+  if (key === "plane") return <Plane size={22} className={cls} aria-hidden />;
+  if (key === "hotel") return <Hotel size={22} className={cls} aria-hidden />;
+  if (key === "bus") return <Bus size={22} className={cls} aria-hidden />;
+  if (key === "kaaba") {
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className={cls} aria-hidden>
+        <path d="M4 8.5 12 4l8 4.5v11L12 24 4 19.5v-11Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+        <path d="M4 8.5 12 13l8-4.5M12 13v11" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+  return <Globe size={22} className={cls} aria-hidden />;
+}
 
 export default function Home() {
-  const [searchTab, setSearchTab] = useState("Visa");
-  const navigate = useNavigate();
+  const [heroSvcs, setHeroSvcs] = useState<HeroSvc[]>(DEFAULT_HERO_SVCS);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api2/site/content?type=hero_service");
+        if (!res.ok) return;
+        const rows = (await res.json()) as Array<{
+          title: string;
+          summary?: string;
+          body?: string;
+          coverUrl?: string;
+          meta?: { url?: string; icon?: string };
+          sortOrder?: number;
+          status?: string;
+        }>;
+        const mapped = rows
+          .filter((r) => r.status === "published" || !r.status)
+          .map((r) => ({
+            icon: r.coverUrl || r.meta?.icon || "globe",
+            title: r.title,
+            description: r.summary || "",
+            buttonText: r.body || "Learn more",
+            url: r.meta?.url || "/inquiry",
+            sortOrder: r.sortOrder || 0,
+          }))
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .slice(0, 6);
+        if (!cancelled && mapped.length) setHeroSvcs(mapped);
+      } catch {
+        /* keep defaults */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div>
       {/* ── Hero ── */}
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden -mt-16">
-        <img src="https://images.unsplash.com/photo-1488085061387-422e29b40080?w=1600&h=900&fit=crop&auto=format" alt="Travel" className="absolute inset-0 w-full h-full object-cover" />
+        <img src="https://images.unsplash.com/photo-1488085061387-422e29b40080?w=1600&h=900&fit=crop&auto=format" alt="Travel destinations" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-primary/82 via-primary/62 to-primary/45" />
         <div className="relative z-10 w-full max-w-[1440px] mx-auto px-6 md:px-8 pt-28 pb-16 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-white text-xs font-medium mb-6 backdrop-blur-sm">
-            <BadgeCheck size={13} className="text-accent" /> IATA Certified · 15 Years Trusted · UAE Licensed
+            <BadgeCheck size={13} className="text-accent" /> Govt. Registered · Reg. No 0017053 · Dhaka, Bangladesh
           </div>
           <h1 className="text-white text-5xl md:text-6xl font-bold mb-5 leading-[1.1] max-w-4xl mx-auto tracking-tight">
             Your World,<br /><span className="text-accent">Expertly Planned.</span>
           </h1>
-          <p className="text-white/75 text-lg max-w-xl mx-auto mb-10 leading-relaxed">
-            Visa processing, flights, hotels, tours, Hajj & Umrah — everything handled by specialists with 15 years of UAE expertise.
+          <p className="text-white/75 text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
+            Visa, air tickets, hotels, tours, Hajj & Umrah and more — for every country, handled by our specialists in Dhaka, Bangladesh.
           </p>
 
-          {/* Search widget */}
-          <div className="max-w-3xl mx-auto">
-            <div className="flex gap-1 justify-center">
-              {SEARCH_TABS.map(tab => (
-                <button key={tab} onClick={() => setSearchTab(tab)} className={`px-4 py-2 rounded-t-xl text-sm font-semibold transition-all ${searchTab === tab ? "bg-white text-primary" : "bg-white/15 text-white/80 hover:bg-white/25"}`}>{tab}</button>
-              ))}
-            </div>
-            <div className="bg-white rounded-b-2xl rounded-tr-2xl p-4 shadow-2xl">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <div>
-                  <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{searchTab === "Visa" ? "From Country" : "From / Destination"}</label>
-                  <div className="relative">
-                    <select className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-background appearance-none focus:outline-none focus:border-primary">
-                      <option>Select country…</option>
-                      <option>United Arab Emirates</option>
-                      <option>India</option>
-                      <option>Pakistan</option>
-                      <option>United Kingdom</option>
-                    </select>
-                    <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{searchTab === "Visa" ? "Destination" : "To / Date"}</label>
-                  <div className="relative">
-                    <select className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-background appearance-none focus:outline-none focus:border-primary">
-                      <option>Select…</option>
-                      <option>United Kingdom</option>
-                      <option>United States</option>
-                      <option>Schengen Area</option>
-                      <option>Australia</option>
-                    </select>
-                    <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Travel Date</label>
-                  <input type="date" className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary" />
-                </div>
-                <button
-                  onClick={() => navigate(searchTab === "Visa" ? "/visa" : searchTab === "Tours" || searchTab === "Hajj & Umrah" ? "/tours" : "/flights")}
-                  className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-accent text-white font-bold text-sm hover:bg-orange-600 transition-colors shadow-md mt-auto"
+          {/* Premium Hero Services */}
+          <ul className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4 max-w-5xl mx-auto text-left" aria-label="Featured travel services">
+            {heroSvcs.map((svc) => (
+              <li key={svc.title}>
+                <Link
+                  to={svc.url}
+                  className="group flex h-full flex-col rounded-2xl border border-white/15 bg-white/10 p-4 md:p-5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white/16 hover:border-white/30 hover:shadow-xl hover:shadow-black/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  aria-label={`${svc.title}: ${svc.buttonText}`}
                 >
-                  <Search size={15} /> Search
-                </button>
-              </div>
-            </div>
+                  <span className="mb-3 inline-flex size-11 items-center justify-center rounded-xl bg-accent/15 transition-colors group-hover:bg-accent/25" aria-hidden>
+                    {heroIcon(svc.icon)}
+                  </span>
+                  <span className="text-[15px] font-bold text-white">{svc.title}</span>
+                  <span className="mt-1.5 text-[12px] leading-relaxed text-white/70 flex-1">{svc.description}</span>
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-[12px] font-bold text-accent">
+                    {svc.buttonText}
+                    <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-8">
+            <Link
+              to="/inquiry"
+              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-accent text-white font-bold text-sm hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/25 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              Request a Free Consultation
+              <ArrowRight size={16} aria-hidden />
+            </Link>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
             {[
-              { icon: Shield,       label: "IATA Certified" },
-              { icon: Award,        label: "50,000+ Clients" },
-              { icon: CheckCircle2, label: "98.7% Approval Rate" },
-              { icon: Headphones,   label: "24/7 Support" },
+              { icon: Shield,       label: "Govt. Registered" },
+              { icon: Award,        label: "Reg. No 0017053" },
+              { icon: CheckCircle2, label: "Visa · Air · Tours · Hajj" },
+              { icon: Headphones,   label: "Dhaka, Bangladesh" },
             ].map(b => (
               <div key={b.label} className="flex items-center gap-2 text-white/80 text-sm">
                 <b.icon size={15} className="text-accent" /> {b.label}

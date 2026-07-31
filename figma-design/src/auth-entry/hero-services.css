@@ -1,0 +1,137 @@
+/* Homepage Hero Services — marketing inject */
+.st-hero-services {
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.st-hero-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+@media (min-width: 640px) {
+  .st-hero-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .st-hero-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.st-hero-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  padding: 1.1rem 1.15rem;
+  color: #fff;
+  text-decoration: none;
+  transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.st-hero-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.22);
+}
+
+.st-hero-card:focus-visible {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
+}
+
+.st-hero-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  background: rgba(249, 115, 22, 0.15);
+  color: #fb923c;
+  margin-bottom: 0.75rem;
+  transition: background-color 0.3s ease;
+}
+
+.st-hero-card:hover .st-hero-card-icon {
+  background: rgba(249, 115, 22, 0.25);
+}
+
+.st-hero-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.st-hero-card-desc {
+  margin-top: 0.35rem;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+  flex: 1;
+}
+
+.st-hero-card-cta {
+  margin-top: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fb923c;
+}
+
+.st-hero-card-cta svg {
+  transition: transform 0.3s ease;
+}
+
+.st-hero-card:hover .st-hero-card-cta svg {
+  transform: translateX(2px);
+}
+
+.st-hero-cta-wrap {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+.st-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.85rem 1.6rem;
+  border-radius: 0.75rem;
+  background: #f97316;
+  color: #fff !important;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(249, 115, 22, 0.28);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.st-hero-cta:hover {
+  background: #ea580c;
+  box-shadow: 0 14px 28px rgba(249, 115, 22, 0.35);
+  transform: translateY(-1px);
+}
+
+.st-hero-cta:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}

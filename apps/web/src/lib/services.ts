@@ -1213,6 +1213,9 @@ export type CmsContent = {
   title: string;
   summary?: string | null;
   body?: string | null;
+  coverUrl?: string | null;
+  meta?: Record<string, unknown> | null;
+  sortOrder?: number;
   status: string;
   publishedAt?: string | null;
 };
@@ -1278,7 +1281,10 @@ export const cmsApi = {
     return apiFetch<CmsContent[]>(`/cms/content${qs}`);
   },
   createContent: (body: Record<string, unknown>) => apiFetch<CmsContent>("/cms/content", { method: "POST", body }),
+  updateContent: (id: string, body: Record<string, unknown>) =>
+    apiFetch<CmsContent>(`/cms/content/${id}`, { method: "POST", body }),
   publishContent: (id: string) => apiFetch(`/cms/content/${id}/publish`, { method: "POST", body: {} }),
+  unpublishContent: (id: string) => apiFetch(`/cms/content/${id}/unpublish`, { method: "POST", body: {} }),
   listTravel: (q?: { serviceType?: string }) => {
     const qs = q?.serviceType ? `?serviceType=${encodeURIComponent(q.serviceType)}` : "";
     return apiFetch<CmsTravelOffer[]>(`/cms/travel${qs}`);

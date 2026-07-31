@@ -104,6 +104,7 @@ const CmsPagesPage = lazy(() => import("@/pages/CmsPagesPage"));
 const CmsMenusPage = lazy(() => import("@/pages/CmsMenusPage"));
 const CmsMediaPage = lazy(() => import("@/pages/CmsMediaPage"));
 const CmsBannersPage = lazy(() => import("@/pages/CmsBannersPage"));
+const CmsHeroServicesPage = lazy(() => import("@/pages/CmsHeroServicesPage"));
 const CmsContentPage = lazy(() => import("@/pages/CmsContentPage"));
 const CmsTravelPage = lazy(() => import("@/pages/CmsTravelPage"));
 const CmsFormsPage = lazy(() => import("@/pages/CmsFormsPage"));
@@ -1235,6 +1236,14 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <CmsBannersPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "cms/hero-services",
+            element: (
+              <Lazy>
+                <CmsHeroServicesPage />
               </Lazy>
             ),
           },

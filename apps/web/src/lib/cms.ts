@@ -1,7 +1,15 @@
 /** Phase E1 — Website & CMS helpers */
 
 export const PAGE_STATUSES = ["draft", "in_review", "published", "archived"] as const;
-export const CONTENT_TYPES = ["blog", "announcement", "faq", "testimonial", "gallery", "download"] as const;
+export const CONTENT_TYPES = [
+  "blog",
+  "announcement",
+  "faq",
+  "testimonial",
+  "gallery",
+  "download",
+  "hero_service",
+] as const;
 export const TRAVEL_TYPES = ["visa", "air_ticket", "tour", "hajj", "umrah", "hotel", "transport"] as const;
 export const FORM_TYPES = ["contact", "enquiry", "quote", "visa", "tour", "hajj", "career"] as const;
 export const LEAD_FORM_TYPES = ["contact", "enquiry", "quote", "visa", "tour", "hajj"] as const;
