@@ -127,6 +127,18 @@ const PortalFinancePage = lazy(() => import("@/pages/portal/PortalFinancePage"))
 const PortalCommunicationsPage = lazy(() => import("@/pages/portal/PortalCommunicationsPage"));
 const PortalProfilePage = lazy(() => import("@/pages/portal/PortalProfilePage"));
 const PortalReportsPage = lazy(() => import("@/pages/portal/PortalReportsPage"));
+const AgentPortalLayout = lazy(() => import("@/layouts/AgentPortalLayout"));
+const AgentLoginPage = lazy(() => import("@/pages/portal/agent/AgentLoginPage"));
+const AgentForgotPage = lazy(() => import("@/pages/portal/agent/AgentForgotPage"));
+const AgentDashboardPage = lazy(() => import("@/pages/portal/agent/AgentDashboardPage"));
+const AgentBookingsPage = lazy(() => import("@/pages/portal/agent/AgentBookingsPage"));
+const AgentBookingDetailPage = lazy(() => import("@/pages/portal/agent/AgentBookingDetailPage"));
+const AgentCustomersPage = lazy(() => import("@/pages/portal/agent/AgentCustomersPage"));
+const AgentCustomerDetailPage = lazy(() => import("@/pages/portal/agent/AgentCustomerDetailPage"));
+const AgentFinancePage = lazy(() => import("@/pages/portal/agent/AgentFinancePage"));
+const AgentDocumentsPage = lazy(() => import("@/pages/portal/agent/AgentDocumentsPage"));
+const AgentCommunicationsPage = lazy(() => import("@/pages/portal/agent/AgentCommunicationsPage"));
+const AgentReportsPage = lazy(() => import("@/pages/portal/agent/AgentReportsPage"));
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return (
@@ -288,6 +300,104 @@ export const router = createHashRouter([
         element: (
           <Lazy>
             <PortalReportsPage />
+          </Lazy>
+        ),
+      },
+    ],
+  },
+  {
+    path: "/portal/agent/login",
+    element: (
+      <Lazy>
+        <AgentLoginPage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/portal/agent/forgot",
+    element: (
+      <Lazy>
+        <AgentForgotPage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/portal/agent",
+    element: (
+      <Lazy>
+        <AgentPortalLayout />
+      </Lazy>
+    ),
+    children: [
+      {
+        index: true,
+        element: (
+          <Lazy>
+            <AgentDashboardPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "bookings",
+        element: (
+          <Lazy>
+            <AgentBookingsPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "bookings/:id",
+        element: (
+          <Lazy>
+            <AgentBookingDetailPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "customers",
+        element: (
+          <Lazy>
+            <AgentCustomersPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "customers/:id",
+        element: (
+          <Lazy>
+            <AgentCustomerDetailPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "finance",
+        element: (
+          <Lazy>
+            <AgentFinancePage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "documents",
+        element: (
+          <Lazy>
+            <AgentDocumentsPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "communications",
+        element: (
+          <Lazy>
+            <AgentCommunicationsPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: "reports",
+        element: (
+          <Lazy>
+            <AgentReportsPage />
           </Lazy>
         ),
       },

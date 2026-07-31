@@ -1755,6 +1755,197 @@ async function main() {
     ok("portal: logout", okHttp(r.status), `status=${r.status}`);
   }
 
+  // ---------- Phase G1 Agent Portal ----------
+  // Staff session still present (customer cookies are separate). Create agent + invite.
+  const agentEmail = `agent.smoke.${Date.now()}@example.com`;
+  const agentPhone = `019${String(Date.now()).slice(-8)}`;
+  let agentId = null;
+  let agentTempPassword = null;
+  {
+    const r = await req("POST", "/agents", {
+      name: "Smoke Agent Co",
+      phone: agentPhone,
+      email: agentEmail,
+      commissionRateBps: 250,
+    });
+    agentId = r.data?.id || null;
+    ok("agent-portal: create agent", okHttp(r.status) && !!agentId, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", `/agent-accounts/${agentId}`, { email: agentEmail });
+    agentTempPassword = r.data?.tempPassword || null;
+    ok(
+      "agent-portal: invite",
+      okHttp(r.status) && r.data?.invited === true && !!agentTempPassword,
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("POST", "/portal/agent/login", { email: agentEmail, password: agentTempPassword });
+    ok(
+      "agent-portal: login",
+      okHttp(r.status) && r.data?.ok === true && r.data?.mustChangePassword === true,
+      `status=${r.status}`,
+    );
+    ok("agent-portal: agent cookie", jar.has("st_agent"), `cookies=${[...jar.keys()].join(",")}`);
+  }
+  {
+    const r = await req("POST", "/portal/agent/change-password", {
+      currentPassword: agentTempPassword,
+      newPassword: "AgentSmoke1!",
+    });
+    ok("agent-portal: change password", okHttp(r.status) && r.data?.ok === true, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/portal/agent/me");
+    ok(
+      "agent-portal: me",
+      okHttp(r.status) && r.data?.agent?.id === agentId && r.data?.user?.mustChangePassword === false,
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("GET", "/portal/agent/dashboard");
+    ok(
+      "agent-portal: dashboard",
+      okHttp(r.status) && r.data?.bookings && typeof r.data?.walletBalance === "number" && r.data?.salesSummary,
+      `status=${r.status}`,
+    );
+  }
+  let agentCustomerId = null;
+  {
+    const r = await req("POST", "/portal/agent/customers", {
+      fullName: "Agent Smoke Customer",
+      phone: `016${String(Date.now()).slice(-8)}`,
+      email: `cust.${Date.now()}@example.com`,
+    });
+    agentCustomerId = r.data?.id || null;
+    ok("agent-portal: create customer", okHttp(r.status) && !!agentCustomerId, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/portal/agent/customers");
+    ok("agent-portal: list customers", okHttp(r.status) && Array.isArray(r.data), `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", `/portal/agent/customers/${agentCustomerId}/passports`, {
+      passportNo: `AP${Date.now().toString().slice(-8)}`,
+      issuingCountry: "BD",
+      isPrimary: true,
+    });
+    ok("agent-portal: passport", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", `/portal/agent/customers/${agentCustomerId}/travellers`, {
+      fullName: "Agent Traveller Smoke",
+    });
+    ok("agent-portal: traveller", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  let agentCaseId = null;
+  {
+    const r = await req("POST", "/portal/agent/cases", {
+      serviceType: "visa",
+      customerName: "Agent Case Customer",
+      customerPhone: `015${String(Date.now()).slice(-8)}`,
+      title: "Agent smoke visa",
+      message: "smoke",
+    });
+    agentCaseId = r.data?.id || null;
+    ok(
+      "agent-portal: create booking",
+      okHttp(r.status) && !!agentCaseId && !!r.data?.reference,
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("GET", "/portal/agent/cases");
+    ok("agent-portal: list bookings", okHttp(r.status) && Array.isArray(r.data), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", `/portal/agent/cases/${agentCaseId}`);
+    ok(
+      "agent-portal: get booking",
+      okHttp(r.status) && r.data?.id === agentCaseId && r.data?.agentId === agentId,
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("GET", "/portal/agent/finance");
+    ok(
+      "agent-portal: finance",
+      okHttp(r.status) && r.data?.wallet && Array.isArray(r.data?.commissions) && Array.isArray(r.data?.invoices),
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("GET", "/portal/agent/wallet");
+    ok("agent-portal: wallet", okHttp(r.status) && typeof r.data?.balance === "number", `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/portal/agent/commissions");
+    ok("agent-portal: commissions", okHttp(r.status) && Array.isArray(r.data), `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/portal/agent/documents");
+    ok("agent-portal: documents", okHttp(r.status) && Array.isArray(r.data), `status=${r.status}`);
+  }
+  {
+    const r = await req("POST", "/portal/agent/support", {
+      subject: "Agent smoke support",
+      body: "Need help with commission payout",
+    });
+    ok("agent-portal: support", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
+  }
+  {
+    const r = await req("GET", "/portal/agent/communications");
+    ok(
+      "agent-portal: communications",
+      okHttp(r.status) && Array.isArray(r.data?.messages) && Array.isArray(r.data?.support),
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("GET", "/portal/agent/reports");
+    ok(
+      "agent-portal: reports",
+      okHttp(r.status) &&
+        r.data?.sales &&
+        Array.isArray(r.data?.bookingHistory) &&
+        r.data?.outstanding &&
+        r.data?.commissions,
+      `status=${r.status}`,
+    );
+  }
+  {
+    const r = await req("POST", "/portal/agent/forgot-password", { email: agentEmail });
+    const code = r.data?.devCode;
+    ok("agent-portal: forgot password", okHttp(r.status) && r.data?.ok === true, `status=${r.status}`);
+    if (code) {
+      const reset = await req("POST", "/portal/agent/reset-password", {
+        email: agentEmail,
+        code,
+        newPassword: "AgentSmoke2!",
+      });
+      ok("agent-portal: reset password", okHttp(reset.status) && reset.data?.ok === true, `status=${reset.status}`);
+    } else {
+      ok("agent-portal: reset password", false, "no devCode — set PORTAL_RETURN_CODES=true");
+    }
+  }
+  {
+    const r = await req("POST", "/portal/agent/otp/request", { email: agentEmail });
+    const code = r.data?.devCode;
+    ok("agent-portal: otp request", okHttp(r.status) && r.data?.ok === true, `status=${r.status}`);
+    if (code) {
+      const v = await req("POST", "/portal/agent/otp/verify", { email: agentEmail, code });
+      ok("agent-portal: otp verify", okHttp(v.status) && v.data?.ok === true, `status=${v.status}`);
+    } else {
+      ok("agent-portal: otp verify", false, "no devCode");
+    }
+  }
+  {
+    const r = await req("POST", "/portal/agent/logout");
+    ok("agent-portal: logout", okHttp(r.status), `status=${r.status}`);
+  }
+
   {
     const r = await req("POST", "/auth/logout");
     ok("auth: logout", okHttp(r.status), `status=${r.status}`);
