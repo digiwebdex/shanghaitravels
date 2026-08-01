@@ -16,12 +16,15 @@ export function photoUrl(id: string, width = 1200): string {
 }
 
 /**
- * Cinematic wide frame behind the hero. The hero crops to roughly 3.2:1, which
- * ruins any photo with a strong foreground subject — this one is chosen for a
- * horizontal skyline that survives the crop and stays bright enough behind the
- * scrim to carry navy type.
+ * Cinematic wide frame behind the hero: the Pudong skyline at dawn, mirrored in
+ * the Huangpu.
+ *
+ * The hero crops to roughly 3.2:1 on desktop and to a tall 0.75:1 on a phone,
+ * which ruins any photo with a strong foreground subject — a horizontal skyline
+ * survives both. Its pale dawn wash also measures ~230/255 behind the headline
+ * once the scrim composites, leaving navy type at about 12.8:1.
  */
-export const HERO_PHOTO = photoUrl("1512453979798-5ea266f8880c", 2400);
+export const HERO_PHOTO = photoUrl("1545893835-abaa50cbe628", 2400);
 
 /** Warm departure-lounge frame behind the consultation banner. */
 export const CTA_PHOTO = photoUrl("1488646953014-85cb44e25828", 900);
@@ -57,9 +60,9 @@ const PLACE_PHOTOS: Record<string, string[]> = {
   id: ["1544644181-1484b3fdfc62", "1518548419970-58e3b4079ab2"],
   bali: ["1544644181-1484b3fdfc62", "1518548419970-58e3b4079ab2"],
 
-  china: ["1508804185872-d7badad00f7d", "1474181487882-5abf3f0ba6c2"],
-  cn: ["1508804185872-d7badad00f7d", "1474181487882-5abf3f0ba6c2"],
-  shanghai: ["1474181487882-5abf3f0ba6c2"],
+  china: ["1508804185872-d7badad00f7d", "1545893835-abaa50cbe628", "1474181487882-5abf3f0ba6c2"],
+  cn: ["1508804185872-d7badad00f7d", "1545893835-abaa50cbe628", "1474181487882-5abf3f0ba6c2"],
+  shanghai: ["1545893835-abaa50cbe628", "1474181487882-5abf3f0ba6c2"],
 
   japan: ["1524413840807-0c3cb6fa808d", "1493976040374-85c8e12f0c0e"],
   jp: ["1524413840807-0c3cb6fa808d", "1493976040374-85c8e12f0c0e"],
