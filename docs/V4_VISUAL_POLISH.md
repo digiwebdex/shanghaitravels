@@ -207,11 +207,44 @@ packages, stacked footer all behave as before.
 These need an admin edit; they were left alone because CMS values take
 precedence over code by design.
 
-1. **Hero banner title is `"Smoke banner"`** — a smoke-test record is the active
-   hero banner. Also no hero banner carries an `imageUrl`, so the code default
-   renders. Setting a real title and image would override both.
+1. ~~**Hero banner title is `"Smoke banner"`**~~ — fixed, see below. No hero
+   banner carries an `imageUrl` yet, so the cinematic code default still
+   renders; uploading one would override it.
 2. **Blog posts are smoke-test records** (`"Smoke blog 1785527453529"`).
 3. **Qatar's destination image is a Tbilisi photo** — the URL resolves, so the
    fallback never triggers; only a CMS correction will fix it.
 4. **`Schengen Visa Assistance` and `Dhaka–Dubai Round Trip` share one
    aeroplane photo** — both URLs resolve, so this is a Package Engine field edit.
+
+---
+
+## 8. Hero headline: smoke-test data in production
+
+The live hero read **"Smoke banner"**. Three separate causes:
+
+1. **The API smoke suite writes to production.** `apps/web/tests/api/smoke.mjs`
+   POSTs a `placement: "hero"` banner on every run. Nine had accumulated in
+   `st_erp_prod`.
+2. **Banners have no delete endpoint** — `CmsController` exposes only GET and
+   POST, so nothing ever cleaned them up.
+3. **`sortOrder` did not disambiguate.** The public query orders by `sortOrder`
+   ascending; the smoke rows defaulted to `0` while the real `home-hero` banner
+   sat at `10`, so a test record was always first and `banners[0]` took it.
+
+Fixes applied:
+
+- **Data.** Soft-deleted the nine smoke rows in `st_erp_prod` and
+  `st_erp_staging` (`deletedAt`, `isActive: false` — the public query filters on
+  both). `home-hero` now carries the design headline
+  `"Your World, Expertly Planned"` at `sortOrder 0`. The comma is load-bearing:
+  `splitHeadline` breaks there to give the second line the orange accent.
+  CSV snapshots of both tables are in `/root/cms-backups/`.
+- **Selection.** `pickHeroBanner` in `home/v4/api.ts` keys off the `home-hero`
+  code instead of taking `banners[0]`, and only falls back to list order if
+  that code is absent.
+- **Root cause.** The smoke test now creates its banner with
+  `placement: "smoke"` and `isActive: false`, so it still exercises the create
+  path without ever reaching the homepage.
+
+Editing the headline is still a normal CMS operation — change the `home-hero`
+banner's title and it flows straight through.

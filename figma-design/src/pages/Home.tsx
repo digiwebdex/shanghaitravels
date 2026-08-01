@@ -5,6 +5,7 @@ import {
   fetchContentBySlug,
   fetchDestinations,
   fetchPackages,
+  pickHeroBanner,
   type CmsBanner,
   type CmsContent,
   type DestinationRow,
@@ -71,7 +72,7 @@ export default function Home() {
 
       if (cancelled) return;
 
-      setHeroBanner(banners[0] ?? null);
+      setHeroBanner(pickHeroBanner(banners));
       setCtaBanner(ctaBanners[0] ?? null);
       setPackages(pkgList);
       setPackagesLoading(false);

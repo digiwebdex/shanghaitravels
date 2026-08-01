@@ -68,12 +68,27 @@ export type CmsContent = {
 
 export type CmsBanner = {
   id?: string;
+  code?: string | null;
   imageUrl?: string | null;
   title?: string | null;
   subtitle?: string | null;
   ctaLabel?: string | null;
   ctaUrl?: string | null;
 };
+
+/** Code of the banner that owns the homepage hero. */
+export const HERO_BANNER_CODE = "home-hero";
+
+/**
+ * Resolves which banner drives the hero. Every hero banner is free to share
+ * `sortOrder`, so "whichever the API listed first" is not a stable choice —
+ * API smoke runs write their own hero banners into the same table, and one of
+ * those held the headline until it was retired. Key off the known code and
+ * only fall back to list order if it is missing.
+ */
+export function pickHeroBanner(banners: CmsBanner[]): CmsBanner | null {
+  return banners.find((b) => b.code === HERO_BANNER_CODE) ?? banners[0] ?? null;
+}
 
 export function listOf<T>(raw: unknown): T[] {
   if (Array.isArray(raw)) return raw as T[];

@@ -1513,10 +1513,15 @@ async function main() {
     ok("cms: create media", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
   }
   {
+    // Deliberately not placement "hero" and not active: banners have no
+    // delete endpoint, so every run leaves a row behind for good. Nine of
+    // these accumulated at sortOrder 0 and one of them ended up supplying the
+    // live homepage headline. This still exercises the create path.
     const r = await req("POST", "/cms/banners", {
       code: `smoke-banner-${Date.now().toString().slice(-6)}`,
       title: "Smoke banner",
-      placement: "hero",
+      placement: "smoke",
+      isActive: false,
       linkHref: "/#/site/enquire",
     });
     ok("cms: create banner", okHttp(r.status) && !!r.data?.id, `status=${r.status}`);
