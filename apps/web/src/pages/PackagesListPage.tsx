@@ -1,7 +1,9 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Package as PackageIcon } from "lucide-react";
-import { packagesApi } from "@/lib/services";
+import { Link } from "react-router";
+import { packagesApi, suppliersApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
+import type { Supplier } from "@/lib/types";
 import type { PackageCategory, PackageMaster } from "@/lib/packages";
 import {
   PACKAGE_TYPES,
@@ -22,6 +24,8 @@ import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { PackageModuleNav } from "@/components/packages/PackageModuleNav";
+import { btnPrimary, btnPrimaryStyle } from "@/components/enterprise/Page";
+import { brand } from "@/styles/tokens";
 
 type DayRow = { day: number; title: string; body: string };
 
@@ -30,6 +34,7 @@ type Props = { pricingFocus?: boolean };
 export default function PackagesListPage({ pricingFocus = false }: Props) {
   const [rows, setRows] = useState<PackageMaster[]>([]);
   const [categories, setCategories] = useState<PackageCategory[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -43,12 +48,14 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
     setLoading(true);
     setError("");
     try {
-      const [pkgs, cats] = await Promise.all([
+      const [pkgs, cats, sups] = await Promise.all([
         packagesApi.list({ q: q || undefined, limit: 200 }),
         packagesApi.listCategories({ active: "true" }),
+        suppliersApi.list({ limit: 200 }).catch(() => ({ data: [] as Supplier[], total: 0, page: 1, limit: 200 })),
       ]);
       setRows(listOf<PackageMaster>(pkgs));
       setCategories(listOf<PackageCategory>(cats));
+      setSuppliers(listOf<Supplier>(sups));
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to load packages");
     } finally {
@@ -133,11 +140,11 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
       <div className="p-5 max-w-[1200px] space-y-4">
         <div>
           <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <PackageIcon size={16} className="text-amber-600" />
+            <PackageIcon size={16} style={{ color: brand.accent }} />
             {pricingFocus ? "Package pricing" : "Products & packages"}
           </h1>
           <p className="text-[11px] text-slate-500 mt-0.5">
-            PackageID is the source of truth — website, portals, CRM, and bookings reference the same master.
+            Package master links optional supplier cost to Supplier Center — website, portals, CRM, and bookings share the same PackageID.
           </p>
         </div>
         <PackageModuleNav />
@@ -226,7 +233,24 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
               </div>
             </div>
 
-            <div className={`grid grid-cols-1 sm:grid-cols-3 gap-2 ${pricingFocus ? "ring-2 ring-amber-200 rounded-lg p-2" : ""}`}>
+            <div className={`grid grid-cols-1 sm:grid-cols-3 gap-2 ${pricingFocus ? "ring-2 ring-orange-200 rounded-lg p-2" : ""}`}>
+              <div>
+                <label className={labelCls}>Supplier</label>
+                <select className={inputCls} value={form.supplierId} onChange={(e) => patchForm("supplierId", e.target.value)}>
+                  <option value="">— None —</option>
+                  {suppliers.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.code}){s.type ? ` · ${s.type}` : ""}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-0.5 text-[10px] text-slate-400">
+                  From{" "}
+                  <Link to="/partners/suppliers" className="font-semibold text-orange-700 hover:underline">
+                    Supplier Center
+                  </Link>
+                </p>
+              </div>
               <div>
                 <label className={labelCls}>Supplier cost (BDT)</label>
                 <input className={inputCls} value={form.supplierCostBdt} onChange={(e) => patchForm("supplierCostBdt", e.target.value)} />
@@ -301,7 +325,7 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
                     <p className="text-[10px] font-bold text-slate-500 uppercase">Itinerary</p>
                     <button
                       type="button"
-                      className="text-[10px] font-semibold text-amber-700"
+                      className="text-[10px] font-semibold text-orange-700"
                       onClick={() => setDays((d) => [...d, { day: d.length + 1, title: "", body: "" }])}
                     >
                       + Add day
@@ -344,7 +368,7 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
             )}
 
             <div className="flex flex-wrap gap-2">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
                 {editId ? "Update package" : "Create package"}
               </button>
               {editId && (
@@ -369,6 +393,7 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
                 <tr>
                   <th className="text-left p-2">Code</th>
                   <th className="text-left p-2">Name</th>
+                  <th className="text-left p-2">Supplier</th>
                   <th className="text-left p-2">Status</th>
                   <th className="text-left p-2">Price</th>
                   <th className="text-left p-2">Seats</th>
@@ -382,6 +407,15 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
                     <td className="p-2 font-mono">{p.code}</td>
                     <td className="p-2">{p.name}</td>
                     <td className="p-2">
+                      {p.supplier ? (
+                        <Link to="/partners/suppliers" className="font-semibold text-orange-700 hover:underline">
+                          {p.supplier.name}
+                        </Link>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </td>
+                    <td className="p-2">
                       <span className="px-1.5 py-0.5 rounded bg-slate-100">{p.status}</span>
                     </td>
                     <td className="p-2">{formatPrice(displayPricePoisha(p))}</td>
@@ -391,7 +425,7 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
                     </td>
                     <td className="p-2">
                       <div className="flex flex-wrap gap-1">
-                        <button type="button" className="text-amber-700 font-semibold" onClick={() => loadEdit(p)}>
+                        <button type="button" className="text-orange-700 font-semibold" onClick={() => loadEdit(p)}>
                           Edit
                         </button>
                         <button type="button" className="text-emerald-700" onClick={() => void act(p.id, "publish")}>

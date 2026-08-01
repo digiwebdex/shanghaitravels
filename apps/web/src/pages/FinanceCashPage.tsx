@@ -7,12 +7,9 @@ import { ErrorBanner } from "@/components/Feedback";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import { Column, DataTable, Pill } from "@/components/enterprise/DataTable";
 import { PageHeader, PageShell, Surface, SurfaceHeader, btnGhost } from "@/components/enterprise/Page";
-import { WorkspaceTabsCompact } from "@/workspaces/WorkspaceTabs";
-import { workspaceById } from "@/workspaces/registry";
 import { fmtBDTPlain } from "@/lib/money";
 
 export default function FinanceCashPage() {
-  const workspace = workspaceById("finance")!;
   const [rows, setRows] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -57,7 +54,6 @@ export default function FinanceCashPage() {
           </button>
         }
       />
-      <WorkspaceTabsCompact workspace={workspace} />
       <FinanceModuleNav />
       <ErrorBanner message={error} />
       <Surface>

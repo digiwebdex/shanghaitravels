@@ -6,15 +6,12 @@ import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import { PageHeader, PageShell, Surface, SurfaceHeader } from "@/components/enterprise/Page";
-import { WorkspaceTabsCompact } from "@/workspaces/WorkspaceTabs";
-import { workspaceById } from "@/workspaces/registry";
 import { fmtBDTPlain } from "@/lib/money";
 import { inputCls, labelCls } from "@/components/cases/formStyles";
 
 type ApSupplier = { id: string; code: string; name: string; type?: string; outstandingPoisha: number };
 
 export default function FinanceSupplierLedgerPage() {
-  const workspace = workspaceById("finance")!;
   const [suppliers, setSuppliers] = useState<ApSupplier[]>([]);
   const [supplierId, setSupplierId] = useState("");
   const [entries, setEntries] = useState<unknown[]>([]);
@@ -67,7 +64,6 @@ export default function FinanceSupplierLedgerPage() {
         subtitle="AP supplier ledger from /ap/reports/supplier-ledger."
         breadcrumb={[{ label: "Finance ERP" }, { label: "Supplier Ledger" }]}
       />
-      <WorkspaceTabsCompact workspace={workspace} />
       <FinanceModuleNav />
       <ErrorBanner message={error} />
       {loading ? (

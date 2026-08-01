@@ -8,14 +8,11 @@ import { ErrorBanner } from "@/components/Feedback";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
 import { PageHeader, PageShell, Surface, SurfaceHeader, btnGhost } from "@/components/enterprise/Page";
-import { WorkspaceTabsCompact } from "@/workspaces/WorkspaceTabs";
-import { workspaceById } from "@/workspaces/registry";
 import { fmtBDTPlain } from "@/lib/money";
 
 type Inv = Invoice & { customer?: { fullName?: string; code?: string } };
 
 export default function FinanceInvoicesPage() {
-  const workspace = workspaceById("finance")!;
   const [rows, setRows] = useState<Inv[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -74,7 +71,6 @@ export default function FinanceInvoicesPage() {
           </button>
         }
       />
-      <WorkspaceTabsCompact workspace={workspace} />
       <FinanceModuleNav />
       <ErrorBanner message={error} />
       <Surface>

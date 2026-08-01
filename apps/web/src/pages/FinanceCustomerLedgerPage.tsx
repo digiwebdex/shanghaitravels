@@ -6,15 +6,12 @@ import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import { PageHeader, PageShell, Surface, SurfaceHeader } from "@/components/enterprise/Page";
-import { WorkspaceTabsCompact } from "@/workspaces/WorkspaceTabs";
-import { workspaceById } from "@/workspaces/registry";
 import { fmtBDTPlain } from "@/lib/money";
 import { inputCls, labelCls } from "@/components/cases/formStyles";
 
 type ArCustomer = { id: string; code: string; fullName: string; outstandingPoisha: number; invoiceCount: number };
 
 export default function FinanceCustomerLedgerPage() {
-  const workspace = workspaceById("finance")!;
   const [customers, setCustomers] = useState<ArCustomer[]>([]);
   const [customerId, setCustomerId] = useState("");
   const [entries, setEntries] = useState<unknown[]>([]);
@@ -67,7 +64,6 @@ export default function FinanceCustomerLedgerPage() {
         subtitle="AR customer ledger from /ar/reports/customer-ledger."
         breadcrumb={[{ label: "Finance ERP" }, { label: "Customer Ledger" }]}
       />
-      <WorkspaceTabsCompact workspace={workspace} />
       <FinanceModuleNav />
       <ErrorBanner message={error} />
       {loading ? (

@@ -7,12 +7,9 @@ import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import { PageHeader, PageShell, Surface, SurfaceHeader } from "@/components/enterprise/Page";
-import { WorkspaceTabsCompact } from "@/workspaces/WorkspaceTabs";
-import { workspaceById } from "@/workspaces/registry";
 import { fmtBDTCompact, fmtBDTPlain } from "@/lib/money";
 
 export default function FinanceDashboardPage() {
-  const workspace = workspaceById("finance")!;
   const [summary, setSummary] = useState<FinanceSummary | null>(null);
   const [outstanding, setOutstanding] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState("");
@@ -62,7 +59,6 @@ export default function FinanceDashboardPage() {
         subtitle="Company-wide financial health from /finance/summary and AR/AP outstanding reports."
         breadcrumb={[{ label: "Finance ERP" }, { label: "Dashboard" }]}
       />
-      <WorkspaceTabsCompact workspace={workspace} />
       <FinanceModuleNav />
       <ErrorBanner message={error} />
       {loading ? (

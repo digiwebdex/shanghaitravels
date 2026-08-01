@@ -8,8 +8,6 @@ import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { CmsModuleNav } from "@/components/cms/CmsModuleNav";
 import { PageHeader, PageShell, Surface, SurfaceHeader } from "@/components/enterprise/Page";
-import { WorkspaceTabsCompact } from "@/workspaces/WorkspaceTabs";
-import { workspaceById } from "@/workspaces/registry";
 import { Pill, statusTone } from "@/components/enterprise/DataTable";
 
 const LABELS: Record<string, string> = {
@@ -23,7 +21,6 @@ const LABELS: Record<string, string> = {
  */
 export default function CmsTypedContentPage() {
   const { type = "blog" } = useParams<{ type: string }>();
-  const workspace = workspaceById("cms")!;
   const [rows, setRows] = useState<CmsContent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -54,7 +51,6 @@ export default function CmsTypedContentPage() {
         subtitle={`CMS content filtered to type=${type}.`}
         breadcrumb={[{ label: "Website & CMS" }, { label: LABELS[type] || type }]}
       />
-      <WorkspaceTabsCompact workspace={workspace} />
       <CmsModuleNav />
       <ErrorBanner message={error} />
       <SuccessBanner message={ok} />

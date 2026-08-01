@@ -2,8 +2,6 @@ import { Link } from "react-router";
 import { Building2, Handshake, Truck, UserRound } from "lucide-react";
 import { PageHeader, PageShell, Surface } from "@/components/enterprise/Page";
 import { PartnerModuleNav } from "@/components/partners/PartnerModuleNav";
-import { WorkspaceTabsCompact } from "@/workspaces/WorkspaceTabs";
-import { workspaceById } from "@/workspaces/registry";
 
 const CARDS = [
   { label: "Customers", to: "/customers", icon: UserRound, perm: "customer:read", hint: "B2C travellers" },
@@ -13,7 +11,6 @@ const CARDS = [
 ];
 
 export default function PartnersOverviewPage() {
-  const workspace = workspaceById("partners")!;
   return (
     <PageShell>
       <PageHeader
@@ -21,7 +18,6 @@ export default function PartnersOverviewPage() {
         subtitle="Customers, agents, corporate clients and suppliers — the commercial parties behind every booking."
         breadcrumb={[{ label: "Business Partners" }]}
       />
-      <WorkspaceTabsCompact workspace={workspace} />
       <PartnerModuleNav />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {CARDS.map((c) => (

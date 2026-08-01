@@ -16,12 +16,9 @@ import {
   btnPrimary,
   btnPrimaryStyle,
 } from "@/components/enterprise/Page";
-import { WorkspaceTabsCompact } from "@/workspaces/WorkspaceTabs";
-import { workspaceById } from "@/workspaces/registry";
 import { fmtBDTPlain } from "@/lib/money";
 
 export default function AgentsPage() {
-  const workspace = workspaceById("partners")!;
   const [rows, setRows] = useState<Agent[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
@@ -116,7 +113,6 @@ export default function AgentsPage() {
           </>
         }
       />
-      <WorkspaceTabsCompact workspace={workspace} />
       <PartnerModuleNav />
       <ErrorBanner message={error} />
       <SuccessBanner message={ok} />

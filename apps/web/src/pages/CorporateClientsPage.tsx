@@ -16,12 +16,9 @@ import {
   btnPrimary,
   btnPrimaryStyle,
 } from "@/components/enterprise/Page";
-import { WorkspaceTabsCompact } from "@/workspaces/WorkspaceTabs";
-import { workspaceById } from "@/workspaces/registry";
 import { fmtBDTPlain, toPoisha } from "@/lib/money";
 
 export default function CorporateClientsPage() {
-  const workspace = workspaceById("partners")!;
   const [rows, setRows] = useState<CorporateClient[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
@@ -139,7 +136,6 @@ export default function CorporateClientsPage() {
           </>
         }
       />
-      <WorkspaceTabsCompact workspace={workspace} />
       <PartnerModuleNav />
       <ErrorBanner message={error} />
       <SuccessBanner message={ok} />

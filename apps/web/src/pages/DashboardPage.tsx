@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { Link } from "react-router";
 import {
   Area,
@@ -39,10 +40,9 @@ import {
   type Metric,
 } from "@/dashboard/DashboardDataProvider";
 import { fmtBDTCompact, fmtBDTPlain } from "@/lib/money";
+import { brand, chartColors } from "@/styles/tokens";
 
-const CHART_COLORS = ["#F59E0B", "#14213D", "#0EA5E9", "#10B981", "#F97316", "#6366F1", "#EC4899", "#64748B"];
-
-function MetricCard({ metric, money }: { metric: Metric; money?: boolean }) {
+const MetricCard = memo(function MetricCard({ metric, money }: { metric: Metric; money?: boolean }) {
   if (metric.provenance === "unavailable" && metric.value == null) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-200 bg-white/60 p-4">
@@ -77,36 +77,42 @@ function MetricCard({ metric, money }: { metric: Metric; money?: boolean }) {
     return (
       <Link
         to={metric.href}
-        className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:border-amber-300 hover:shadow-sm"
+        className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:border-orange-300 hover:shadow-sm"
       >
         {inner}
       </Link>
     );
   }
   return <div className="rounded-2xl border border-slate-200 bg-white p-4">{inner}</div>;
-}
+});
 
 function DashboardBody() {
   const { user, can } = useAuth();
   const d = useDashboardData();
-  const actions = QUICK_ACTIONS.filter((a) => !a.perm || can(a.perm)).slice(0, 10);
+  const actions = useMemo(
+    () => QUICK_ACTIONS.filter((a) => !a.perm || can(a.perm)).slice(0, 10),
+    [can],
+  );
 
-  const kpiRow = [
-    { m: d.kpis.revenue, money: true },
-    { m: d.kpis.profit, money: true },
-    { m: d.kpis.todaysBookings, money: false },
-    { m: d.kpis.bookings, money: false },
-    { m: d.kpis.pendingApplications, money: false },
-    { m: d.kpis.pendingInvoices, money: false },
-    { m: d.kpis.receivables, money: true },
-    { m: d.kpis.payables, money: true },
-    { m: d.kpis.supplierDue, money: true },
-    { m: d.kpis.customers, money: false },
-    { m: d.kpis.agents, money: false },
-    { m: d.kpis.corporateClients, money: false },
-    { m: d.kpis.pendingTasks, money: false },
-    { m: d.kpis.unreadComms, money: false },
-  ];
+  const kpiRow = useMemo(
+    () => [
+      { m: d.kpis.revenue, money: true },
+      { m: d.kpis.profit, money: true },
+      { m: d.kpis.todaysBookings, money: false },
+      { m: d.kpis.bookings, money: false },
+      { m: d.kpis.pendingApplications, money: false },
+      { m: d.kpis.pendingInvoices, money: false },
+      { m: d.kpis.receivables, money: true },
+      { m: d.kpis.payables, money: true },
+      { m: d.kpis.supplierDue, money: true },
+      { m: d.kpis.customers, money: false },
+      { m: d.kpis.agents, money: false },
+      { m: d.kpis.corporateClients, money: false },
+      { m: d.kpis.pendingTasks, money: false },
+      { m: d.kpis.unreadComms, money: false },
+    ],
+    [d.kpis],
+  );
 
   return (
     <PageShell wide>
@@ -145,15 +151,15 @@ function DashboardBody() {
                     <AreaChart data={d.charts.bookingTrend.points}>
                       <defs>
                         <linearGradient id="bookFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#F59E0B" stopOpacity={0.35} />
-                          <stop offset="100%" stopColor="#F59E0B" stopOpacity={0} />
+                          <stop offset="0%" stopColor={brand.accent} stopOpacity={0.35} />
+                          <stop offset="100%" stopColor={brand.accent} stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
                       <XAxis dataKey="key" tick={{ fontSize: 10 }} />
                       <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
                       <Tooltip />
-                      <Area type="monotone" dataKey="value" stroke="#F59E0B" fill="url(#bookFill)" strokeWidth={2} />
+                      <Area type="monotone" dataKey="value" stroke={brand.accent} fill="url(#bookFill)" strokeWidth={2} />
                     </AreaChart>
                   </ResponsiveContainer>
                 )}
@@ -177,7 +183,7 @@ function DashboardBody() {
                         paddingAngle={2}
                       >
                         {d.charts.serviceDistribution.points.map((_, i) => (
-                          <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                          <Cell key={i} fill={chartColors[i % chartColors.length]} />
                         ))}
                       </Pie>
                       <Tooltip />
@@ -201,7 +207,7 @@ function DashboardBody() {
                       <XAxis dataKey="label" tick={{ fontSize: 10 }} />
                       <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => fmtBDTCompact(v)} />
                       <Tooltip formatter={(v: number) => fmtBDTPlain(v)} />
-                      <Bar dataKey="value" fill="#14213D" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="value" fill={brand.primary} radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -219,7 +225,7 @@ function DashboardBody() {
                       <XAxis dataKey="label" tick={{ fontSize: 10 }} />
                       <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => fmtBDTCompact(v)} />
                       <Tooltip formatter={(v: number) => fmtBDTPlain(v)} />
-                      <Bar dataKey="value" fill="#F97316" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="value" fill={brand.accent} radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -232,7 +238,7 @@ function DashboardBody() {
               <SurfaceHeader
                 title="Recent applications"
                 action={
-                  <Link to="/visa" className="flex items-center gap-1 text-[11px] font-semibold text-amber-700 hover:underline">
+                  <Link to="/visa" className="flex items-center gap-1 text-[11px] font-semibold text-orange-700 hover:underline">
                     View all <ArrowRight size={11} />
                   </Link>
                 }
@@ -255,7 +261,7 @@ function DashboardBody() {
                         <td className="px-4 py-2.5">
                           <Link
                             to={serviceHref(a.serviceType, a.id)}
-                            className="font-mono text-[11px] font-bold text-amber-700 hover:underline"
+                            className="font-mono text-[11px] font-bold text-orange-700 hover:underline"
                           >
                             {a.referenceNo}
                           </Link>
@@ -280,9 +286,9 @@ function DashboardBody() {
                     <Link
                       key={a.id}
                       to={a.to}
-                      className="flex items-center gap-2 rounded-xl border border-slate-100 px-2.5 py-2 text-[11px] font-semibold text-slate-700 transition-colors hover:border-amber-200 hover:bg-amber-50/50"
+                      className="flex items-center gap-2 rounded-xl border border-slate-100 px-2.5 py-2 text-[11px] font-semibold text-slate-700 transition-colors hover:border-orange-200 hover:bg-orange-50/50"
                     >
-                      <a.icon size={13} className="flex-shrink-0 text-amber-600" />
+                      <a.icon size={13} className="flex-shrink-0 text-orange-600" />
                       <span className="truncate">{a.label}</span>
                     </Link>
                   ))}
@@ -343,7 +349,7 @@ function SnapRow({
       to={metric.href || "/"}
       className="flex items-center gap-2.5 rounded-xl px-2 py-2 transition-colors hover:bg-slate-50"
     >
-      <Icon size={14} className="text-amber-600" />
+      <Icon size={14} className="text-orange-600" />
       <span className="flex-1 text-[11.5px] font-medium text-slate-600">{label}</span>
       <span className="text-[12px] font-bold tabular-nums text-slate-900">
         {metric.value == null ? "—" : money ? fmtBDTCompact(metric.value as number) : metric.value.toLocaleString()}

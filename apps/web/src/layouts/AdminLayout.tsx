@@ -18,6 +18,7 @@ import { ORG_NAME } from "@/config/env";
 import { NAV, sectionForPath, type NavLeaf, type NavSection } from "@/config/nav";
 import { QUICK_ACTIONS } from "@/config/quickActions";
 import { CommandPalette } from "@/components/shell/CommandPalette";
+import { brand, gradient } from "@/styles/tokens";
 
 const EXPANDED_KEY = "travelos:nav:expanded";
 const COLLAPSED_KEY = "travelos:nav:collapsed";
@@ -47,7 +48,7 @@ const SidebarLeaf = memo(function SidebarLeaf({
       className={({ isActive }) =>
         `group relative flex items-center gap-2.5 rounded-lg pl-8 pr-2.5 py-[7px] text-[11.5px] font-medium transition-colors duration-100 ${
           isActive
-            ? "bg-amber-500/[0.12] text-amber-200"
+            ? "bg-orange-500/[0.14] text-orange-100"
             : "text-white/45 hover:bg-white/[0.05] hover:text-white/80"
         }`
       }
@@ -55,9 +56,9 @@ const SidebarLeaf = memo(function SidebarLeaf({
       {({ isActive }) => (
         <>
           {isActive && (
-            <span className="absolute left-[13px] top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-amber-400" />
+            <span className="absolute left-[13px] top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-orange-400" />
           )}
-          <Icon size={13} className={`flex-shrink-0 ${isActive ? "text-amber-400" : "text-white/35"}`} />
+          <Icon size={13} className={`flex-shrink-0 ${isActive ? "text-orange-400" : "text-white/35"}`} />
           <span className="flex-1 truncate">{item.label}</span>
           {item.soon && (
             <span className="flex-shrink-0 rounded bg-white/[0.07] px-1.5 py-[1px] text-[8.5px] font-bold uppercase tracking-wide text-white/40">
@@ -97,12 +98,12 @@ function SidebarSection({
         className={({ isActive }) =>
           `flex items-center gap-2.5 rounded-lg py-2 text-[12px] font-semibold transition-colors ${
             collapsed ? "justify-center px-2" : "px-2.5"
-          } ${isActive ? "bg-amber-500/[0.14] text-amber-200" : "text-white/60 hover:bg-white/[0.05] hover:text-white"}`
+          } ${isActive ? "bg-orange-500/[0.14] text-orange-100" : "text-white/60 hover:bg-white/[0.05] hover:text-white"}`
         }
       >
         {({ isActive }) => (
           <>
-            <Icon size={15} className={`flex-shrink-0 ${isActive ? "text-amber-400" : "text-white/45"}`} />
+            <Icon size={15} className={`flex-shrink-0 ${isActive ? "text-orange-400" : "text-white/45"}`} />
             {!collapsed && <span className="truncate">{section.label}</span>}
           </>
         )}
@@ -260,7 +261,7 @@ export default function AdminLayout() {
       >
         <div
           className="flex size-7 flex-shrink-0 items-center justify-center rounded-lg"
-          style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+          style={{ background: gradient.accent }}
         >
           <Command size={14} className="text-white" />
         </div>
@@ -305,7 +306,7 @@ export default function AdminLayout() {
       {/* Desktop sidebar */}
       <aside
         className="relative z-20 hidden flex-shrink-0 flex-col transition-[width] duration-200 lg:flex"
-        style={{ background: "#0D1117", width: collapsed ? 56 : 248 }}
+        style={{ background: brand.sidebar, width: collapsed ? 56 : 248 }}
       >
         {sidebar}
         <button
@@ -329,7 +330,7 @@ export default function AdminLayout() {
           />
           <aside
             className="absolute inset-y-0 left-0 flex w-[268px] flex-col shadow-2xl"
-            style={{ background: "#0D1117" }}
+            style={{ background: brand.sidebar }}
           >
             <button
               type="button"
@@ -387,7 +388,7 @@ export default function AdminLayout() {
                   type="button"
                   onClick={() => setCreateOpen((o) => !o)}
                   className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-[11.5px] font-bold text-white transition-opacity hover:opacity-90"
-                  style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+                  style={{ background: gradient.accent }}
                 >
                   <Plus size={13} />
                   <span className="hidden sm:inline">Create</span>
@@ -405,7 +406,7 @@ export default function AdminLayout() {
                         }}
                         className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[11.5px] text-slate-600 transition-colors hover:bg-slate-50"
                       >
-                        <a.icon size={13} className="flex-shrink-0 text-amber-600" />
+                        <a.icon size={13} className="flex-shrink-0 text-orange-600" />
                         {a.label}
                       </button>
                     ))}
@@ -424,7 +425,7 @@ export default function AdminLayout() {
               >
                 <div
                   className="flex size-7 items-center justify-center rounded-full text-[10px] font-black text-white"
-                  style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+                  style={{ background: gradient.accent }}
                 >
                   {initials}
                 </div>
@@ -444,7 +445,7 @@ export default function AdminLayout() {
                   <div className="border-b border-slate-100 px-4 py-3.5">
                     <p className="text-[12px] font-bold text-slate-800">{user?.fullName || "—"}</p>
                     <p className="mt-0.5 text-[9.5px] text-slate-400">{user?.email}</p>
-                    <span className="mt-1.5 inline-block rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-700">
+                    <span className="mt-1.5 inline-block rounded-full border border-orange-200 bg-orange-100 px-2 py-0.5 text-[9px] font-bold text-orange-700">
                       {user?.role}
                     </span>
                   </div>

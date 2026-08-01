@@ -131,15 +131,15 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                 onMouseEnter={() => setCursor(i)}
                 onClick={() => go(entry.to)}
                 className={`flex w-full items-center gap-2.5 px-4 py-2 text-left transition-colors ${
-                  i === cursor ? "bg-amber-50" : ""
+                  i === cursor ? "bg-orange-50" : ""
                 }`}
               >
-                <entry.icon size={14} className={i === cursor ? "text-amber-600" : "text-slate-400"} />
+                <entry.icon size={14} className={i === cursor ? "text-orange-600" : "text-slate-400"} />
                 <span className="flex-1 truncate text-[12px] font-medium text-slate-700">{entry.label}</span>
                 <span className="flex-shrink-0 text-[9.5px] uppercase tracking-wide text-slate-400">
                   {entry.group}
                 </span>
-                {i === cursor && <CornerDownLeft size={11} className="flex-shrink-0 text-amber-500" />}
+                {i === cursor && <CornerDownLeft size={11} className="flex-shrink-0 text-orange-500" />}
               </button>
             ))
           )}

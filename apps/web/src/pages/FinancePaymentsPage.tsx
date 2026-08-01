@@ -7,8 +7,6 @@ import { ErrorBanner } from "@/components/Feedback";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
 import { PageHeader, PageShell, Surface, SurfaceHeader, btnGhost } from "@/components/enterprise/Page";
-import { WorkspaceTabsCompact } from "@/workspaces/WorkspaceTabs";
-import { workspaceById } from "@/workspaces/registry";
 import { fmtBDTPlain } from "@/lib/money";
 
 /**
@@ -16,7 +14,6 @@ import { fmtBDTPlain } from "@/lib/money";
  * Receipts appear as AR documents of type payment, so we list those.
  */
 export default function FinancePaymentsPage() {
-  const workspace = workspaceById("finance")!;
   const [rows, setRows] = useState<ArDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -64,7 +61,6 @@ export default function FinancePaymentsPage() {
           </button>
         }
       />
-      <WorkspaceTabsCompact workspace={workspace} />
       <FinanceModuleNav />
       <ErrorBanner message={error} />
       <Surface>

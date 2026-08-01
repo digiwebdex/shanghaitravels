@@ -37,6 +37,8 @@ export type PackageMaster = {
   cities?: string[] | null;
   durationDays?: number | null;
   durationNights?: number | null;
+  supplierId?: string | null;
+  supplier?: { id: string; code: string; name: string; type?: string | null } | null;
   supplierCostPoisha?: number | null;
   sellingPricePoisha?: number | null;
   offerPricePoisha?: number | null;
@@ -148,6 +150,7 @@ export type PackageForm = {
   cities: string;
   durationDays: string;
   durationNights: string;
+  supplierId: string;
   supplierCostBdt: string;
   sellingPriceBdt: string;
   offerPriceBdt: string;
@@ -182,6 +185,7 @@ export function emptyPackageForm(): PackageForm {
     cities: "",
     durationDays: "",
     durationNights: "",
+    supplierId: "",
     supplierCostBdt: "",
     sellingPriceBdt: "",
     offerPriceBdt: "",
@@ -345,6 +349,7 @@ export function packageFormPayload(f: PackageForm): Record<string, unknown> {
     cities: parseCities(f.cities),
     durationDays: f.durationDays.trim() ? Number(f.durationDays) : undefined,
     durationNights: f.durationNights.trim() ? Number(f.durationNights) : undefined,
+    supplierId: f.supplierId.trim() || null,
     supplierCostPoisha: toPoisha(f.supplierCostBdt),
     sellingPricePoisha: toPoisha(f.sellingPriceBdt),
     offerPricePoisha: toPoisha(f.offerPriceBdt),
@@ -380,6 +385,7 @@ export function packageToForm(p: PackageMaster): PackageForm {
     cities: (p.cities || []).join(", "),
     durationDays: p.durationDays != null ? String(p.durationDays) : "",
     durationNights: p.durationNights != null ? String(p.durationNights) : "",
+    supplierId: p.supplierId || "",
     supplierCostBdt: fromPoisha(p.supplierCostPoisha),
     sellingPriceBdt: fromPoisha(p.sellingPricePoisha),
     offerPriceBdt: fromPoisha(p.offerPricePoisha),

@@ -6,19 +6,128 @@
  */
 import {
   Briefcase,
+  Car,
   ClipboardList,
   Globe,
   Handshake,
+  Hotel,
   Landmark,
+  Map,
   MessagesSquare,
+  Moon,
+  Package,
   PieChart,
   Settings,
   Target,
+  TrendingUp,
   Users,
 } from "lucide-react";
 import type { Workspace } from "./types";
 
 export const WORKSPACES: Workspace[] = [
+  {
+    id: "products",
+    label: "Products & Packages",
+    description: "Package Engine — master catalog for website, portals and bookings.",
+    icon: Package,
+    basePath: "/products",
+    perm: "application:read",
+    tabs: [
+      { kind: "overview", label: "Packages", to: "/products/packages", end: true, perm: "application:read" },
+      { kind: "work", label: "Destinations", to: "/products/destinations", perm: "application:read" },
+      { kind: "work", label: "Categories", to: "/products/categories", perm: "application:read" },
+      { kind: "work", label: "Pricing", to: "/products/packages/pricing", perm: "application:read" },
+      { kind: "work", label: "Gallery", to: "/products/gallery", perm: "application:read" },
+      { kind: "work", label: "Availability", to: "/products/availability", perm: "application:read" },
+      { kind: "reports", label: "Reports", to: "/products/reports", perm: "application:read" },
+      { kind: "calendar", label: "Calendar", to: "/operations/calendar", perm: "task:read" },
+      { kind: "settings", label: "CMS Packages", to: "/cms/packages", perm: "cms:read" },
+    ],
+  },
+  {
+    id: "hotels",
+    label: "Hotels",
+    description: "Hotel bookings, property master and hotel suppliers.",
+    icon: Hotel,
+    basePath: "/hotels",
+    perm: "application:read",
+    tabs: [
+      { kind: "overview", label: "Bookings", to: "/hotels", end: true, perm: "application:read" },
+      { kind: "work", label: "Hotel master", to: "/hotels/catalog", perm: "application:read" },
+      { kind: "work", label: "Suppliers", to: "/hotels/suppliers", perm: "supplier:read" },
+      { kind: "reports", label: "Reports", to: "/hotels/reports", perm: "application:read" },
+      { kind: "calendar", label: "Calendar", to: "/operations/calendar", perm: "task:read" },
+      { kind: "settings", label: "All suppliers", to: "/partners/suppliers/hotel", perm: "supplier:read" },
+    ],
+  },
+  {
+    id: "transport",
+    label: "Transport",
+    description: "Transport bookings, vehicles, routes and suppliers.",
+    icon: Car,
+    basePath: "/transport",
+    perm: "application:read",
+    tabs: [
+      { kind: "overview", label: "Bookings", to: "/transport", end: true, perm: "application:read" },
+      { kind: "work", label: "Vehicles", to: "/transport/vehicles", perm: "application:read" },
+      { kind: "work", label: "Routes", to: "/transport/routes", perm: "application:read" },
+      { kind: "work", label: "Suppliers", to: "/transport/suppliers", perm: "supplier:read" },
+      { kind: "reports", label: "Reports", to: "/transport/reports", perm: "application:read" },
+      { kind: "calendar", label: "Calendar", to: "/operations/calendar", perm: "task:read" },
+      { kind: "settings", label: "All suppliers", to: "/partners/suppliers/transport", perm: "supplier:read" },
+    ],
+  },
+  {
+    id: "tours",
+    label: "Tour Packages",
+    description: "Tour bookings, packages, departures and destinations.",
+    icon: Map,
+    basePath: "/tours",
+    perm: "application:read",
+    tabs: [
+      { kind: "overview", label: "Bookings", to: "/tours", end: true, perm: "application:read" },
+      { kind: "work", label: "Packages", to: "/tours/packages", perm: "application:read" },
+      { kind: "work", label: "Departures", to: "/tours/departures", perm: "application:read" },
+      { kind: "work", label: "Destinations", to: "/tours/destinations", perm: "application:read" },
+      { kind: "reports", label: "Reports", to: "/tours/reports", perm: "application:read" },
+      { kind: "calendar", label: "Calendar", to: "/operations/calendar", perm: "task:read" },
+      { kind: "settings", label: "Package Engine", to: "/products/packages", perm: "application:read" },
+    ],
+  },
+  {
+    id: "hajj",
+    label: "Hajj & Umrah",
+    description: "Hajj/Umrah bookings, packages, pilgrims and groups.",
+    icon: Moon,
+    basePath: "/hajj",
+    perm: "application:read",
+    tabs: [
+      { kind: "overview", label: "Bookings", to: "/hajj", end: true, perm: "application:read" },
+      { kind: "work", label: "Packages", to: "/hajj/packages", perm: "application:read" },
+      { kind: "work", label: "Pilgrims", to: "/hajj/pilgrims", perm: "application:read" },
+      { kind: "work", label: "Groups", to: "/hajj/groups", perm: "application:read" },
+      { kind: "reports", label: "Reports", to: "/hajj/reports", perm: "application:read" },
+      { kind: "calendar", label: "Calendar", to: "/operations/calendar", perm: "task:read" },
+      { kind: "settings", label: "Package Engine", to: "/products/packages", perm: "application:read" },
+    ],
+  },
+  {
+    id: "sales",
+    label: "Sales",
+    description: "Pipeline, quotations, pricing and tasks.",
+    icon: TrendingUp,
+    basePath: "/sales",
+    perm: "opportunity:read",
+    tabs: [
+      { kind: "overview", label: "Pipeline", to: "/sales", end: true, perm: "opportunity:read" },
+      { kind: "work", label: "Quotations", to: "/sales/quotations", perm: "quote:read" },
+      { kind: "work", label: "Pricing", to: "/sales/pricing", perm: "sales:pricing" },
+      { kind: "work", label: "Tasks", to: "/sales/tasks", perm: "task:read" },
+      { kind: "reports", label: "Reports", to: "/sales/reports", perm: "opportunity:read" },
+      { kind: "calendar", label: "Calendar", to: "/operations/calendar", perm: "task:read" },
+      { kind: "settings", label: "CRM", to: "/crm", end: true, perm: "crm:read" },
+    ],
+  },
   {
     id: "partners",
     label: "Business Partners",
@@ -234,12 +343,17 @@ export function workspaceForPath(pathname: string): Workspace | undefined {
       if (!best || w.basePath.length > best.basePath.length) best = w;
     }
   }
-  // Partners also owns /customers
   if (pathname === "/customers" || pathname.startsWith("/customers/")) {
     return workspaceById("partners");
   }
   if (pathname === "/passports" || pathname === "/case-journey") {
     return workspaceById("operations");
   }
+  if (pathname.startsWith("/products")) return workspaceById("products");
+  if (pathname.startsWith("/hotels")) return workspaceById("hotels");
+  if (pathname.startsWith("/transport")) return workspaceById("transport");
+  if (pathname.startsWith("/tours")) return workspaceById("tours");
+  if (pathname.startsWith("/hajj")) return workspaceById("hajj");
+  if (pathname.startsWith("/sales")) return workspaceById("sales");
   return best;
 }

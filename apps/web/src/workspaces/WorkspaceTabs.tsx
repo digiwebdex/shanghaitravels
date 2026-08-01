@@ -35,9 +35,9 @@ export function WorkspaceTabs({ workspace }: { workspace: Workspace }) {
                   to={t.to}
                   end={!!t.end}
                   className={({ isActive }) =>
-                    `inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${
+                    `inline-flex items-center gap-1.5 rounded-2xl border px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${
                       isActive
-                        ? "border-amber-300 bg-amber-50 text-amber-800"
+                        ? "border-orange-300 bg-orange-50 text-orange-800"
                         : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
                     }`
                   }
@@ -79,9 +79,9 @@ export function WorkspaceTabsCompact({ workspace }: { workspace: Workspace }) {
           to={t.to}
           end={!!t.end}
           className={({ isActive }) =>
-            `inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${
+            `inline-flex items-center gap-1.5 rounded-2xl border px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${
               isActive
-                ? "border-amber-300 bg-amber-50 text-amber-800"
+                ? "border-orange-300 bg-orange-50 text-orange-800"
                 : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
             }`
           }

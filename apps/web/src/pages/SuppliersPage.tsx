@@ -11,8 +11,6 @@ import { PartnerModuleNav } from "@/components/partners/PartnerModuleNav";
 import { Column, DataTable, Pill } from "@/components/enterprise/DataTable";
 import { PageHeader, PageShell, Surface, SurfaceHeader, btnGhost, btnPrimary, btnPrimaryStyle } from "@/components/enterprise/Page";
 import { SUPPLIER_TYPES, supplierTypeLabel } from "@/config/nav";
-import { WorkspaceTabsCompact } from "@/workspaces/WorkspaceTabs";
-import { workspaceById } from "@/workspaces/registry";
 import { fmtBDTPlain } from "@/lib/money";
 
 type Row = Supplier & { outstandingPoisha?: number };
@@ -24,7 +22,6 @@ type Row = Supplier & { outstandingPoisha?: number };
  */
 export default function SuppliersPage() {
   const { type } = useParams<{ type?: string }>();
-  const workspace = workspaceById("partners")!;
   const [rows, setRows] = useState<Row[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
@@ -100,6 +97,24 @@ export default function SuppliersPage() {
     [rows],
   );
 
+  const typeSummary = useMemo(() => {
+    const map = new Map<string, { count: number; due: number }>();
+    for (const r of rows) {
+      const key = r.type || "other";
+      const cur = map.get(key) || { count: 0, due: 0 };
+      cur.count += 1;
+      cur.due += r.outstandingPoisha ?? 0;
+      map.set(key, cur);
+    }
+    return SUPPLIER_TYPES.map((t) => ({
+      ...t,
+      count: map.get(t.type)?.count ?? 0,
+      due: map.get(t.type)?.due ?? 0,
+    }));
+  }, [rows]);
+
+  const activeCount = useMemo(() => rows.filter((r) => r.isActive !== false).length, [rows]);
+
   const columns: Column<Row>[] = [
     { key: "code", header: "Code", className: "font-mono font-semibold text-slate-800", render: (r) => r.code },
     { key: "name", header: "Name", render: (r) => <span className="font-semibold text-slate-800">{r.name}</span> },
@@ -159,16 +174,48 @@ export default function SuppliersPage() {
         }
       />
 
-      <WorkspaceTabsCompact workspace={workspace} />
       <PartnerModuleNav />
 
-      <div className="flex flex-wrap gap-1">
+      {!type && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5" aria-label="Supplier type summary">
+          <div className="rounded-2xl border border-slate-200 bg-white p-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Directory</p>
+            <p className="mt-1 text-[22px] font-black tabular-nums text-slate-900">{rows.length}</p>
+            <p className="text-[10px] text-slate-500">
+              {activeCount} active
+              {totalDue > 0 ? ` · ${fmtBDTPlain(totalDue)} due` : ""}
+            </p>
+          </div>
+          {typeSummary
+            .filter((t) => t.count > 0)
+            .map((t) => (
+              <Link
+                key={t.type}
+                to={`/partners/suppliers/${t.type}`}
+                className="rounded-2xl border border-slate-200 bg-white p-3.5 transition-all hover:border-orange-300 hover:shadow-sm"
+              >
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <t.icon size={12} className="text-orange-600" />
+                  {t.label}
+                </div>
+                <p className="mt-1 text-[22px] font-black tabular-nums text-slate-900">{t.count}</p>
+                <p className={`text-[10px] ${t.due > 0 ? "font-semibold text-red-600" : "text-slate-500"}`}>
+                  {t.due > 0 ? `${fmtBDTPlain(t.due)} due` : "No AP due"}
+                </p>
+              </Link>
+            ))}
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-1" role="navigation" aria-label="Filter by supplier type">
         <NavLink
           to="/partners/suppliers"
           end
           className={({ isActive }) =>
             `rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors ${
-              isActive ? "border-slate-800 bg-slate-800 text-white" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+              isActive
+                ? "border-[var(--primary)] bg-[var(--primary)] text-white"
+                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
             }`
           }
         >
@@ -181,7 +228,7 @@ export default function SuppliersPage() {
             className={({ isActive }) =>
               `flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors ${
                 isActive
-                  ? "border-slate-800 bg-slate-800 text-white"
+                  ? "border-[var(--primary)] bg-[var(--primary)] text-white"
                   : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
               }`
             }
@@ -311,6 +358,9 @@ export default function SuppliersPage() {
                 onKeyDown={(e) => e.key === "Enter" && void load()}
                 aria-label="Search suppliers"
               />
+              <Link to="/products/packages" className={btnGhost}>
+                Packages
+              </Link>
               <Link to="/finance/ap" className={btnGhost}>
                 Open AP
               </Link>

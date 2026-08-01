@@ -17,14 +17,11 @@ import {
   btnPrimary,
   btnPrimaryStyle,
 } from "@/components/enterprise/Page";
-import { WorkspaceTabsCompact } from "@/workspaces/WorkspaceTabs";
-import { workspaceById } from "@/workspaces/registry";
 import { fmtBDTPlain, toPoisha } from "@/lib/money";
 
 const CATEGORIES = ["office", "salary", "vendor", "marketing", "utility", "other"];
 
 export default function FinanceExpensesPage() {
-  const workspace = workspaceById("finance")!;
   const [rows, setRows] = useState<ExpenseRow[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,7 +116,6 @@ export default function FinanceExpensesPage() {
           </>
         }
       />
-      <WorkspaceTabsCompact workspace={workspace} />
       <FinanceModuleNav />
       <ErrorBanner message={error} />
       <SuccessBanner message={ok} />

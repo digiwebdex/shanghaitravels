@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { ChevronRight, type LucideIcon } from "lucide-react";
+import { gradient } from "@/styles/tokens";
 
 /**
  * Shared page furniture for the enterprise shell: a consistent header,
@@ -48,7 +49,7 @@ export function PageHeader({
           </nav>
         )}
         <h1 className="flex items-center gap-2 text-[19px] font-bold tracking-[-0.01em] text-slate-900">
-          {Icon && <Icon size={18} className="text-amber-600" />}
+          {Icon && <Icon size={18} className="text-orange-600" />}
           {title}
         </h1>
         {subtitle && <p className="mt-1 max-w-2xl text-[12px] leading-relaxed text-slate-500">{subtitle}</p>}
@@ -69,7 +70,7 @@ export function Surface({
 }) {
   return (
     <section
-      className={`rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${
+      className={`rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${
         padded ? "p-4 sm:p-5" : ""
       } ${className}`}
     >
@@ -101,7 +102,7 @@ export function SurfaceHeader({
 export const btnPrimary =
   "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[11.5px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50";
 
-export const btnPrimaryStyle = { background: "linear-gradient(135deg,#F59E0B,#B45309)" } as const;
+export const btnPrimaryStyle = { background: gradient.accent } as const;
 
 export const btnGhost =
   "inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11.5px] font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50";
