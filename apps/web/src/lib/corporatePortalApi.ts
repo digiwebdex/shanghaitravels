@@ -104,7 +104,13 @@ export const corporatePortalApi = {
     corporateFetch(`/portal/corporate/travel-requests/${id}/cancel`, { method: "POST" }),
   approvals: () => corporateFetch<Record<string, any>[]>("/portal/corporate/approvals"),
   decide: (id: string, body: { decision: "approve" | "reject"; comment?: string }) =>
-    corporateFetch(`/portal/corporate/approvals/${id}/decide`, { method: "POST", body }),
+    corporateFetch(`/portal/corporate/approvals/${id}/decide`, {
+      method: "POST",
+      body: {
+        decision: body.decision === "approve" ? "approved" : "rejected",
+        note: body.comment,
+      },
+    }),
   bookings: () => corporateFetch<Record<string, any>[]>("/portal/corporate/bookings"),
   booking: (id: string) => corporateFetch<Record<string, any>>(`/portal/corporate/bookings/${id}`),
   finance: () => corporateFetch<Record<string, any>>("/portal/corporate/finance"),
