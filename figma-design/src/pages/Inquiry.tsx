@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { CheckCircle2, ChevronRight, FileText, User, MessageSquare, ClipboardList, Check, Phone } from "lucide-react";
+import { HOTLINE, OPENING_HOURS, telHref } from "../company";
 
 const STEPS = [
   { label: "Service Details",  icon: FileText },
@@ -168,7 +169,7 @@ export default function Inquiry() {
                 </div>
                 <div>
                   <label className={labelCls}>Phone Number *</label>
-                  <input type="tel" className={inputCls} placeholder="+971 50 000 0000" value={form.phone} onChange={e => set("phone", e.target.value)} />
+                  <input type="tel" className={inputCls} placeholder="+880 1XXX-XXXXXX" value={form.phone} onChange={e => set("phone", e.target.value)} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -268,7 +269,7 @@ export default function Inquiry() {
           <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0"><Phone size={18} className="text-primary" /></div>
           <div>
             <p className="text-sm font-semibold text-foreground">Prefer to speak with us?</p>
-            <p className="text-xs text-muted-foreground">Call <a href="tel:+97141234567" className="text-accent font-semibold">+971 4 123 4567</a> · Mon–Sat 8am–8pm · Sun 10am–5pm</p>
+            <p className="text-xs text-muted-foreground">Call <a href={telHref(HOTLINE)} className="text-accent font-semibold">{HOTLINE}</a> · {OPENING_HOURS}</p>
           </div>
         </div>
       </div>

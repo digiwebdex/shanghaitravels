@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useParams, Link } from "react-router";
 import { CreditCard, Building2, MapPin, CheckCircle2, Lock, Shield, Info, Download } from "lucide-react";
 import { MOCK_APPLICATIONS, STATUS_CONFIG } from "./data";
+import { EMAIL, HOTLINE, OFFICES, OPENING_HOURS } from "../company";
 
 type Method = "card" | "bank" | "cash";
 
@@ -101,26 +102,23 @@ export default function PortalPayment() {
                 </div>
                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-xl flex gap-2">
                   <Info size={13} className="text-yellow-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-yellow-800">After transferring, email your receipt to <strong>payments@travelos.ae</strong> with reference <strong>{app.ref}</strong>.</p>
+                  <p className="text-xs text-yellow-800">After transferring, email your receipt to <strong>{EMAIL}</strong> with reference <strong>{app.ref}</strong>.</p>
                 </div>
               </div>
             )}
 
             {method === "cash" && (
               <div className="space-y-3">
-                {[
-                  { city: "Dubai HQ", addr: "Office 1204, Al Moosa Tower 1, Sheikh Zayed Rd", hours: "Mon–Sat 8am–8pm" },
-                  { city: "Abu Dhabi", addr: "Office 305, Al Falah St, Khalidiyah", hours: "Mon–Sat 9am–7pm" },
-                ].map(o => (
-                  <div key={o.city} className="p-3.5 bg-muted rounded-xl">
-                    <p className="text-sm font-bold text-foreground mb-1">{o.city}</p>
-                    <p className="text-xs text-muted-foreground">{o.addr}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{o.hours}</p>
+                {OFFICES.map(o => (
+                  <div key={o.label} className="p-3.5 bg-muted rounded-xl">
+                    <p className="text-sm font-bold text-foreground mb-1">{o.label}</p>
+                    <p className="text-xs text-muted-foreground">{o.street}, {o.area}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{OPENING_HOURS}</p>
                   </div>
                 ))}
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex gap-2">
                   <Info size={13} className="text-blue-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-blue-800">Quote reference <strong>{app.ref}</strong> when paying. Call <strong>+971 4 123 4567</strong> to confirm your visit.</p>
+                  <p className="text-xs text-blue-800">Quote reference <strong>{app.ref}</strong> when paying. Call <strong>{HOTLINE}</strong> to confirm your visit.</p>
                 </div>
               </div>
             )}

@@ -3,7 +3,8 @@ import { ArrowRight, MessageCircle, Phone } from "lucide-react";
 import { Section } from "./Section";
 import type { CmsBanner } from "./api";
 import { CTA_PHOTO } from "./photos";
-import { EASE, FOCUS, HOTLINE, PHOTO_GRADE, WHATSAPP } from "./tokens";
+import { EASE, FOCUS, PHOTO_GRADE } from "./tokens";
+import { HOTLINE, telHref, waHref } from "../../company";
 
 type CtaBannerProps = {
   banner?: CmsBanner | null;
@@ -49,13 +50,13 @@ export function CtaBanner({ banner }: CtaBannerProps) {
 
             <div className="flex flex-wrap items-center gap-6 xl:gap-8">
               <ContactBlock
-                href={`tel:${HOTLINE.replace(/[^\d+]/g, "")}`}
+                href={telHref(HOTLINE)}
                 icon={<Phone size={16} aria-hidden />}
                 label="Call Us"
                 value={HOTLINE}
               />
               <ContactBlock
-                href={`https://wa.me/${WHATSAPP}`}
+                href={waHref(HOTLINE)}
                 icon={<MessageCircle size={16} aria-hidden />}
                 label="WhatsApp"
                 value="Chat with us"

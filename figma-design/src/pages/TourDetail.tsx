@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router";
 import { Star, Clock, Users, MapPin, CheckCircle2, X, Calendar, Phone, ArrowRight, ArrowLeft, Share2, Heart } from "lucide-react";
 import { TOUR_PACKAGES } from "./Tours";
+import { HOTLINE, telHref } from "../company";
 
 export default function TourDetail() {
   const { id } = useParams();
@@ -142,8 +143,8 @@ export default function TourDetail() {
                   </div>
                   <Link to="/inquiry" className="block w-full text-center py-3.5 rounded-xl bg-accent text-white font-bold hover:bg-orange-600 transition-colors">Book This Package</Link>
                   <Link to="/payment" className="block w-full text-center py-3 rounded-xl border border-border text-foreground text-sm font-semibold hover:bg-muted transition-colors">Pay Online</Link>
-                  <a href="tel:+97141234567" className="text-xs text-muted-foreground hover:text-accent transition-colors flex items-center justify-center gap-1">
-                    <Phone size={11} /> Questions? +971 4 123 4567
+                  <a href={telHref(HOTLINE)} className="text-xs text-muted-foreground hover:text-accent transition-colors flex items-center justify-center gap-1">
+                    <Phone size={11} /> Questions? {HOTLINE}
                   </a>
                 </div>
               </div>

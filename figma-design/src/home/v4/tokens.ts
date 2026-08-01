@@ -44,8 +44,5 @@ export const ICON_TINTS = [
   "bg-[#EF4444]",
 ] as const;
 
-export const HOTLINE = "+880 1333-356393";
-export const HOTLINE_ALT = "+880 1742-255003";
-export const WHATSAPP = "8801333356393";
-export const EMAIL = "info@shanghaitravels.com.bd";
-export const REG_NO = "0017053";
+// Company contact details live in `src/company.ts` — they are facts about the
+// business, not design tokens, and several places outside this folder need them.

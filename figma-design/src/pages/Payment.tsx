@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { CreditCard, Building2, MapPin, CheckCircle2, Lock, Shield, ChevronDown, Info } from "lucide-react";
+import { EMAIL, HOTLINE, OFFICES, OPENING_HOURS, telHref } from "../company";
 
 type PayMethod = "card" | "bank" | "cash";
 
@@ -174,7 +175,7 @@ export default function Payment() {
                 </div>
                 <div className="mt-5 p-3 bg-yellow-50 rounded-lg border border-yellow-200 flex gap-2">
                   <Info size={14} className="text-yellow-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-yellow-800">After transferring, email your payment slip to <strong>payments@travelos.ae</strong> with your reference number to expedite processing.</p>
+                  <p className="text-xs text-yellow-800">After transferring, email your payment slip to <strong>{EMAIL}</strong> with your reference number to expedite processing.</p>
                 </div>
               </div>
             )}
@@ -185,21 +186,17 @@ export default function Payment() {
                 <h3 className="text-foreground font-bold mb-2">Pay at Our Office</h3>
                 <p className="text-xs text-muted-foreground mb-5">Visit any of our branches and pay cash, card, or cheque. Bring your booking reference.</p>
                 <div className="space-y-3">
-                  {[
-                    { city: "Dubai HQ", addr: "Office 1204, Al Moosa Tower 1, Sheikh Zayed Rd", hours: "Mon–Sat 8am–8pm, Sun 10am–5pm" },
-                    { city: "Abu Dhabi", addr: "Office 305, Al Falah St, Khalidiyah", hours: "Mon–Sat 9am–7pm" },
-                    { city: "Sharjah", addr: "Shop 12, Al Majaz 3, Buhaira Corniche", hours: "Mon–Sat 9am–6pm" },
-                  ].map(o => (
-                    <div key={o.city} className="p-4 rounded-xl bg-muted">
-                      <p className="font-bold text-foreground text-sm mb-1">{o.city}</p>
-                      <p className="text-xs text-muted-foreground flex items-start gap-1.5"><MapPin size={11} className="mt-0.5 flex-shrink-0" />{o.addr}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{o.hours}</p>
+                  {OFFICES.map(o => (
+                    <div key={o.label} className="p-4 rounded-xl bg-muted">
+                      <p className="font-bold text-foreground text-sm mb-1">{o.label}</p>
+                      <p className="text-xs text-muted-foreground flex items-start gap-1.5"><MapPin size={11} className="mt-0.5 flex-shrink-0" />{o.street}, {o.area}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{OPENING_HOURS}</p>
                     </div>
                   ))}
                 </div>
                 <div className="mt-5 p-3 bg-blue-50 rounded-lg border border-blue-200 flex gap-2">
                   <Info size={14} className="text-blue-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-blue-800">Please quote reference <strong>{ORDER.ref}</strong> when making payment. Call ahead to confirm your slot: <strong>+971 4 123 4567</strong></p>
+                  <p className="text-xs text-blue-800">Please quote reference <strong>{ORDER.ref}</strong> when making payment. Call ahead to confirm your slot: <strong>{HOTLINE}</strong></p>
                 </div>
               </div>
             )}
@@ -243,7 +240,7 @@ export default function Payment() {
                   ))}
                 </div>
                 <div className="mt-5 pt-5 border-t border-border">
-                  <p className="text-xs text-muted-foreground">Questions? <Link to="/contact" className="text-accent font-semibold hover:underline">Contact us</Link> or call <a href="tel:+97141234567" className="text-accent font-semibold hover:underline">+971 4 123 4567</a></p>
+                  <p className="text-xs text-muted-foreground">Questions? <Link to="/contact" className="text-accent font-semibold hover:underline">Contact us</Link> or call <a href={telHref(HOTLINE)} className="text-accent font-semibold hover:underline">{HOTLINE}</a></p>
                 </div>
               </div>
             </div>

@@ -12,7 +12,16 @@ import {
 } from "lucide-react";
 import { submitForm } from "./api";
 import { Logo } from "./Logo";
-import { CONTAINER, EMAIL, FOCUS, HOTLINE, REG_NO } from "./tokens";
+import { CONTAINER, FOCUS } from "./tokens";
+import {
+  EMAIL,
+  OFFICES,
+  OPENING_HOURS,
+  PHONES,
+  REG_NO,
+  mapHref,
+  telHref,
+} from "../../company";
 
 type FooterLink = { label: string; path: string; external?: boolean };
 
@@ -172,23 +181,33 @@ export function SiteFooter() {
           <div>
             <ColumnHeading>Contact Us</ColumnHeading>
             <ul className="space-y-2.5 text-[12px] text-white/60">
-              <li className="flex gap-2">
-                <MapPin size={13} className="mt-0.5 shrink-0 text-accent" aria-hidden />
-                <span>
-                  House 27, DR-SL Road 2, Block C,
-                  <br />
-                  Banani, Dhaka-1213
-                </span>
-              </li>
-              <li>
-                <a
-                  href={`tel:${HOTLINE.replace(/[^\d+]/g, "")}`}
-                  className={`flex items-center gap-2 transition-colors hover:text-white ${FOCUS}`}
-                >
-                  <Phone size={13} className="shrink-0 text-accent" aria-hidden />
-                  {HOTLINE}
-                </a>
-              </li>
+              {OFFICES.map((office) => (
+                <li key={office.label} className="flex gap-2">
+                  <MapPin size={13} className="mt-0.5 shrink-0 text-accent" aria-hidden />
+                  <a
+                    href={mapHref(office)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`transition-colors hover:text-white ${FOCUS}`}
+                  >
+                    <span className="block font-semibold text-white/75">{office.label}</span>
+                    {office.street}
+                    <br />
+                    {office.area}
+                  </a>
+                </li>
+              ))}
+              {PHONES.map((phone) => (
+                <li key={phone}>
+                  <a
+                    href={telHref(phone)}
+                    className={`flex items-center gap-2 transition-colors hover:text-white ${FOCUS}`}
+                  >
+                    <Phone size={13} className="shrink-0 text-accent" aria-hidden />
+                    {phone}
+                  </a>
+                </li>
+              ))}
               <li>
                 <a
                   href={`mailto:${EMAIL}`}
@@ -200,7 +219,7 @@ export function SiteFooter() {
               </li>
               <li className="flex items-center gap-2">
                 <Clock size={13} className="shrink-0 text-accent" aria-hidden />
-                Sun – Thu: 9:00 AM – 8:00 PM
+                {OPENING_HOURS}
               </li>
             </ul>
           </div>

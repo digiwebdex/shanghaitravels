@@ -4,7 +4,8 @@ import { ChevronDown, Menu, Phone, X } from "lucide-react";
 import { AuthEntryDesktop, AuthEntryMobile } from "../../components/AuthEntryMenus";
 import { AnnouncementBar } from "./AnnouncementBar";
 import { Logo } from "./Logo";
-import { CONTAINER, FOCUS, HOTLINE } from "./tokens";
+import { CONTAINER, FOCUS } from "./tokens";
+import { HOTLINE, telHref } from "../../company";
 
 type NavChild = { label: string; path: string; external?: boolean };
 type NavItem = { label: string; path: string; external?: boolean; children?: NavChild[] };
@@ -164,7 +165,7 @@ export function SiteHeader() {
 
           <div className="flex items-center gap-2">
             <a
-              href={`tel:${HOTLINE.replace(/[^\d+]/g, "")}`}
+              href={telHref(HOTLINE)}
               className={`hidden items-center gap-2.5 rounded-full bg-muted py-1.5 pl-1.5 pr-4 transition-colors hover:bg-[#E7EBF3] md:inline-flex ${FOCUS}`}
             >
               <span className="grid size-8 place-items-center rounded-full bg-accent text-white" aria-hidden>
@@ -214,7 +215,7 @@ export function SiteHeader() {
               ))}
             </ul>
             <a
-              href={`tel:${HOTLINE.replace(/[^\d+]/g, "")}`}
+              href={telHref(HOTLINE)}
               className="mt-1 flex items-center gap-2 px-3 py-2.5 text-sm font-bold text-accent"
             >
               <Phone size={14} aria-hidden /> {HOTLINE}

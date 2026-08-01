@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router";
 import { Download, Printer, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { MOCK_APPLICATIONS } from "./data";
+import { CORPORATE_OFFICE, EMAIL, HOTLINE } from "../company";
 
 export default function Invoice() {
   const { id } = useParams();
@@ -37,9 +38,9 @@ export default function Invoice() {
               <div className="size-9 rounded-lg bg-accent flex items-center justify-center"><span className="text-white font-black">T</span></div>
               <div><p className="text-white font-bold">TravelOS</p><p className="text-white/40 text-[10px]">Shanghai Travels LLC</p></div>
             </div>
-            <p className="text-white/50 text-xs">Office 1204, Al Moosa Tower 1</p>
-            <p className="text-white/50 text-xs">Sheikh Zayed Road, Dubai, UAE</p>
-            <p className="text-white/50 text-xs mt-1">+971 4 123 4567 · info@travelos.ae</p>
+            <p className="text-white/50 text-xs">{CORPORATE_OFFICE.street}</p>
+            <p className="text-white/50 text-xs">{CORPORATE_OFFICE.area}</p>
+            <p className="text-white/50 text-xs mt-1">{HOTLINE} · {EMAIL}</p>
           </div>
           <div className="text-right">
             <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Tax Invoice</p>

@@ -5,41 +5,33 @@ import {
   Facebook, Twitter, Instagram, Linkedin, Youtube,
   ArrowRight, ChevronDown,
 } from "lucide-react";
+import {
+  EMAIL, HOTLINE, OFFICES, OPENING_HOURS, PHONES,
+  mapHref, telHref, waHref,
+} from "../company";
+import { fallbackPhoto } from "../home/v4/photos";
 
-const OFFICES = [
-  {
-    city: "Dubai HQ",
-    address: "Dubai Media City, Al Sufouh 2, Building 3, Office 401",
-    phone: "+971 4 123 4567",
-    email: "dubai@shanghaitravels.com",
-    hours: "Mon–Sat 8:00 AM – 8:00 PM · Sun 10:00 AM – 4:00 PM",
-    mapImg: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&h=300&fit=crop&auto=format",
-  },
-  {
-    city: "Abu Dhabi",
-    address: "Khalifa Street, Al Markaziyah, Abu Dhabi, UAE",
-    phone: "+971 2 987 6543",
-    email: "abudhabi@shanghaitravels.com",
-    hours: "Mon–Sat 9:00 AM – 6:00 PM",
-    mapImg: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=300&fit=crop&auto=format",
-  },
-  {
-    city: "Sharjah",
-    address: "Al Majaz 3, Buhaira Corniche, Sharjah, UAE",
-    phone: "+971 6 555 1234",
-    email: "sharjah@shanghaitravels.com",
-    hours: "Mon–Sat 9:00 AM – 7:00 PM",
-    mapImg: "https://images.unsplash.com/photo-1548407260-da850faa41e3?w=600&h=300&fit=crop&auto=format",
-  },
-];
+const LOCATIONS = OFFICES.map((office, i) => ({
+  ...office,
+  phone: PHONES[i] ?? HOTLINE,
+  // Only one verified Dhaka frame in the photo library, so the second card
+  // takes a neutral travel image rather than repeating it side by side.
+  photo: fallbackPhoto(
+    i === 0 ? { places: ["bangladesh"], width: 600 } : { seed: office.label, width: 600 },
+  ),
+}));
 
+/**
+ * One shared inbox rather than per-department addresses. Routing is handled by
+ * the enquiry form's department field.
+ */
 const DEPARTMENTS = [
-  { label: "Visa Enquiries",      email: "visa@shanghaitravels.com",      phone: "+971 4 123 4501" },
-  { label: "Air Ticketing",       email: "flights@shanghaitravels.com",   phone: "+971 4 123 4502" },
-  { label: "Tour Packages",       email: "tours@shanghaitravels.com",     phone: "+971 4 123 4503" },
-  { label: "Hajj & Umrah",        email: "hajj@shanghaitravels.com",      phone: "+971 4 123 4504" },
-  { label: "Corporate Travel",    email: "corporate@shanghaitravels.com", phone: "+971 4 123 4505" },
-  { label: "Finance / Payments",  email: "finance@shanghaitravels.com",   phone: "+971 4 123 4506" },
+  "Visa Enquiries",
+  "Air Ticketing",
+  "Tour Packages",
+  "Hajj & Umrah",
+  "Corporate Travel",
+  "Finance / Payments",
 ];
 
 export default function Contact() {
@@ -64,17 +56,19 @@ export default function Contact() {
           <p className="text-xs font-semibold tracking-widest text-accent uppercase mb-3">Get in Touch</p>
           <h1 className="text-white text-4xl font-bold mb-4">Contact Us</h1>
           <p className="text-white/65 max-w-lg mx-auto mb-8">
-            We're here 7 days a week. Talk to our travel specialists by phone, email, WhatsApp, or visit one of our UAE offices.
+            Talk to our travel specialists by phone, email or WhatsApp, or visit either of our Dhaka offices.
           </p>
           {/* Quick contact strip */}
           <div className="inline-flex flex-wrap justify-center gap-4">
-            <a href="tel:+97141234567" className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-medium hover:bg-white/20 transition-colors">
-              <Phone size={14} className="text-accent" /> +971 4 123 4567
+            {PHONES.map(phone => (
+              <a key={phone} href={telHref(phone)} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-medium hover:bg-white/20 transition-colors">
+                <Phone size={14} className="text-accent" /> {phone}
+              </a>
+            ))}
+            <a href={`mailto:${EMAIL}`} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-medium hover:bg-white/20 transition-colors">
+              <Mail size={14} className="text-accent" /> {EMAIL}
             </a>
-            <a href="mailto:info@shanghaitravels.com" className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-medium hover:bg-white/20 transition-colors">
-              <Mail size={14} className="text-accent" /> info@shanghaitravels.com
-            </a>
-            <a href="https://wa.me/97141234567" className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-medium hover:bg-white/20 transition-colors">
+            <a href={waHref(HOTLINE)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-medium hover:bg-white/20 transition-colors">
               <MessageSquare size={14} className="text-accent" /> WhatsApp
             </a>
           </div>
@@ -116,7 +110,7 @@ export default function Contact() {
                         <input
                           value={form.name} onChange={e => update("name", e.target.value)}
                           className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary placeholder:text-muted-foreground"
-                          placeholder="Ahmed Al-Rashidi"
+                          placeholder="Rahim Ahmed"
                         />
                       </div>
                       <div>
@@ -124,7 +118,7 @@ export default function Contact() {
                         <input
                           type="email" value={form.email} onChange={e => update("email", e.target.value)}
                           className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary placeholder:text-muted-foreground"
-                          placeholder="ahmed@company.com"
+                          placeholder="you@example.com"
                         />
                       </div>
                       <div>
@@ -132,7 +126,7 @@ export default function Contact() {
                         <input
                           type="tel" value={form.phone} onChange={e => update("phone", e.target.value)}
                           className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary placeholder:text-muted-foreground"
-                          placeholder="+971 50 123 4567"
+                          placeholder="+880 1XXX-XXXXXX"
                         />
                       </div>
                       <div>
@@ -143,7 +137,7 @@ export default function Contact() {
                             className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-background appearance-none focus:outline-none focus:border-primary"
                           >
                             <option value="">Select department…</option>
-                            {DEPARTMENTS.map(d => <option key={d.label}>{d.label}</option>)}
+                            {DEPARTMENTS.map(d => <option key={d}>{d}</option>)}
                           </select>
                           <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                         </div>
@@ -194,17 +188,10 @@ export default function Contact() {
                   <h4 className="text-foreground font-bold">Working Hours</h4>
                 </div>
                 <div className="space-y-2 text-sm">
-                  {[
-                    { day: "Monday – Friday",  hours: "8:00 AM – 8:00 PM" },
-                    { day: "Saturday",         hours: "8:00 AM – 6:00 PM" },
-                    { day: "Sunday",           hours: "10:00 AM – 4:00 PM" },
-                    { day: "Public Holidays",  hours: "10:00 AM – 2:00 PM" },
-                  ].map(r => (
-                    <div key={r.day} className="flex justify-between">
-                      <span className="text-muted-foreground">{r.day}</span>
-                      <span className="font-medium text-foreground">{r.hours}</span>
-                    </div>
-                  ))}
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Saturday – Sunday</span>
+                    <span className="font-medium text-foreground">9:00 AM – 6:00 PM</span>
+                  </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-border">
                   <div className="flex items-center gap-2">
@@ -216,21 +203,23 @@ export default function Contact() {
 
               {/* Department directory */}
               <div className="bg-card rounded-xl border border-border p-5">
-                <h4 className="text-foreground font-bold mb-4">Direct Lines</h4>
+                <h4 className="text-foreground font-bold mb-4">What We Handle</h4>
                 <div className="space-y-3">
-                  {DEPARTMENTS.map(d => (
-                    <div key={d.label} className="py-2.5 border-b border-border last:border-0">
-                      <p className="text-xs font-semibold text-foreground mb-1">{d.label}</p>
-                      <div className="flex flex-col gap-0.5">
-                        <a href={`tel:${d.phone}`} className="text-xs text-muted-foreground hover:text-accent transition-colors flex items-center gap-1.5">
-                          <Phone size={10} /> {d.phone}
-                        </a>
-                        <a href={`mailto:${d.email}`} className="text-xs text-muted-foreground hover:text-accent transition-colors flex items-center gap-1.5">
-                          <Mail size={10} /> {d.email}
-                        </a>
-                      </div>
+                  {DEPARTMENTS.map(label => (
+                    <div key={label} className="py-2 border-b border-border last:border-0">
+                      <p className="text-xs font-semibold text-foreground">{label}</p>
                     </div>
                   ))}
+                </div>
+                <div className="mt-4 pt-4 border-t border-border space-y-1.5">
+                  {PHONES.map(phone => (
+                    <a key={phone} href={telHref(phone)} className="text-xs text-muted-foreground hover:text-accent transition-colors flex items-center gap-1.5">
+                      <Phone size={10} /> {phone}
+                    </a>
+                  ))}
+                  <a href={`mailto:${EMAIL}`} className="text-xs text-muted-foreground hover:text-accent transition-colors flex items-center gap-1.5 break-all">
+                    <Mail size={10} /> {EMAIL}
+                  </a>
                 </div>
               </div>
 
@@ -265,36 +254,41 @@ export default function Contact() {
         <div className="max-w-[1440px] mx-auto px-8">
           <div className="text-center mb-10">
             <p className="text-xs font-semibold tracking-widest text-accent uppercase mb-2">Our Locations</p>
-            <h2 className="text-foreground text-2xl font-bold">Visit Us in the UAE</h2>
+            <h2 className="text-foreground text-2xl font-bold">Visit Us in Dhaka</h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {OFFICES.map(office => (
-              <div key={office.city} className="bg-card rounded-2xl border border-border overflow-hidden group">
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {LOCATIONS.map(office => (
+              <div key={office.label} className="bg-card rounded-2xl border border-border overflow-hidden group">
                 <div className="relative h-44 overflow-hidden">
                   <img
-                    src={office.mapImg}
-                    alt={office.city}
+                    src={office.photo}
+                    alt=""
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <div className="absolute bottom-3 left-4">
-                    <p className="text-white font-bold text-lg">{office.city}</p>
+                    <p className="text-white font-bold text-lg">{office.label}</p>
                   </div>
                 </div>
                 <div className="p-5 space-y-3">
-                  <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <a
+                    href={mapHref(office)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start gap-2 text-sm text-muted-foreground hover:text-accent transition-colors"
+                  >
                     <MapPin size={13} className="text-accent flex-shrink-0 mt-0.5" />
-                    {office.address}
-                  </div>
-                  <a href={`tel:${office.phone}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-accent transition-colors">
+                    <span>{office.street}, {office.area}</span>
+                  </a>
+                  <a href={telHref(office.phone)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-accent transition-colors">
                     <Phone size={13} className="text-accent" /> {office.phone}
                   </a>
-                  <a href={`mailto:${office.email}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-accent transition-colors">
-                    <Mail size={13} className="text-accent" /> {office.email}
+                  <a href={`mailto:${EMAIL}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-accent transition-colors break-all">
+                    <Mail size={13} className="text-accent" /> {EMAIL}
                   </a>
                   <div className="flex items-start gap-2 text-xs text-muted-foreground pt-1 border-t border-border">
                     <Clock size={11} className="text-muted-foreground flex-shrink-0 mt-0.5" />
-                    {office.hours}
+                    {OPENING_HOURS}
                   </div>
                 </div>
               </div>
@@ -315,10 +309,10 @@ export default function Contact() {
             <div className="size-10 rounded-full bg-accent flex items-center justify-center mx-auto mb-2">
               <MapPin size={18} className="text-white" />
             </div>
-            <p className="font-bold text-foreground">Dubai Media City HQ</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Al Sufouh 2, Building 3, Office 401</p>
+            <p className="font-bold text-foreground">{OFFICES[0].label}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{OFFICES[0].street}, {OFFICES[0].area}</p>
             <a
-              href="https://maps.google.com"
+              href={mapHref(OFFICES[0])}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 mt-3 text-xs font-semibold text-accent hover:underline"

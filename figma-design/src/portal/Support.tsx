@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Send, Plus, ChevronRight, Clock, CheckCircle2, AlertCircle, Paperclip, X } from "lucide-react";
 import { MOCK_APPLICATIONS } from "./data";
+import { OPENING_HOURS } from "../company";
 
 type TicketStatus = "open" | "pending" | "resolved";
 interface Ticket {
@@ -183,7 +184,7 @@ export default function Support() {
                     <Send size={15} />
                   </button>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-2">Typical response time: 2 hours during business hours · Mon–Sat 8am–8pm</p>
+                <p className="text-[10px] text-muted-foreground mt-2">Typical response time: 2 hours during business hours · {OPENING_HOURS}</p>
               </div>
             )}
           </>

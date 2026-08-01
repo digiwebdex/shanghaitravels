@@ -17,7 +17,7 @@ const FAQS = [
   { q: "Can I apply for a US visa through your office?", a: "Yes. We assist with the DS-160 form, biometric and interview appointments, and supporting documents. The final approval decision rests with the US Embassy. Our fee covers consultancy and document preparation only." },
   { q: "What is your visa refund policy if my visa is rejected?", a: "We offer a partial refund of our service fee if your application is refused, excluding the non-refundable government visa fee. We also provide a free reapplication consultation to strengthen your case for a second attempt." },
   { q: "Do you offer Hajj and Umrah packages year-round?", a: "Umrah packages are available year-round (except during Hajj season, Dhul Hijja 8–13). Hajj 2025 packages are now accepting registrations — spaces are limited by Saudi quota. We recommend booking 4–6 months in advance." },
-  { q: "How do I pay for my booking?", a: "We accept bank transfers, credit/debit cards (Visa, Mastercard, AMEX), and cash at our Dubai office. A 20–50% deposit is required at booking with the balance due 30 days before departure. Online instalment options are available." },
+  { q: "How do I pay for my booking?", a: "We accept bank transfers, credit/debit cards (Visa, Mastercard, AMEX), and cash at our Dhaka offices. A 20–50% deposit is required at booking with the balance due 30 days before departure. Online instalment options are available." },
   { q: "Is travel insurance mandatory?", a: "Travel insurance is mandatory for Schengen visa applications (min. €30,000 medical coverage). For all other destinations we strongly recommend it. We offer competitive travel insurance in partnership with leading UAE insurers." },
   { q: "Can you arrange group travel for corporate clients?", a: "Absolutely. Our corporate travel division handles groups of any size — from 5 to 500+ travellers. Services include group visa processing, charter flights, hotel blocks, ground transportation, and dedicated on-trip support." },
 ];
@@ -127,7 +127,7 @@ export default function Blog() {
             </div>
             <div className="mt-10 bg-primary rounded-2xl p-8 text-center">
               <h3 className="text-white font-bold mb-2">Still have questions?</h3>
-              <p className="text-white/60 text-sm mb-5">Our team is ready to help — call, email, or visit our Dubai office.</p>
+              <p className="text-white/60 text-sm mb-5">Our team is ready to help — call, email, or visit our Dhaka office.</p>
               <div className="flex items-center justify-center gap-3">
                 <Link to="/contact" className="px-5 py-2.5 rounded-lg bg-accent text-white font-bold text-sm hover:bg-orange-500 transition-colors">Contact Us</Link>
                 <Link to="/inquiry" className="px-5 py-2.5 rounded-lg border border-white/20 text-white font-semibold text-sm hover:bg-white/10 transition-colors">Submit Inquiry</Link>

@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { BadgeCheck, ChevronDown, Facebook, Globe, Instagram, Linkedin, Youtube } from "lucide-react";
-import { CONTAINER, REG_NO } from "./tokens";
+import { CONTAINER } from "./tokens";
+import { REG_NO } from "../../company";
 
 const TOP_LINKS = [
   { label: "About Us", to: "/about" },
