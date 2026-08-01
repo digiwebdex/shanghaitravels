@@ -35,10 +35,15 @@ type SectionHeadingProps = {
 /** Left-aligned 26px heading with the 28×3px orange rule from the reference. */
 export function SectionHeading({ title, action, className = "" }: SectionHeadingProps) {
   return (
-    <div className={`mb-4 flex items-start justify-between gap-4 ${className}`}>
+    <div className={`mb-5 flex items-start justify-between gap-4 ${className}`}>
       <div>
-        <h2 className="text-[20px] font-bold tracking-tight text-primary md:text-[26px]">{title}</h2>
-        <span className="mt-2 block h-[3px] w-7 rounded-full bg-accent" aria-hidden />
+        <h2 className="text-[20px] font-bold leading-[1.2] tracking-[-0.022em] text-primary md:text-[26px]">
+          {title}
+        </h2>
+        <span
+          className="mt-2.5 block h-[3px] w-7 rounded-full bg-[linear-gradient(90deg,#F97316_0%,#FDBA74_100%)]"
+          aria-hidden
+        />
       </div>
       {action}
     </div>

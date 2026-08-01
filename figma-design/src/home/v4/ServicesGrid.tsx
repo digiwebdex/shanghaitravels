@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Section, SectionHeading, ViewAll } from "./Section";
 import type { CmsContent } from "./api";
-import { CARD, CARD_HOVER, FOCUS, ICON_TINTS } from "./tokens";
+import { CARD, CARD_HOVER, EASE, FOCUS, ICON_TINTS } from "./tokens";
 
 type ServiceItem = {
   key: string;
@@ -99,7 +99,7 @@ export function ServicesGrid({ services = [] }: ServicesGridProps) {
     <Section id="services">
       <SectionHeading title="Our Services" action={<ViewAll to="/services">View all services</ViewAll>} />
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-5 md:grid-cols-3 xl:grid-cols-6">
         {items.map((service, i) => {
           const Icon = ICON_MAP[service.icon] || Globe2;
           const isExternal = service.url.startsWith("http") || service.url.startsWith("/erp");
@@ -107,27 +107,29 @@ export function ServicesGrid({ services = [] }: ServicesGridProps) {
           const body = (
             <>
               <span
-                className={`grid size-11 place-items-center rounded-full text-white shadow-[0_4px_12px_rgba(20,33,61,0.16)] transition-transform duration-300 group-hover:scale-110 ${
+                className={`grid size-11 place-items-center rounded-full text-white shadow-[0_3px_10px_rgba(20,33,61,0.18)] transition-all duration-500 ${EASE} group-hover:-translate-y-0.5 group-hover:scale-110 group-hover:shadow-[0_8px_20px_rgba(20,33,61,0.24)] ${
                   ICON_TINTS[i % ICON_TINTS.length]
                 }`}
                 aria-hidden
               >
                 <Icon size={19} />
               </span>
-              <h3 className="mt-3 text-[13px] font-bold text-primary">{service.title}</h3>
+              <h3 className="mt-3.5 text-[13px] font-bold leading-[1.4] tracking-[-0.01em] text-primary">
+                {service.title}
+              </h3>
               {service.summary && (
-                <p className="mt-1.5 line-clamp-3 text-[11px] leading-[1.55] text-muted-foreground">
+                <p className="mt-2 line-clamp-3 text-[11px] leading-[1.65] text-muted-foreground">
                   {service.summary}
                 </p>
               )}
-              <span className="mt-auto inline-flex items-center gap-1 pt-3 text-[10px] font-bold text-accent transition-all group-hover:gap-2">
+              <span className="mt-auto inline-flex items-center gap-1 pt-4 text-[10px] font-bold tracking-[0.02em] text-accent transition-all duration-300 group-hover:gap-2">
                 Learn More
                 <ArrowRight size={10} aria-hidden />
               </span>
             </>
           );
 
-          const className = `group flex h-full flex-col items-center p-4 text-center ${CARD} ${CARD_HOVER} hover:ring-accent/25 ${FOCUS}`;
+          const className = `group flex h-full flex-col items-center p-[18px] text-center ${CARD} ${CARD_HOVER} hover:ring-accent/25 ${FOCUS}`;
 
           return isExternal ? (
             <a key={service.key} href={service.url} className={className}>

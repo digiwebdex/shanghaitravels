@@ -3,7 +3,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { Section, SectionHeading } from "./Section";
 import type { CmsContent } from "./api";
-import { CARD, FOCUS } from "./tokens";
+import { CARD, CARD_HOVER, EASE, FOCUS } from "./tokens";
 
 type TestimonialsProps = {
   items: CmsContent[];
@@ -75,7 +75,7 @@ function ArrowButton({
       aria-label={dir === "prev" ? "Previous reviews" : "Next reviews"}
       disabled={disabled}
       onClick={onClick}
-      className={`grid size-8 place-items-center rounded-full bg-white text-primary ring-1 ring-[rgba(20,33,61,0.12)] transition-colors hover:bg-accent hover:text-white hover:ring-accent disabled:opacity-35 disabled:hover:bg-white disabled:hover:text-primary ${FOCUS}`}
+      className={`grid size-8 place-items-center rounded-full bg-white text-primary shadow-[0_1px_3px_rgba(20,33,61,0.06)] ring-1 ring-[rgba(20,33,61,0.12)] transition-all duration-300 hover:scale-110 hover:bg-accent hover:text-white hover:ring-accent disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-white disabled:hover:text-primary ${FOCUS}`}
     >
       <Icon size={15} aria-hidden />
     </button>
@@ -89,26 +89,43 @@ function TestimonialCard({ item }: { item: CmsContent }) {
   const avatar = item.coverUrl;
 
   return (
-    <article className={`flex h-full flex-col p-5 ${CARD}`}>
-      <div className="flex gap-0.5" aria-label={`${rating} out of 5 stars`}>
+    <article className={`group relative flex h-full flex-col overflow-hidden p-[22px] ${CARD} ${CARD_HOVER}`}>
+      {/* Oversized quote glyph, kept faint so it sits behind the review copy. */}
+      <span
+        className="pointer-events-none absolute -top-3 right-4 select-none font-serif text-[86px] leading-none text-primary/[0.05]"
+        aria-hidden
+      >
+        &rdquo;
+      </span>
+
+      <div className="relative flex gap-0.5" aria-label={`${rating} out of 5 stars`}>
         {Array.from({ length: rating }).map((_, i) => (
           <Star key={i} size={13} className="fill-accent text-accent" aria-hidden />
         ))}
       </div>
 
-      <p className="mt-3 line-clamp-3 text-[13px] leading-[1.6] text-primary">{quote}</p>
+      <p className="relative mt-3.5 line-clamp-3 text-[13px] leading-[1.7] tracking-[-0.005em] text-primary">
+        {quote}
+      </p>
 
-      <div className="mt-auto flex items-center gap-3 pt-4">
+      <div className="relative mt-auto flex items-center gap-3 border-t border-[rgba(20,33,61,0.06)] pt-4">
         {avatar ? (
-          <img src={avatar} alt="" loading="lazy" className="size-9 shrink-0 rounded-full object-cover" />
+          <img
+            src={avatar}
+            alt=""
+            loading="lazy"
+            className={`size-9 shrink-0 rounded-full object-cover ring-2 ring-white shadow-[0_2px_8px_rgba(20,33,61,0.16)] transition-transform duration-500 ${EASE} group-hover:scale-105`}
+          />
         ) : (
-          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-[12px] font-bold text-white">
+          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-[12px] font-bold text-white shadow-[0_2px_8px_rgba(20,33,61,0.2)]">
             {item.title.charAt(0).toUpperCase()}
           </span>
         )}
         <span className="min-w-0">
-          <span className="block truncate text-[13px] font-bold text-primary">{item.title}</span>
-          {role && <span className="block truncate text-[11px] text-muted-foreground">{role}</span>}
+          <span className="block truncate text-[13px] font-bold tracking-[-0.01em] text-primary">
+            {item.title}
+          </span>
+          {role && <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">{role}</span>}
         </span>
       </div>
     </article>

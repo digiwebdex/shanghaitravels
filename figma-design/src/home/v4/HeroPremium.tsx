@@ -1,11 +1,9 @@
 import { Link } from "react-router";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, Globe2, Plane, ScrollText, Sparkles } from "lucide-react";
 import type { CmsBanner, CmsContent } from "./api";
-import { CONTAINER, FOCUS } from "./tokens";
-
-const DEFAULT_HERO =
-  "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=2000&q=80&auto=format&fit=crop";
+import { HERO_PHOTO } from "./photos";
+import { CONTAINER, EASE, FOCUS, PHOTO_GRADE } from "./tokens";
 
 type Pill = {
   key: string;
@@ -72,7 +70,8 @@ type HeroPremiumProps = {
 };
 
 export function HeroPremium({ banner, services = [] }: HeroPremiumProps) {
-  const imageUrl = banner?.imageUrl || DEFAULT_HERO;
+  const reduceMotion = useReducedMotion();
+  const imageUrl = banner?.imageUrl || HERO_PHOTO;
   const cmsPills = pillsFromCms(services);
   const pills = cmsPills.length === 4 ? cmsPills : DEFAULT_PILLS;
 
@@ -87,19 +86,30 @@ export function HeroPremium({ banner, services = [] }: HeroPremiumProps) {
 
   return (
     <section className="relative isolate overflow-hidden bg-[#D9E7F2]">
-      <img
+      {/* Slow drift across the frame; the scale headroom hides the edges. */}
+      <motion.img
         src={imageUrl}
         alt=""
         fetchPriority="high"
-        className="absolute inset-0 size-full object-cover object-center"
+        className={`absolute inset-0 size-full object-cover object-center ${PHOTO_GRADE}`}
+        initial={reduceMotion ? undefined : { scale: 1.12 }}
+        animate={reduceMotion ? undefined : { scale: 1 }}
+        transition={{ duration: 18, ease: "linear" }}
       />
       <div
-        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.72)_0%,rgba(255,255,255,0.42)_36%,rgba(255,255,255,0.12)_62%,rgba(255,255,255,0.42)_100%)]"
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.62)_0%,rgba(255,255,255,0.34)_36%,rgba(255,255,255,0.16)_62%,rgba(255,255,255,0.4)_100%)]"
         aria-hidden
       />
-      {/* Keeps the navy headline readable regardless of which banner the CMS serves. */}
+      {/* Pool of light behind the headline. Tuned to land near 80% white at the
+          type — enough for navy to clear WCAG AA, light enough that the photo
+          still reads as a photograph rather than a wash. */}
       <div
-        className="absolute inset-0 bg-[radial-gradient(60%_58%_at_50%_38%,rgba(255,255,255,0.92)_0%,rgba(255,255,255,0.6)_45%,rgba(255,255,255,0)_100%)]"
+        className="absolute inset-0 bg-[radial-gradient(60%_58%_at_50%_38%,rgba(255,255,255,0.72)_0%,rgba(255,255,255,0.42)_45%,rgba(255,255,255,0)_100%)]"
+        aria-hidden
+      />
+      {/* Cinematic vignette: darkens the corners so the frame reads as composed. */}
+      <div
+        className="absolute inset-0 bg-[radial-gradient(120%_100%_at_50%_45%,rgba(20,33,61,0)_45%,rgba(20,33,61,0.16)_100%)]"
         aria-hidden
       />
 
@@ -112,11 +122,11 @@ export function HeroPremium({ banner, services = [] }: HeroPremiumProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
         >
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-accent md:text-[12px]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent md:text-[12px]">
             Your Journey, Our Expertise
           </p>
 
-          <h1 className="mt-2.5 text-[34px] font-extrabold leading-[1.08] tracking-tight text-primary sm:text-[44px] lg:text-[52px]">
+          <h1 className="mt-3 text-[34px] font-extrabold leading-[1.06] tracking-[-0.025em] text-primary sm:text-[44px] lg:text-[52px]">
             {titleLead}
             {titleAccent && (
               <>
@@ -126,18 +136,23 @@ export function HeroPremium({ banner, services = [] }: HeroPremiumProps) {
             )}
           </h1>
 
-          <p className="mt-3.5 text-[15px] font-semibold text-primary/85 md:text-[18px]">{subtitle}</p>
+          <p className="mt-4 text-[15px] font-semibold leading-[1.5] tracking-[-0.005em] text-primary/85 md:text-[18px]">
+            {subtitle}
+          </p>
 
-          <p className="mt-2.5 text-[12px] text-primary/55 md:text-[13px]">
+          <p className="mt-2.5 text-[12px] font-medium leading-[1.6] text-primary/70 md:text-[13px]">
             Trusted by thousands of travellers. Government approved. Always by your side.
           </p>
 
           <Link
             to={ctaUrl}
-            className={`mt-5 inline-flex items-center gap-3 rounded-full bg-accent py-1.5 pl-7 pr-1.5 text-[14px] font-bold text-white shadow-[0_10px_26px_rgba(249,115,22,0.38)] transition-all duration-300 hover:bg-orange-600 hover:shadow-[0_14px_32px_rgba(249,115,22,0.45)] ${FOCUS}`}
+            className={`group mt-6 inline-flex items-center gap-3 rounded-full bg-accent py-1.5 pl-7 pr-1.5 text-[14px] font-bold tracking-[0.01em] text-white shadow-[0_10px_26px_rgba(249,115,22,0.38)] transition-all duration-500 ${EASE} hover:-translate-y-0.5 hover:bg-orange-600 hover:shadow-[0_18px_38px_rgba(249,115,22,0.48)] ${FOCUS}`}
           >
             {ctaLabel}
-            <span className="grid size-8 place-items-center rounded-full bg-white" aria-hidden>
+            <span
+              className={`grid size-8 place-items-center rounded-full bg-white transition-transform duration-500 ${EASE} group-hover:translate-x-0.5`}
+              aria-hidden
+            >
               <ArrowRight size={15} className="text-accent" />
             </span>
           </Link>
@@ -155,19 +170,19 @@ export function HeroPremium({ banner, services = [] }: HeroPremiumProps) {
               <li key={key}>
                 <Link
                   to={url}
-                  className={`group flex h-[64px] items-center gap-2.5 rounded-xl bg-white/95 px-3 shadow-[0_10px_28px_rgba(20,33,61,0.14)] ring-1 ring-black/[0.04] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_16px_36px_rgba(20,33,61,0.2)] sm:gap-3 sm:px-4 lg:h-[74px] ${FOCUS}`}
+                  className={`group flex h-[64px] items-center gap-2.5 rounded-xl bg-white/95 px-3 shadow-[0_2px_6px_rgba(20,33,61,0.06),0_12px_30px_rgba(20,33,61,0.14)] ring-1 ring-black/[0.04] backdrop-blur-sm transition-all duration-500 ${EASE} hover:-translate-y-1.5 hover:bg-white hover:shadow-[0_4px_10px_rgba(20,33,61,0.08),0_22px_44px_rgba(20,33,61,0.2)] hover:ring-accent/25 sm:gap-3 sm:px-4 lg:h-[74px] ${FOCUS}`}
                 >
                   <span
-                    className={`grid size-9 shrink-0 place-items-center rounded-lg sm:size-10 ${tint}`}
+                    className={`grid size-9 shrink-0 place-items-center rounded-lg transition-transform duration-500 ${EASE} group-hover:scale-110 sm:size-10 ${tint}`}
                     aria-hidden
                   >
                     <Icon size={18} />
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-[13px] font-bold text-primary transition-colors group-hover:text-accent sm:text-[14px]">
+                    <span className="block truncate text-[13px] font-bold tracking-[-0.01em] text-primary transition-colors duration-300 group-hover:text-accent sm:text-[14px]">
                       {title}
                     </span>
-                    <span className="block truncate text-[10.5px] text-muted-foreground sm:text-[11px]">
+                    <span className="mt-0.5 block truncate text-[10.5px] leading-[1.4] text-muted-foreground sm:text-[11px]">
                       {tagline}
                     </span>
                   </span>

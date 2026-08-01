@@ -11,11 +11,25 @@ export const CONTAINER = "mx-auto w-full max-w-[1368px] px-5 sm:px-6";
 /** 36px top rhythm; the last section adds its own bottom padding. */
 export const SECTION_TOP = "pt-8 md:pt-9";
 
-export const CARD =
-  "rounded-xl bg-white ring-1 ring-[rgba(20,33,61,0.08)] shadow-[0_2px_12px_rgba(20,33,61,0.06)]";
+/** Decelerating curve shared by every hover and reveal so motion feels of a piece. */
+export const EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 
-export const CARD_HOVER =
-  "transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(20,33,61,0.14)]";
+/**
+ * Two-part shadows: a tight contact shadow keeps the card edge crisp while the
+ * wide ambient pass gives it height. A single blur reads flat at these sizes.
+ */
+export const SHADOW_REST =
+  "shadow-[0_1px_2px_rgba(20,33,61,0.05),0_6px_20px_rgba(20,33,61,0.06)]";
+
+export const SHADOW_LIFT =
+  "hover:shadow-[0_2px_4px_rgba(20,33,61,0.06),0_20px_44px_rgba(20,33,61,0.16)]";
+
+/** Slight lift in saturation and brightness, applied to every photo slot. */
+export const PHOTO_GRADE = "saturate-[1.08] contrast-[1.04] brightness-[1.03]";
+
+export const CARD = `rounded-xl bg-white ring-1 ring-[rgba(20,33,61,0.07)] ${SHADOW_REST}`;
+
+export const CARD_HOVER = `transition-all duration-500 ${EASE} hover:-translate-y-1.5 ${SHADOW_LIFT} hover:ring-[rgba(20,33,61,0.1)]`;
 
 export const FOCUS =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2";

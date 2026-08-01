@@ -1,4 +1,5 @@
-import type { DestinationRow, PackageRow } from "./api";
+import type { CmsContent, DestinationRow, PackageRow } from "./api";
+import { fallbackPhoto } from "./photos";
 
 export function formatPrice(poisha?: number | null, currency = "৳"): string {
   if (poisha == null) return "—";
@@ -45,6 +46,17 @@ export function packageImage(p: PackageRow): string {
   return p.thumbnailUrl || p.bannerUrl || p.coverImageUrl || p.heroImageUrl || "";
 }
 
+/** Luxury travel frame for a package whose own image is missing or dead. */
+export function packageFallbackImage(p: PackageRow, index?: number, width = 800): string {
+  return fallbackPhoto({
+    places: [p.destination, p.country],
+    subjects: [p.name],
+    seed: p.slug || p.id,
+    rotate: index,
+    width,
+  });
+}
+
 export type PackageBadge = { label: string; className: string };
 
 /** Reference badge ladder: BEST SELLER / POPULAR / TRENDING / VALUE PACK / SPECIAL. */
@@ -76,6 +88,27 @@ export function flagSrc(d: DestinationRow): string {
 
 export function destinationImage(d: DestinationRow): string {
   return d.heroImageUrl || d.coverImageUrl || "";
+}
+
+/** Iconic landmark frame for a destination whose own image is missing or dead. */
+export function destinationFallbackImage(d: DestinationRow, index?: number, width = 800): string {
+  return fallbackPhoto({
+    places: [d.name, d.countryName, d.country, d.countryCode, d.region],
+    seed: d.slug || d.id,
+    rotate: index,
+    width,
+  });
+}
+
+/** Editorial frame for a blog card with no cover image. */
+export function postFallbackImage(post: CmsContent, index?: number, width = 700): string {
+  return fallbackPhoto({
+    subjects: [post.title, post.summary],
+    seed: post.slug || post.id,
+    rotate: index,
+    width,
+    editorial: true,
+  });
 }
 
 export function parseMetaArray<T>(meta: Record<string, unknown> | null | undefined, key: string): T[] {
