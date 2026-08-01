@@ -1,7 +1,18 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import {
-  LayoutDashboard, FileText, Upload, Landmark, MessageSquare, User, BarChart2, LogOut, Package, Heart, Briefcase, History,
+  LayoutDashboard,
+  FileText,
+  Upload,
+  Landmark,
+  MessageSquare,
+  User,
+  BarChart2,
+  LogOut,
+  Package,
+  Heart,
+  Briefcase,
+  History,
 } from "lucide-react";
 import { customerPortalApi } from "@/lib/portalApi";
 
@@ -23,6 +34,10 @@ export default function CustomerPortalLayout() {
   const nav = useNavigate();
   const [name, setName] = useState("Customer");
   const [email, setEmail] = useState("");
+  const [mustChange, setMustChange] = useState(false);
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     void customerPortalApi
@@ -30,6 +45,7 @@ export default function CustomerPortalLayout() {
       .then((m) => {
         setName(String(m.customer?.fullName || "Customer"));
         setEmail(String(m.user?.email || m.customer?.email || ""));
+        setMustChange(!!m.user?.mustChangePassword);
       })
       .catch(() => nav("/portal/customer/login"));
   }, [nav]);
@@ -37,6 +53,50 @@ export default function CustomerPortalLayout() {
   async function logout() {
     await customerPortalApi.logout().catch(() => null);
     nav("/portal/customer/login");
+  }
+
+  async function changePw() {
+    try {
+      await customerPortalApi.changePassword(current, next);
+      setMustChange(false);
+      setCurrent("");
+      setNext("");
+      setError("");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Password change failed");
+    }
+  }
+
+  if (mustChange) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+        <div className="w-full max-w-sm bg-white border rounded-xl p-5 space-y-3">
+          <h1 className="text-[16px] font-bold">Change temporary password</h1>
+          <input
+            type="password"
+            className="w-full border rounded-lg px-3 py-2 text-[12px]"
+            placeholder="Current password"
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+          />
+          <input
+            type="password"
+            className="w-full border rounded-lg px-3 py-2 text-[12px]"
+            placeholder="New password (min 8)"
+            value={next}
+            onChange={(e) => setNext(e.target.value)}
+          />
+          {error && <p className="text-red-600 text-[11px]">{error}</p>}
+          <button
+            type="button"
+            onClick={() => void changePw()}
+            className="w-full py-2 rounded-lg bg-amber-600 text-white text-[12px] font-bold"
+          >
+            Save password
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -66,7 +126,11 @@ export default function CustomerPortalLayout() {
         <div className="p-3 border-t border-white/10 text-[11px]">
           <div className="font-semibold truncate">{name}</div>
           <div className="text-white/40 truncate mb-2">{email}</div>
-          <button type="button" onClick={() => void logout()} className="flex items-center gap-2 text-white/60 hover:text-red-300">
+          <button
+            type="button"
+            onClick={() => void logout()}
+            className="flex items-center gap-2 text-white/60 hover:text-red-300"
+          >
             <LogOut size={14} /> Sign out
           </button>
         </div>

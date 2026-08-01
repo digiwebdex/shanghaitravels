@@ -16,7 +16,7 @@ const KIND_LABEL: Record<WorkspaceTabKind, string> = {
  */
 export function WorkspaceTabs({ workspace }: { workspace: Workspace }) {
   const { can } = useAuth();
-  const visible = workspace.tabs.filter((t) => !t.perm || can(t.perm));
+  const visible = workspace.tabs.filter((t) => !t.soon && (!t.perm || can(t.perm)));
 
   return (
     <nav className="space-y-2" aria-label={`${workspace.label} workspace`}>
@@ -43,11 +43,6 @@ export function WorkspaceTabs({ workspace }: { workspace: Workspace }) {
                   }
                 >
                   {t.label}
-                  {t.soon && (
-                    <span className="rounded bg-slate-100 px-1 py-[1px] text-[8px] font-bold uppercase text-slate-400">
-                      Soon
-                    </span>
-                  )}
                 </NavLink>
               ))}
             </div>
@@ -61,7 +56,7 @@ export function WorkspaceTabs({ workspace }: { workspace: Workspace }) {
 /** Compact single-row variant used inside list pages. */
 export function WorkspaceTabsCompact({ workspace }: { workspace: Workspace }) {
   const { can } = useAuth();
-  const visible = workspace.tabs.filter((t) => !t.perm || can(t.perm));
+  const visible = workspace.tabs.filter((t) => !t.soon && (!t.perm || can(t.perm)));
   // Deduplicate by path so Overview/Work aliases don't double up
   const seen = new Set<string>();
   const unique = visible.filter((t) => {
@@ -87,11 +82,6 @@ export function WorkspaceTabsCompact({ workspace }: { workspace: Workspace }) {
           }
         >
           {t.label}
-          {t.soon && (
-            <span className="rounded bg-slate-100 px-1 py-[1px] text-[8px] font-bold uppercase text-slate-400">
-              Soon
-            </span>
-          )}
         </NavLink>
       ))}
     </nav>

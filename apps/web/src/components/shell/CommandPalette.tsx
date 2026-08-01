@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { CornerDownLeft, Search, type LucideIcon } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
+import { searchPlaceholderForPath } from "@/config/contextUi";
 import { NAV_LEAVES } from "@/config/nav";
 import { QUICK_ACTIONS } from "@/config/quickActions";
 
@@ -20,11 +21,13 @@ type Entry = {
  */
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { can } = useAuth();
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const placeholder = searchPlaceholderForPath(pathname);
 
   const entries = useMemo<Entry[]>(() => {
     const nav = NAV_LEAVES.filter((l) => !l.perm || can(l.perm)).map((l) => ({
@@ -87,7 +90,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Search modules and actions"
+        aria-label={placeholder}
         className="relative flex max-h-[62vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
       >
         <div className="flex flex-shrink-0 items-center gap-2.5 border-b border-slate-100 px-4 py-3">
@@ -111,7 +114,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                 go(results[cursor].to);
               }
             }}
-            placeholder="Search modules and actions…"
+            placeholder={placeholder}
             className="flex-1 bg-transparent text-[13px] text-slate-800 outline-none placeholder:text-slate-400"
           />
           <kbd className="flex-shrink-0 rounded border border-slate-200 px-1.5 py-[1px] font-mono text-[9px] font-semibold text-slate-400">

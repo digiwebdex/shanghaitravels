@@ -26,7 +26,7 @@ export default function PortalRegisterPage() {
         phone: phone.trim() || undefined,
         password,
       });
-      nav(`/portal/customer/verify?email=${encodeURIComponent(r.email)}${r.devCode ? `&code=${r.devCode}` : ""}`);
+      nav(`/portal/customer/verify?email=${encodeURIComponent(r.email)}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Registration failed");
     }

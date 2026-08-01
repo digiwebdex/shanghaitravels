@@ -33,10 +33,10 @@ export default function PartnersOverviewPage() {
         ))}
       </div>
       <Surface padded>
-        <p className="text-[12px] font-bold text-slate-800">Supplier is a Business Partner</p>
+        <p className="text-[12px] font-bold text-slate-800">Suppliers in your partner network</p>
         <p className="mt-1 text-[11.5px] leading-relaxed text-slate-500">
-          Supplier records drive Accounts Payable, package costing and supplier ledgers. Bookings link to suppliers
-          through AP bills and package master — not a direct Application.supplierId (no schema change).
+          Supplier records support accounts payable, package costing and supplier ledgers across bookings and
+          finance.
         </p>
       </Surface>
     </PageShell>

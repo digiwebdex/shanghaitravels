@@ -16,7 +16,11 @@ import {
 import { useAuth } from "@/auth/AuthProvider";
 import { ORG_NAME } from "@/config/env";
 import { NAV, sectionForPath, type NavLeaf, type NavSection } from "@/config/nav";
-import { QUICK_ACTIONS } from "@/config/quickActions";
+import {
+  createActionsForPath,
+  createLabelForPath,
+  searchPlaceholderForPath,
+} from "@/config/contextUi";
 import { CommandPalette } from "@/components/shell/CommandPalette";
 import { brand, gradient } from "@/styles/tokens";
 
@@ -60,11 +64,6 @@ const SidebarLeaf = memo(function SidebarLeaf({
           )}
           <Icon size={13} className={`flex-shrink-0 ${isActive ? "text-orange-400" : "text-white/35"}`} />
           <span className="flex-1 truncate">{item.label}</span>
-          {item.soon && (
-            <span className="flex-shrink-0 rounded bg-white/[0.07] px-1.5 py-[1px] text-[8.5px] font-bold uppercase tracking-wide text-white/40">
-              Soon
-            </span>
-          )}
         </>
       )}
     </NavLink>
@@ -250,7 +249,9 @@ export default function AdminLayout() {
     .slice(0, 2)
     .toUpperCase();
 
-  const quickActions = QUICK_ACTIONS.filter((a) => a.primary && (!a.perm || can(a.perm)));
+  const quickActions = useMemo(() => createActionsForPath(pathname, can), [pathname, can]);
+  const createLabel = useMemo(() => createLabelForPath(pathname, can), [pathname, can]);
+  const searchPlaceholder = useMemo(() => searchPlaceholderForPath(pathname), [pathname]);
 
   const sidebar = (
     <>
@@ -295,7 +296,7 @@ export default function AdminLayout() {
 
       {!collapsed && (
         <div className="flex-shrink-0 border-t border-white/[0.06] px-4 py-2.5">
-          <p className="font-mono text-[8.5px] text-white/20">v0.1.0 · Enterprise UI · Dhaka</p>
+          <p className="truncate text-[9px] text-white/25">{ORG_NAME}</p>
         </div>
       )}
     </>
@@ -365,7 +366,7 @@ export default function AdminLayout() {
             className="flex flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left transition-colors hover:border-slate-300 hover:bg-white sm:max-w-md"
           >
             <Search size={13} className="flex-shrink-0 text-slate-400" />
-            <span className="flex-1 truncate text-[11.5px] text-slate-400">Search modules and actions…</span>
+            <span className="flex-1 truncate text-[11.5px] text-slate-400">{searchPlaceholder}</span>
             <kbd className="hidden flex-shrink-0 rounded border border-slate-200 bg-white px-1.5 py-[1px] font-mono text-[9px] font-semibold text-slate-400 sm:block">
               ⌘K
             </kbd>
@@ -384,16 +385,28 @@ export default function AdminLayout() {
 
             {quickActions.length > 0 && (
               <div className="relative" ref={createRef}>
-                <button
-                  type="button"
-                  onClick={() => setCreateOpen((o) => !o)}
-                  className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-[11.5px] font-bold text-white transition-opacity hover:opacity-90"
+                <div
+                  className="flex overflow-hidden rounded-lg text-white"
                   style={{ background: gradient.accent }}
                 >
-                  <Plus size={13} />
-                  <span className="hidden sm:inline">Create</span>
-                  <ChevronDown size={11} className={createOpen ? "rotate-180" : ""} />
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate(quickActions[0].to)}
+                    className="flex items-center gap-1.5 px-3 py-2 text-[11.5px] font-bold transition-opacity hover:opacity-90"
+                  >
+                    <Plus size={13} />
+                    <span className="hidden max-w-[140px] truncate sm:inline">{createLabel}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCreateOpen((o) => !o)}
+                    className="border-l border-white/20 px-2 py-2 transition-opacity hover:opacity-90"
+                    aria-label="More create actions"
+                    aria-expanded={createOpen}
+                  >
+                    <ChevronDown size={11} className={createOpen ? "rotate-180" : ""} />
+                  </button>
+                </div>
                 {createOpen && (
                   <div className="absolute right-0 top-full z-50 mt-1.5 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
                     {quickActions.map((a) => (

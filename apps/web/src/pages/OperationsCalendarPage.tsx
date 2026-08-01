@@ -85,7 +85,7 @@ export default function OperationsCalendarPage() {
       <PageHeader
         icon={CalendarDays}
         title="Calendar"
-        subtitle="Derived from task due dates and recent bookings. No calendar entity exists in the backend."
+        subtitle="Upcoming tasks and booking dates across operations."
         breadcrumb={[{ label: "Operations" }, { label: "Calendar" }]}
       />
       <WorkspaceTabsCompact workspace={workspace} />

@@ -61,9 +61,9 @@ export default function CorporateLoginPage() {
             onClick={() =>
               void corporatePortalApi
                 .requestOtp(email.trim())
-                .then((r) => {
+                .then(() => {
                   setOtpMode(true);
-                  setInfo(r.devCode ? `OTP (dev): ${r.devCode}` : "OTP sent if account exists");
+                  setInfo("OTP sent if account exists");
                 })
                 .catch((err) => setError(err instanceof ApiError ? err.message : "OTP failed"))
             }

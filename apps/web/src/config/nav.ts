@@ -1,20 +1,13 @@
 /**
- * Enterprise navigation model.
+ * Enterprise navigation — commercial information architecture.
  *
- * Single source of truth for the sidebar, the command palette and the
- * breadcrumb trail. Every leaf points at a route that exists in the router;
- * `soon` marks the handful of screens whose backend endpoints are not built
- * yet, so they render an explanatory page instead of a dead link.
- *
- * `perm` mirrors the permission the underlying API actually enforces, so a
- * user never sees a link that would 403 on arrival.
+ * Daily-use leaves stay at the section root. Infrequent setup screens are
+ * nested under hub pages (e.g. Website Setup). Unfinished features are omitted
+ * from the menu entirely — no "Soon" placeholders in production.
  */
 import {
-  Activity,
-  BadgeDollarSign,
   BarChart3,
   Bell,
-  Blocks,
   BookOpen,
   Briefcase,
   Building2,
@@ -24,22 +17,17 @@ import {
   Contact,
   CreditCard,
   FileCheck,
-  FileSpreadsheet,
   FileText,
   Files,
   Globe,
   Handshake,
   Hotel,
   Image as ImageIcon,
-  KeyRound,
   Landmark,
   LayoutDashboard,
   LifeBuoy,
-  Link2,
   ListChecks,
-  Mail,
   Map,
-  Megaphone,
   MessagesSquare,
   Moon,
   Newspaper,
@@ -50,13 +38,10 @@ import {
   Receipt,
   Route,
   ScrollText,
-  Search,
   Settings,
-  Shield,
   ShieldCheck,
   Ship,
   Sparkles,
-  Tags,
   Target,
   TrendingUp,
   Truck,
@@ -77,8 +62,6 @@ export type NavLeaf = {
   perm?: string;
   /** Exact-match active state, for parent paths like `/finance`. */
   end?: boolean;
-  /** Backend endpoint not available yet — renders a roadmap page. */
-  soon?: boolean;
   /** Extra words the command palette should match on. */
   keywords?: string;
 };
@@ -157,18 +140,8 @@ export const NAV: NavSection[] = [
         icon: Truck,
         perm: "supplier:read",
         end: true,
-        keywords: "vendor directory",
+        keywords: "vendor airline hotel",
       },
-      ...SUPPLIER_TYPES.filter((t) => t.type !== "other" && t.type !== "embassy" && t.type !== "courier").map(
-        (t) => ({
-          id: `suppliers-${t.type}`,
-          label: t.label,
-          to: `/partners/suppliers/${t.type}`,
-          icon: t.icon,
-          perm: "supplier:read",
-          keywords: "supplier vendor",
-        }),
-      ),
     ],
   },
 
@@ -178,14 +151,6 @@ export const NAV: NavSection[] = [
     icon: Target,
     items: [
       { id: "crm-leads", label: "Leads", to: "/crm", icon: Sparkles, perm: "crm:read", end: true },
-      { id: "crm-contacts", label: "Contacts", to: "/crm/contacts", icon: Contact, perm: "crm:read" },
-      {
-        id: "crm-orgs",
-        label: "Organizations",
-        to: "/crm/organizations",
-        icon: Building2,
-        perm: "crm:read",
-      },
       {
         id: "crm-opps",
         label: "Opportunities",
@@ -193,7 +158,6 @@ export const NAV: NavSection[] = [
         icon: TrendingUp,
         perm: "crm:read",
       },
-      { id: "crm-activities", label: "Activities", to: "/crm/activities", icon: Activity, perm: "crm:read" },
       {
         id: "sales-pipeline",
         label: "Pipeline",
@@ -203,61 +167,31 @@ export const NAV: NavSection[] = [
         end: true,
       },
       { id: "sales-quotes", label: "Quotations", to: "/sales/quotations", icon: Quote, perm: "quote:read" },
-      { id: "sales-pricing", label: "Pricing", to: "/sales/pricing", icon: Tags, perm: "sales:pricing" },
       { id: "sales-tasks", label: "Tasks", to: "/sales/tasks", icon: ListChecks, perm: "task:read" },
       { id: "comms", label: "Communications", to: "/comms", icon: MessagesSquare, perm: "comms:read" },
-      { id: "crm-reports", label: "CRM Reports", to: "/crm/reports", icon: FileSpreadsheet, perm: "crm:read" },
       {
-        id: "sales-reports",
-        label: "Sales Reports",
-        to: "/sales/reports",
-        icon: FileSpreadsheet,
-        perm: "opportunity:read",
+        id: "crm-directory",
+        label: "Directory",
+        to: "/crm/directory",
+        icon: Contact,
+        perm: "crm:read",
+        keywords: "contacts organizations",
       },
     ],
   },
 
   {
     id: "finance",
-    label: "Finance ERP",
+    label: "Finance",
     icon: Landmark,
     items: [
       {
         id: "fin-dashboard",
-        label: "Finance Dashboard",
+        label: "Dashboard",
         to: "/finance/dashboard",
         icon: LayoutDashboard,
         perm: "financial-report:read",
       },
-      { id: "fin-coa", label: "Chart of Accounts", to: "/finance", icon: ScrollText, perm: "gl:read", end: true },
-      { id: "fin-groups", label: "Account Groups", to: "/finance/groups", icon: Blocks, perm: "gl:read" },
-      { id: "fin-periods", label: "Fiscal Periods", to: "/finance/periods", icon: CalendarDays, perm: "gl:read" },
-      { id: "fin-cc", label: "Cost Centers", to: "/finance/cost-centers", icon: Target, perm: "gl:read" },
-      {
-        id: "fin-currencies",
-        label: "Currencies",
-        to: "/finance/currencies",
-        icon: BadgeDollarSign,
-        perm: "gl:read",
-      },
-      { id: "fin-journals", label: "Journals", to: "/finance/journals", icon: FileText, perm: "gl:read" },
-      { id: "fin-banking", label: "Banking", to: "/finance/banking", icon: Landmark, perm: "banking:read", end: true },
-      {
-        id: "fin-movements",
-        label: "Bank Movements",
-        to: "/finance/banking/movements",
-        icon: Activity,
-        perm: "banking:read",
-      },
-      { id: "fin-cheques", label: "Cheques", to: "/finance/banking/cheques", icon: Receipt, perm: "banking:read" },
-      {
-        id: "fin-recon",
-        label: "Reconciliation",
-        to: "/finance/banking/reconciliation",
-        icon: ListChecks,
-        perm: "banking:reconcile",
-      },
-      { id: "fin-cash", label: "Cash & Bank Accounts", to: "/finance/cash", icon: Wallet, perm: "bank:read" },
       {
         id: "fin-invoices",
         label: "Invoices",
@@ -267,53 +201,18 @@ export const NAV: NavSection[] = [
       },
       { id: "fin-payments", label: "Payments", to: "/finance/payments", icon: CreditCard, perm: "ar:read" },
       { id: "fin-expenses", label: "Expenses", to: "/finance/expenses", icon: Wallet, perm: "expense:manage" },
-      { id: "fin-ar", label: "Accounts Receivable", to: "/finance/ar", icon: TrendingUp, perm: "ar:read", end: true },
-      { id: "fin-ap", label: "Accounts Payable", to: "/finance/ap", icon: Truck, perm: "ap:read", end: true },
+      { id: "fin-ar", label: "Receivables", to: "/finance/ar", icon: TrendingUp, perm: "ar:read", end: true },
+      { id: "fin-ap", label: "Payables", to: "/finance/ap", icon: Truck, perm: "ap:read", end: true },
+      { id: "fin-cash", label: "Cash & Bank", to: "/finance/cash", icon: Wallet, perm: "bank:read" },
+      { id: "fin-banking", label: "Banking", to: "/finance/banking", icon: Landmark, perm: "banking:read", end: true },
       {
-        id: "fin-cust-ledger",
-        label: "Customer Ledger",
-        to: "/finance/customer-ledger",
-        icon: UserRound,
-        perm: "financial-report:read",
+        id: "fin-accounting",
+        label: "Accounting",
+        to: "/finance/accounting",
+        icon: ScrollText,
+        perm: "gl:read",
+        keywords: "chart of accounts journals statements period closing ledger",
       },
-      {
-        id: "fin-supp-ledger",
-        label: "Supplier Ledger",
-        to: "/finance/supplier-ledger",
-        icon: Truck,
-        perm: "financial-report:read",
-      },
-      { id: "fin-ledger", label: "General Ledger", to: "/finance/ledger", icon: BookOpen, perm: "gl:read" },
-      {
-        id: "fin-statements",
-        label: "Financial Statements",
-        to: "/finance/statements",
-        icon: FileSpreadsheet,
-        perm: "financial-report:read",
-      },
-      {
-        id: "fin-arap-reports",
-        label: "AR / AP Reports",
-        to: "/finance/ar-ap-reports",
-        icon: FileSpreadsheet,
-        perm: "financial-report:read",
-      },
-      {
-        id: "fin-bank-reports",
-        label: "Bank Reports",
-        to: "/finance/banking/reports",
-        icon: FileSpreadsheet,
-        perm: "financial-report:read",
-      },
-      {
-        id: "fin-gl-reports",
-        label: "GL Reports",
-        to: "/finance/reports",
-        icon: FileSpreadsheet,
-        perm: "financial-report:read",
-      },
-      { id: "fin-analysis", label: "Analysis", to: "/finance/analysis", icon: PieChart, perm: "gl:read" },
-      { id: "fin-closing", label: "Period Closing", to: "/finance/closing", icon: ShieldCheck, perm: "period:close" },
     ],
   },
 
@@ -322,7 +221,7 @@ export const NAV: NavSection[] = [
     label: "Operations",
     icon: ClipboardList,
     items: [
-      { id: "passports", label: "Passport Management", to: "/passports", icon: BookOpen, perm: "customer:read" },
+      { id: "passports", label: "Passports", to: "/passports", icon: BookOpen, perm: "customer:read" },
       {
         id: "ops-documents",
         label: "Documents",
@@ -331,13 +230,6 @@ export const NAV: NavSection[] = [
         perm: "document:read-passport",
       },
       { id: "case-journey", label: "Case Journey", to: "/case-journey", icon: Route, perm: "application:read" },
-      {
-        id: "ops-workflow",
-        label: "Workflow",
-        to: "/operations/workflow",
-        icon: Workflow,
-        perm: "settings:manage",
-      },
       { id: "ops-calendar", label: "Calendar", to: "/operations/calendar", icon: CalendarDays, perm: "task:read" },
       {
         id: "ops-notifications",
@@ -356,58 +248,51 @@ export const NAV: NavSection[] = [
     items: [
       {
         id: "an-exec",
-        label: "Executive Dashboard",
+        label: "Executive",
         to: "/analytics",
         icon: LayoutDashboard,
         perm: "analytics:read",
         end: true,
       },
-      { id: "an-sales", label: "Sales Analytics", to: "/analytics/sales", icon: TrendingUp, perm: "analytics:read" },
+      { id: "an-sales", label: "Sales", to: "/analytics/sales", icon: TrendingUp, perm: "analytics:read" },
       {
         id: "an-customers",
-        label: "Customer Analytics",
+        label: "Customers",
         to: "/analytics/customers",
         icon: UserRound,
         perm: "analytics:read",
       },
       {
         id: "an-finance",
-        label: "Finance Analytics",
+        label: "Finance",
         to: "/analytics/finance",
         icon: Landmark,
         perm: "analytics:read",
       },
-      {
-        id: "an-comms",
-        label: "Communications Analytics",
-        to: "/analytics/comms",
-        icon: MessagesSquare,
-        perm: "analytics:read",
-      },
-      { id: "an-exports", label: "Exports", to: "/analytics/reports", icon: FileSpreadsheet, perm: "analytics:read" },
     ],
   },
 
   {
     id: "cms",
-    label: "Website & CMS",
+    label: "Website CMS",
     icon: Globe,
     items: [
       { id: "cms-pages", label: "Pages", to: "/cms", icon: FileText, perm: "cms:read", end: true },
       { id: "cms-menus", label: "Menus", to: "/cms/menus", icon: ListChecks, perm: "cms:read" },
       { id: "cms-media", label: "Media", to: "/cms/media", icon: ImageIcon, perm: "cms:read" },
-      { id: "cms-banners", label: "Banners", to: "/cms/banners", icon: Megaphone, perm: "cms:read" },
-      { id: "cms-hero", label: "Hero Services", to: "/cms/hero-services", icon: Sparkles, perm: "cms:read" },
       { id: "cms-packages", label: "Packages", to: "/cms/packages", icon: Package, perm: "cms:read" },
       { id: "cms-destinations", label: "Destinations", to: "/cms/destinations", icon: Map, perm: "cms:read" },
       { id: "cms-blog", label: "Blog", to: "/cms/content/blog", icon: Newspaper, perm: "cms:read" },
       { id: "cms-faq", label: "FAQ", to: "/cms/content/faq", icon: LifeBuoy, perm: "cms:read" },
       { id: "cms-testimonials", label: "Testimonials", to: "/cms/content/testimonial", icon: Quote, perm: "cms:read" },
-      { id: "cms-content", label: "Content Library", to: "/cms/content", icon: Files, perm: "cms:read", end: true },
-      { id: "cms-travel", label: "Travel Content", to: "/cms/travel", icon: Plane, perm: "cms:read" },
-      { id: "cms-forms", label: "Forms", to: "/cms/forms", icon: Mail, perm: "cms:read" },
-      { id: "cms-seo", label: "SEO", to: "/cms/seo", icon: Search, perm: "cms:read" },
-      { id: "cms-reports", label: "Reports", to: "/cms/reports", icon: FileSpreadsheet, perm: "cms:read" },
+      {
+        id: "cms-setup",
+        label: "Website Setup",
+        to: "/cms/setup",
+        icon: Settings,
+        perm: "cms:read",
+        keywords: "banners hero forms seo content library",
+      },
     ],
   },
 
@@ -417,32 +302,13 @@ export const NAV: NavSection[] = [
     icon: Settings,
     items: [
       { id: "adm-users", label: "Users", to: "/admin/users", icon: UserCog, perm: "user:manage" },
-      { id: "adm-roles", label: "Roles", to: "/admin/roles", icon: Shield, perm: "user:manage", soon: true },
-      {
-        id: "adm-permissions",
-        label: "Permissions",
-        to: "/admin/permissions",
-        icon: ShieldCheck,
-        perm: "user:manage",
-        soon: true,
-      },
-      { id: "adm-audit", label: "Audit Logs", to: "/admin/audit", icon: ScrollText, perm: "user:manage", soon: true },
       { id: "adm-settings", label: "System Settings", to: "/admin/settings", icon: Settings, perm: "settings:manage" },
       {
-        id: "adm-keys",
-        label: "API Keys",
-        to: "/admin/api-keys",
-        icon: KeyRound,
+        id: "adm-workflow",
+        label: "Workflow",
+        to: "/operations/workflow",
+        icon: Workflow,
         perm: "settings:manage",
-        soon: true,
-      },
-      {
-        id: "adm-integrations",
-        label: "Integrations",
-        to: "/admin/integrations",
-        icon: Link2,
-        perm: "settings:manage",
-        soon: true,
       },
     ],
   },
@@ -466,6 +332,13 @@ export function sectionForPath(pathname: string): string | null {
       ) {
         best = { id: section.id, len: item.to.length };
       }
+    }
+    // CMS setup children still belong to Website CMS
+    if (section.id === "cms" && pathname.startsWith("/cms/")) {
+      if (!best || best.id !== "cms") best = { id: "cms", len: 4 };
+    }
+    if (section.id === "finance" && pathname.startsWith("/finance")) {
+      if (!best || (best.id !== "finance" && best.len < 8)) best = { id: "finance", len: 8 };
     }
   }
   return best?.id ?? null;

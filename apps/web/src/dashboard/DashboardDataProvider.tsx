@@ -155,14 +155,11 @@ export function DashboardDataProvider({ children }: { children: ReactNode }) {
       const next: Sources = {};
       const jobs: Promise<void>[] = [];
 
-      const run = (key: SourceKey, perm: string | null, fn: () => Promise<void>) => {
+      const run = (_key: SourceKey, perm: string | null, fn: () => Promise<void>) => {
         if (perm && !can(perm)) return;
         jobs.push(
-          fn().catch((e) => {
-            if (!cancelled) {
-              // Soft-fail individual sources — dashboard stays usable.
-              console.warn(`[dashboard] source ${key} failed`, e);
-            }
+          fn().catch(() => {
+            // Soft-fail individual sources — dashboard stays usable.
           }),
         );
       };

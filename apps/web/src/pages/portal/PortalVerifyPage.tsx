@@ -7,7 +7,7 @@ export default function PortalVerifyPage() {
   const [params] = useSearchParams();
   const nav = useNavigate();
   const [email, setEmail] = useState(params.get("email") || "");
-  const [code, setCode] = useState(params.get("code") || "");
+  const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
 

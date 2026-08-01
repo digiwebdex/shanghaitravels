@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { agentPortalApi } from "@/lib/agentPortalApi";
-import { ApiError } from "@/lib/api";
+import { ApiError, validateUploadFile } from "@/lib/api";
 
 export default function AgentDocumentsPage() {
   const [rows, setRows] = useState<Record<string, any>[]>([]);
@@ -34,6 +34,11 @@ export default function AgentDocumentsPage() {
       setError("Choose booking and file");
       return;
     }
+    const invalid = validateUploadFile(file);
+    if (invalid) {
+      setError(invalid);
+      return;
+    }
     const form = new FormData();
     form.append("file", file);
     form.append("applicationId", applicationId);
@@ -62,7 +67,12 @@ export default function AgentDocumentsPage() {
           ))}
         </select>
         <input className="border rounded-lg px-3 py-2 text-[12px]" value={category} onChange={(e) => setCategory(e.target.value)} />
-        <input type="file" className="text-[12px]" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+        <input
+          type="file"
+          accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+          className="text-[12px]"
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
+        />
         <button type="submit" className="px-3 py-2 rounded-lg bg-amber-600 text-white text-[11px] font-bold">
           Upload
         </button>

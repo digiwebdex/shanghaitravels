@@ -35,8 +35,8 @@ export default function PortalLoginPage() {
 
   async function sendOtp() {
     try {
-      const r = await customerPortalApi.requestOtp(email.trim());
-      setInfo(r.devCode ? `OTP sent (dev: ${r.devCode})` : "OTP sent if account exists");
+      await customerPortalApi.requestOtp(email.trim());
+      setInfo("OTP sent if account exists");
       setOtpMode(true);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "OTP request failed");

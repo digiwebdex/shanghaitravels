@@ -21,7 +21,7 @@ export type WorkspaceTab = {
   end?: boolean;
   /** Permission required to see this tab. */
   perm?: string;
-  /** Backend not available — tab renders a roadmap page. */
+  /** Hidden from production UI when true. */
   soon?: boolean;
 };
 

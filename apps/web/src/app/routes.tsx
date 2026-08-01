@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { createHashRouter } from "react-router";
+import { Navigate, createHashRouter } from "react-router";
 import { RequireAuth } from "@/auth/RequireAuth";
 import AdminLayout from "@/layouts/AdminLayout";
 import LoginPage from "@/pages/LoginPage";
@@ -138,7 +138,9 @@ const OperationsNotificationsPage = lazy(() => import("@/pages/OperationsNotific
 const AdminUsersPage = lazy(() => import("@/pages/AdminUsersPage"));
 const AdminSettingsPage = lazy(() => import("@/pages/AdminSettingsPage"));
 const CmsTypedContentPage = lazy(() => import("@/pages/CmsTypedContentPage"));
-const SoonPage = lazy(() => import("@/pages/SoonPage"));
+const CmsWebsiteSetupPage = lazy(() => import("@/pages/CmsWebsiteSetupPage"));
+const FinanceAccountingPage = lazy(() => import("@/pages/FinanceAccountingPage"));
+const CrmDirectoryPage = lazy(() => import("@/pages/CrmDirectoryPage"));
 const SiteHomePage = lazy(() => import("@/pages/SiteHomePage"));
 const SiteDestinationsBrowsePage = lazy(() => import("@/pages/SiteDestinationsBrowsePage"));
 const SiteDestinationDetailPage = lazy(() => import("@/pages/SiteDestinationDetailPage"));
@@ -1226,6 +1228,14 @@ export const router = createHashRouter([
             ),
           },
           {
+            path: "crm/directory",
+            element: (
+              <Lazy>
+                <CrmDirectoryPage />
+              </Lazy>
+            ),
+          },
+          {
             path: "crm/contacts",
             element: (
               <Lazy>
@@ -1418,6 +1428,14 @@ export const router = createHashRouter([
             ),
           },
           {
+            path: "cms/setup",
+            element: (
+              <Lazy>
+                <CmsWebsiteSetupPage />
+              </Lazy>
+            ),
+          },
+          {
             path: "cms/menus",
             element: (
               <Lazy>
@@ -1563,9 +1581,13 @@ export const router = createHashRouter([
           },
           {
             path: "partners/settings",
+            element: <Navigate to="/partners" replace />,
+          },
+          {
+            path: "finance/accounting",
             element: (
               <Lazy>
-                <SoonPage />
+                <FinanceAccountingPage />
               </Lazy>
             ),
           },
@@ -1683,43 +1705,23 @@ export const router = createHashRouter([
           },
           {
             path: "admin/roles",
-            element: (
-              <Lazy>
-                <SoonPage />
-              </Lazy>
-            ),
+            element: <Navigate to="/admin/users" replace />,
           },
           {
             path: "admin/permissions",
-            element: (
-              <Lazy>
-                <SoonPage />
-              </Lazy>
-            ),
+            element: <Navigate to="/admin/users" replace />,
           },
           {
             path: "admin/audit",
-            element: (
-              <Lazy>
-                <SoonPage />
-              </Lazy>
-            ),
+            element: <Navigate to="/admin/settings" replace />,
           },
           {
             path: "admin/api-keys",
-            element: (
-              <Lazy>
-                <SoonPage />
-              </Lazy>
-            ),
+            element: <Navigate to="/admin/settings" replace />,
           },
           {
             path: "admin/integrations",
-            element: (
-              <Lazy>
-                <SoonPage />
-              </Lazy>
-            ),
+            element: <Navigate to="/admin/settings" replace />,
           },
           {
             path: "cms/content/:type",
@@ -1731,35 +1733,19 @@ export const router = createHashRouter([
           },
           {
             path: "crm/settings",
-            element: (
-              <Lazy>
-                <SoonPage />
-              </Lazy>
-            ),
+            element: <Navigate to="/crm" replace />,
           },
           {
             path: "comms/settings",
-            element: (
-              <Lazy>
-                <SoonPage />
-              </Lazy>
-            ),
+            element: <Navigate to="/comms" replace />,
           },
           {
             path: "ai",
-            element: (
-              <Lazy>
-                <SoonPage />
-              </Lazy>
-            ),
+            element: <Navigate to="/" replace />,
           },
           {
             path: "ai/*",
-            element: (
-              <Lazy>
-                <SoonPage />
-              </Lazy>
-            ),
+            element: <Navigate to="/" replace />,
           },
           {
             path: "*",

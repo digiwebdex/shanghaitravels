@@ -61,9 +61,9 @@ export default function AgentLoginPage() {
             onClick={() =>
               void agentPortalApi
                 .requestOtp(email.trim())
-                .then((r) => {
+                .then(() => {
                   setOtpMode(true);
-                  setInfo(r.devCode ? `OTP (dev): ${r.devCode}` : "OTP sent if account exists");
+                  setInfo("OTP sent if account exists");
                 })
                 .catch((err) => setError(err instanceof ApiError ? err.message : "OTP failed"))
             }

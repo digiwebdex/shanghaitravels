@@ -15,9 +15,8 @@ export default function AgentForgotPage() {
   async function request(e: FormEvent) {
     e.preventDefault();
     try {
-      const r = await agentPortalApi.forgot(email.trim());
-      setInfo(r.devCode ? `Reset code (dev): ${r.devCode}` : "If the account exists, a reset code was sent");
-      if (r.devCode) setCode(r.devCode);
+      await agentPortalApi.forgot(email.trim());
+      setInfo("If the account exists, a reset code was sent");
       setStep("reset");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Request failed");

@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { customerPortalApi } from "@/lib/portalApi";
-import { ApiError } from "@/lib/api";
+import { ApiError, validateUploadFile } from "@/lib/api";
 
 export default function PortalDocumentsPage() {
   const [rows, setRows] = useState<Record<string, any>[]>([]);
@@ -22,6 +22,11 @@ export default function PortalDocumentsPage() {
     e.preventDefault();
     if (!file) {
       setError("Choose a file");
+      return;
+    }
+    const invalid = validateUploadFile(file);
+    if (invalid) {
+      setError(invalid);
       return;
     }
     const form = new FormData();
@@ -49,7 +54,12 @@ export default function PortalDocumentsPage() {
         </div>
         <div>
           <label className="text-[10px] font-semibold text-slate-500">File</label>
-          <input type="file" className="block text-[12px]" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+          <input
+            type="file"
+            accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+            className="block text-[12px]"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+          />
         </div>
         <button type="submit" className="px-3 py-2 rounded-lg bg-amber-600 text-white text-[11px] font-bold">
           Upload
