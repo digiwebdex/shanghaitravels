@@ -1,30 +1,32 @@
 import { Section, SectionHeading } from "./Section";
 import type { CmsContent } from "./api";
 import { parsePartnerLogos } from "./format";
+import { DEFAULT_PARTNER_LOGOS } from "./partnerLogos";
 import { EASE } from "./tokens";
-
-const FALLBACK_PARTNERS = [
-  "Emirates",
-  "Qatar Airways",
-  "Turkish Airlines",
-  "Saudia",
-  "Singapore Airlines",
-  "British Airways",
-  "Malaysia Airlines",
-  "Biman Bangladesh",
-];
 
 type PartnersProps = {
   gallery?: CmsContent | null;
 };
 
 export function Partners({ gallery }: PartnersProps) {
-  const logos = gallery ? parsePartnerLogos(gallery) : [];
-  const useMarquee = logos.length > 8 || (!logos.length && FALLBACK_PARTNERS.length > 8);
+  const cmsLogos = gallery ? parsePartnerLogos(gallery) : [];
+  const count = cmsLogos.length || DEFAULT_PARTNER_LOGOS.length;
+  const useMarquee = count > 8;
 
-  const cells = logos.length
-    ? logos.map((url, i) => <LogoCell key={`${url}-${i}`} url={url} />)
-    : FALLBACK_PARTNERS.map((name) => <LogoCell key={name} name={name} />);
+  // The marquee lays cells out intrinsically so they need a width of their own;
+  // in the grid the column sets the width and a minimum would force overflow.
+  const cellWidth = useMarquee ? "min-w-[150px]" : "w-full min-w-0";
+  const cells = cmsLogos.length
+    ? cmsLogos.map((url, i) => <LogoCell key={`${url}-${i}`} src={url} width={cellWidth} />)
+    : DEFAULT_PARTNER_LOGOS.map((logo) => (
+        <LogoCell
+          key={logo.name}
+          src={logo.src}
+          name={logo.name}
+          height={logo.height}
+          width={cellWidth}
+        />
+      ));
 
   return (
     <Section id="partners">
@@ -43,9 +45,13 @@ export function Partners({ gallery }: PartnersProps) {
             </div>
           </div>
         ) : (
-          <ul className="flex items-stretch divide-x divide-[rgba(20,33,61,0.06)]">
+          // Wraps rather than sitting in one row: eight cells at their minimum
+          // width overflow a phone, and the clipped logos would be unreachable.
+          // The 1px gap over a tinted backdrop draws the hairlines between
+          // cells, so they stay correct however the grid reflows.
+          <ul className="grid grid-cols-2 gap-px bg-[rgba(20,33,61,0.07)] sm:grid-cols-4 lg:grid-cols-8">
             {cells.map((cell, i) => (
-              <li key={i} className="flex-1">
+              <li key={i} className="bg-white">
                 {cell}
               </li>
             ))}
@@ -56,25 +62,25 @@ export function Partners({ gallery }: PartnersProps) {
   );
 }
 
-function LogoCell({ url, name }: { url?: string; name?: string }) {
+function LogoCell({
+  src,
+  name,
+  height = "h-8",
+  width = "min-w-[150px]",
+}: {
+  src: string;
+  name?: string;
+  height?: string;
+  width?: string;
+}) {
   return (
-    <div className="group grid h-[76px] min-w-[150px] place-items-center px-5">
-      {url ? (
-        <img
-          src={url}
-          alt=""
-          loading="lazy"
-          className={`max-h-9 max-w-[132px] object-contain opacity-70 grayscale transition-all duration-500 ${EASE} group-hover:scale-105 group-hover:opacity-100 group-hover:grayscale-0`}
-        />
-      ) : (
-        // Partners without an uploaded mark render as a set wordmark so the row
-        // still reads as a deliberate logo lockup rather than leftover label text.
-        <span
-          className={`text-center text-[11.5px] font-extrabold uppercase leading-[1.3] tracking-[0.14em] text-primary/45 transition-all duration-500 ${EASE} group-hover:-translate-y-0.5 group-hover:text-primary/85`}
-        >
-          {name}
-        </span>
-      )}
+    <div className={`group grid h-[76px] place-items-center px-4 sm:px-5 ${width}`}>
+      <img
+        src={src}
+        alt={name ? `${name} logo` : ""}
+        loading="lazy"
+        className={`w-auto max-w-full object-contain opacity-90 transition-all duration-500 ${EASE} group-hover:scale-[1.06] group-hover:opacity-100 sm:max-w-[128px] ${height}`}
+      />
     </div>
   );
 }

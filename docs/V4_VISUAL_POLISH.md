@@ -138,9 +138,21 @@ contrast.
 **CTA banner** — navy gradient with a warm rake off the photo edge and a cool
 lift on the far corner, replacing flat `bg-primary`.
 
-**Partners** — feathered marquee edges via `mask-image`; partners without an
-uploaded mark render as a set uppercase wordmark so the row reads as a
-deliberate logo lockup rather than leftover label text.
+**Partners** — feathered marquee edges via `mask-image`. The row now falls back
+to real airline marks (`src/assets/partners/`, listed in `partnerLogos.ts`)
+instead of typeset wordmarks. They are bundled rather than hotlinked so the row
+cannot break on a third party, and imported so the build fingerprints them.
+
+Each mark carries its own cap height. The set runs from British Airways at
+roughly 6.4:1 to Saudia in portrait at 0.84:1, so a single `max-height` would
+put the stacked marks at nearly twice the optical weight of the wide wordmarks.
+
+The static row is a `2 / 4 / 8` column grid rather than a flex row. Eight cells
+at their minimum width measured 1208px inside a 355px `overflow-hidden`
+container, which clipped six logos on a phone with no way to reach them. The
+1px grid gap over a tinted backdrop draws the hairlines, so they stay correct
+however the grid reflows. CMS-uploaded logos still take precedence, and more
+than eight still switches to the marquee.
 
 **Blog cards** — date chip gains a ring, layered shadow and a hover lift;
 editorial fallback frames; bottom gradient for depth.
