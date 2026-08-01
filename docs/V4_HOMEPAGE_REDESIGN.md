@@ -1,120 +1,118 @@
 # V4 Premium Homepage Redesign
 
-**Branch:** `feature/v4-premium-homepage`  
-**Scope:** Public website + CMS content mapping only  
-**Non-goals:** Auth, ERP ops, Finance, CRM, Portals, Backend APIs, Database schema, Booking engine  
+**Branch:** `feature/v4-premium-homepage`
+**Scope:** Public website + CMS content mapping only
+**Non-goals:** Auth, ERP ops, Finance, CRM, Portals, Backend APIs, Database schema, Booking engine
 
 ---
 
-## 1. Design reference analysis
+## 1. Design reference
 
-Studied the attached Shanghai Travels mock (Aug 1, 2026). Extracted:
+The homepage is a **measured reconstruction** of the approved reference frame, not a
+loose interpretation of it. Every container width, row pitch, card size, band height
+and type step was extracted programmatically from the reference render; the numbers
+and the method live in **[`V4_DESIGN_ANALYSIS.md`](./V4_DESIGN_ANALYSIS.md)**.
 
-| Dimension | Reference pattern | V4 adaptation |
-|---|---|---|
-| Layout | Top bar → sticky nav → hero → sections → footer | Same information architecture |
-| Grid | 4-col destinations, package carousel, 6 service cards | Responsive 4 / 2 / 1 |
-| Spacing | Large section padding, airy white space | `py-16 md:py-24`, `gap-6` |
-| Colors | Navy + orange + white | Keep TravelOS tokens (`#14213D`, `#F97316`) |
-| Typography | Bold navy headlines, orange overlines | Plus Jakarta Sans hierarchy |
-| Cards | Soft shadow, ~12–16px radius | `rounded-2xl shadow-[0_8px_30px_rgba(20,33,61,0.08)]` |
-| Hero | Full-bleed photo + centered copy + floating service pills | Pill nav (not large cards); BD photography/brand |
-| CTA | Orange pill + arrow circle | Primary conversion pattern |
-| UX | Trust bar, social proof, partners, newsletter | Conversion funnel preserved |
+Headline figures: **1440 px frame, 1320 px content box, 36 px section rhythm,
+448 px hero, 12 px card radius, all-white section backgrounds.** The rebuilt page
+measures 3024 px tall against the reference's 3040 px.
 
-**Not a pixel copy.** Original composition for Shanghai Travels (Dhaka), Reg. No. 0017053, BD hotline, Package Engine + Destination Master data.
+Only the brand layer differs from the reference: the real Shanghai Travels wordmark,
+navy `#14213D` / orange `#F97316`, Bangladesh contact facts (Reg. No 0017053, hotline
++880 1333-356393, Banani, Dhaka) and live Package Engine / Destination Master / CMS data.
 
 ---
 
 ## 2. Audit summary
 
 ### Live site (`shanghaitravels.com.bd`)
-- Compiled marketing SPA + injectors (`hero-services`, `packages-home`, `destinations-home`, `auth-entry`)
-- Hero previously booking widget → cards → pills
-- Destinations/packages partially dynamic via injects
-- Layout/footer still mixed Dubai demo vs BD in source
+Compiled marketing SPA served from `/var/www/ShanghaiTravels`. The legacy
+`hero-services`, `packages-home` and `destinations-home` injector scripts are retired —
+React now owns the whole homepage.
 
 ### CMS (existing types — no schema change)
-`blog`, `announcement`, `faq`, `testimonial`, `gallery`, `download`, `hero_service`  
-Public: `/api2/site/content`, `/banners`, `/menus`, `/travel`
+`blog`, `announcement`, `faq`, `testimonial`, `gallery`, `download`, `hero_service`,
+plus a `service` type for the six-card services row.
+Public endpoints: `/api2/site/content`, `/banners`, `/menus`, `/forms`.
 
 ### Package Engine
-`GET /api2/site/packages` collections `home|featured|popular`  
-Detail/book already on ERP site shell; marketing links to `/tours`, `/inquiry`, `/erp/#/site/packages/:slug`
+`GET /api2/site/packages` with collections `home | featured | popular`, falling through
+in that order. Detail and booking stay on the ERP site shell
+(`/erp/#/site/packages/:slug`).
 
 ### Destination Master
-`GET /api2/site/destinations?collection=home` with live `packageCount`
+`GET /api2/site/destinations?collection=home` plus `/settings`, with live `packageCount`
+and admin toggles for flag, region, package count, CTA label and card count.
 
 ---
 
-## 3. Implementation plan
+## 3. Homepage component inventory
 
-1. Rewrite marketing `Layout` (announcement + sticky nav + luxury footer) — BD brand  
-2. Rebuild `Home` as composed V4 sections (all dynamic)  
-3. Seed CMS rows for empty types (testimonials, FAQ, partners, stats/why) via existing `CmsContent`  
-4. Build `figma-design` → deploy `/var/www/ShanghaiTravels`  
-5. Remove conflicting injectors from `index.html` (hero/packages/destinations); keep `auth-entry` only if needed  
-6. Document CMS + Package mapping  
+Section order mirrors the reference exactly.
 
----
+| # | Component | Data source | Status |
+| --- | --- | --- | --- |
+| 1 | `AnnouncementBar` | Static trust facts + secondary nav | Rebuilt |
+| 2 | `SiteHeader` | Route config + `AuthEntryMenus` (reused as-is) | Rebuilt |
+| 3 | `HeroPremium` | `banners?placement=hero` + `content?type=hero_service` | Rebuilt |
+| 4 | `FeaturedPackages` | Package Engine | Rebuilt (5-up) |
+| 5 | `PopularDestinations` | Destination Master + settings | Rebuilt (4 × 2) |
+| 6 | `StatsBar` | CMS `announcement/homepage-stats` | Rebuilt |
+| 7 | `ServicesGrid` | CMS `service`, falling back to defaults | Rebuilt (6-up) |
+| 8 | `Testimonials` | CMS `testimonial` | Rebuilt |
+| 9 | `Partners` | CMS `gallery/trusted-partners` | Rebuilt |
+| 10 | `CtaBanner` | `banners?placement=cta` | Rebuilt |
+| 11 | `BlogLatest` | CMS `blog` | Rebuilt (4-up) |
+| 12 | `SiteFooter` | Static links + newsletter → `/api2/site/forms` | Rebuilt |
 
-## 4. Homepage component inventory
+Supporting modules: `tokens.ts` (container, rhythm, card, focus ring, brand constants),
+`Section.tsx` (motion section, orange-rule heading, view-all link), `Logo.tsx`,
+`CoverImage.tsx` (graceful photo fallback), `format.ts` (price, duration, badge ladder,
+flag resolution).
 
-| # | Component | Source | Reuse / Rebuild |
-|---|---|---|---|
-| 1 | AnnouncementBar | CMS announcement / static BD trust | Rebuild |
-| 2 | SiteHeader (sticky) | Layout | Rebuild |
-| 3 | HeroPremium | Banner API + pill nav | Rebuild |
-| 4 | FeaturedPackages | Package Engine | Rebuild (carousel) |
-| 5 | PopularDestinations | Destination Master | Rebuild |
-| 6 | WhyChoose | CMS announcement `homepage-why` | New |
-| 7 | StatsBar | CMS announcement `homepage-stats` | New |
-| 8 | ServicesGrid | CMS `hero_service` / travel | Rebuild |
-| 9 | Testimonials | CMS `testimonial` | New |
-| 10 | TrustedPartners | CMS `gallery` partners | New |
-| 11 | CtaBanner | Static structure + CMS copy | New |
-| 12 | BlogLatest | CMS `blog` | New |
-| 13 | FaqAccordion | CMS `faq` | New |
-| 14 | Newsletter | Form POST `/site/forms` | New |
-| 15 | SiteFooter | Layout | Rebuild |
+**Reused unchanged:** `AuthEntryMenus` (all portal login/register flows), the public
+Package and Destination APIs, Embla, Motion, Lucide, and every existing marketing route.
 
-**Reused:** Auth entry menus, Package/Destination public APIs, Embla carousel, Motion, Lucide, existing routes (`/visa`, `/tours`, `/inquiry`, …).
-
-**Rebuilt:** Entire homepage visual system + header/footer.
+**Not on the homepage:** `WhyChoose` and `FaqSection` are absent from the reference, so
+they were removed from the composition. Both files remain CMS-driven and available for
+inner pages.
 
 ---
 
-## 5. Detailed reusable prompt
+## 4. Dynamic-content contract
 
-```
-You are Lead Product Designer + Senior React Engineer for Shanghai Travels (Dhaka).
+No package, destination, testimonial, partner, statistic or article is hardcoded.
+Each section renders one of three states:
 
-Redesign ONLY the public marketing website inspired by a premium navy/orange travel homepage mock
-(Booking.com / Klook quality). Do NOT pixel-copy. Keep brand: navy #14213D, orange #F97316, white.
+1. **Skeleton** while its request is in flight (packages, destinations).
+2. **Live content** from the API.
+3. **Empty state** — an explicit dashed-border message for packages and destinations, or
+   the section hides itself entirely (testimonials, blog).
 
-Hard constraints:
-- Do not change Auth, ERP, Finance, CRM, Portals, Backend APIs, DB schema, Booking engine, RBAC.
-- No hardcoded packages/destinations — Package Engine + Destination Master only.
-- CMS-editable sections via existing CmsContent types.
-- Bangladesh facts: Reg. No 0017053, hotline +880 1333-356393, Vatara Dhaka.
+The only literals in the tree are the service copy defaults, which apply solely when the
+CMS returns zero `service` entries, and the labelled hero pill defaults, which apply
+when fewer than four `hero_service` entries are published.
 
-Homepage sections in order:
-1 Announcement bar  2 Sticky nav  3 Hero + 4 service pills  4 Featured packages carousel
-5 Popular destinations grid  6 Why choose  7 Animated stats  8 Services  9 Testimonials
-10 Partners marquee  11 CTA band  12 Blog  13 FAQ  14 Newsletter  15 Luxury footer
+---
 
-Quality: large whitespace, soft shadows, rounded-2xl, motion fades/hovers, lazy images,
-skeleton loading, WCAG AA, responsive 4/2/1, Lighthouse-minded.
+## 5. Accessibility and performance
 
-Deliver production React (figma-design), docs V4_*, branch feature/v4-premium-homepage,
-commit Website/CMS UI only.
-```
+- Every interactive element carries a visible `focus-visible` ring; the carousels and
+  wishlist toggles expose `aria-label` / `aria-pressed`; decorative imagery and scrims
+  are `aria-hidden`.
+- The hero banner is `fetchPriority="high"`; every other photograph is `loading="lazy"`.
+- `prefers-reduced-motion` disables the partner marquee and freezes the stat counters at
+  their final values.
+- No layout shift: card image slots, the stats bar and the CTA banner all have fixed
+  heights.
 
 ---
 
 ## 6. Success criteria
 
-- Homepage matches premium reference quality without cloning  
-- Packages & destinations update when admin publishes  
-- Mobile / tablet / desktop polished  
-- No ERP/auth/finance regressions  
+- Reads as the same design language as the reference at a glance — verified on total
+  page height (0.5 % deviation) and on every row pitch.
+- Packages, destinations, testimonials, partners, stats and articles all update when an
+  administrator publishes.
+- Clean at 1440, 1024, 768 and 390 px, with no horizontal overflow.
+- No ERP, auth, finance, CRM or portal regressions.

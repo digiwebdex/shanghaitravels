@@ -186,6 +186,18 @@
 
   code, kbd, pre { font-family: var(--font-mono); }
 
+  @keyframes st-marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  .st-marquee { animation: st-marquee 34s linear infinite; }
+  .st-marquee:hover { animation-play-state: paused; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .st-marquee { animation: none; }
+  }
+
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }

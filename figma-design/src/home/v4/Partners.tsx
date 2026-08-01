@@ -1,14 +1,16 @@
-import { Section, SectionHeader } from "./Section";
+import { Section, SectionHeading } from "./Section";
 import type { CmsContent } from "./api";
 import { parsePartnerLogos } from "./format";
 
 const FALLBACK_PARTNERS = [
-  "Biman Bangladesh",
   "Emirates",
   "Qatar Airways",
-  "Singapore Airlines",
   "Turkish Airlines",
-  "Saudi Airlines",
+  "Saudia",
+  "Singapore Airlines",
+  "British Airways",
+  "Malaysia Airlines",
+  "Biman Bangladesh",
 ];
 
 type PartnersProps = {
@@ -17,39 +19,56 @@ type PartnersProps = {
 
 export function Partners({ gallery }: PartnersProps) {
   const logos = gallery ? parsePartnerLogos(gallery) : [];
-  const names = logos.length
-    ? logos.map((url) => ({ type: "image" as const, url }))
-    : FALLBACK_PARTNERS.map((name) => ({ type: "text" as const, name }));
+  const useMarquee = logos.length > 8 || (!logos.length && FALLBACK_PARTNERS.length > 8);
+
+  const cells = logos.length
+    ? logos.map((url, i) => <LogoCell key={`${url}-${i}`} url={url} />)
+    : FALLBACK_PARTNERS.map((name) => <LogoCell key={name} name={name} />);
 
   return (
-    <Section className="py-12 md:py-16 bg-card border-y border-border">
-      <SectionHeader
-        eyebrow="Trusted By"
-        title={gallery?.title || "Accreditations & Partners"}
-        subtitle={gallery?.summary || "Airlines, hotels and pilgrimage partners we work with daily."}
-        centered
-        className="mb-8"
-      />
+    <Section id="partners">
+      <SectionHeading title={gallery?.title || "Our Trusted Partners"} />
 
-      <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
-        {names.map((item, i) =>
-          item.type === "image" ? (
-            <div
-              key={item.url + i}
-              className="h-12 px-4 flex items-center justify-center rounded-xl border border-border bg-white"
-            >
-              <img src={item.url} alt="" className="max-h-8 max-w-[120px] object-contain" loading="lazy" />
+      <div className="overflow-hidden rounded-xl bg-white shadow-[0_2px_12px_rgba(20,33,61,0.06)] ring-1 ring-[rgba(20,33,61,0.08)]">
+        {useMarquee ? (
+          <div className="relative overflow-hidden">
+            <div className="st-marquee flex w-max items-stretch">
+              {[0, 1].map((copy) => (
+                <div key={copy} className="flex items-stretch" aria-hidden={copy === 1}>
+                  {cells}
+                </div>
+              ))}
             </div>
-          ) : (
-            <div
-              key={item.name}
-              className="px-5 py-2.5 border border-border rounded-xl text-xs font-bold text-muted-foreground hover:border-primary/30 hover:text-foreground transition-all"
-            >
-              {item.name}
-            </div>
-          ),
+          </div>
+        ) : (
+          <ul className="flex items-stretch divide-x divide-[rgba(20,33,61,0.07)]">
+            {cells.map((cell, i) => (
+              <li key={i} className="flex-1">
+                {cell}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </Section>
+  );
+}
+
+function LogoCell({ url, name }: { url?: string; name?: string }) {
+  return (
+    <div className="grid h-[72px] min-w-[150px] place-items-center px-5">
+      {url ? (
+        <img
+          src={url}
+          alt=""
+          loading="lazy"
+          className="max-h-8 max-w-[130px] object-contain opacity-75 grayscale transition-all duration-300 hover:opacity-100 hover:grayscale-0"
+        />
+      ) : (
+        <span className="text-center text-[11px] font-bold uppercase tracking-wide text-primary/45 transition-colors hover:text-primary/75">
+          {name}
+        </span>
+      )}
+    </div>
   );
 }

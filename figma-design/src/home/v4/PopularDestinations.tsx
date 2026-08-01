@@ -1,15 +1,23 @@
 import { ArrowRight } from "lucide-react";
-import { Section, SectionHeader } from "./Section";
+import { CoverImage } from "./CoverImage";
+import { Section, SectionHeading, ViewAll } from "./Section";
 import type { DestinationRow, DestinationSettings } from "./api";
-import { formatPkgCount } from "./format";
+import { destinationImage, flagSrc, formatPkgCount } from "./format";
+import { FOCUS } from "./tokens";
 
 type PopularDestinationsProps = {
   destinations: DestinationRow[];
   settings: DestinationSettings;
   loading?: boolean;
+  totalCountries?: number;
 };
 
-export function PopularDestinations({ destinations, settings, loading }: PopularDestinationsProps) {
+export function PopularDestinations({
+  destinations,
+  settings,
+  loading,
+  totalCountries,
+}: PopularDestinationsProps) {
   if (settings.enabled === false) return null;
 
   const max = Math.max(1, settings.maxCards ?? 8);
@@ -18,107 +26,110 @@ export function PopularDestinations({ destinations, settings, loading }: Popular
     .sort((a, b) => (a.displayOrder ?? a.sortOrder ?? 9999) - (b.displayOrder ?? b.sortOrder ?? 9999))
     .slice(0, max);
 
+  const count = totalCountries ?? destinations.length;
+
   return (
-    <Section className="py-16 md:py-24 bg-muted/40">
-      <SectionHeader
-        eyebrow="Explore"
+    <Section id="popular-destinations">
+      <SectionHeading
         title="Popular Destinations"
-        subtitle="Where we can take you — live from Destination Master."
         action={
-          <a
-            href="/erp/#/site/destinations"
-            className="hidden md:inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-accent transition-colors"
-          >
-            Browse all countries <ArrowRight size={14} />
-          </a>
+          <ViewAll href="/erp/#/site/destinations">
+            {count > 0 ? `Browse all ${count} countries` : "Browse all countries"}
+          </ViewAll>
         }
       />
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-44 rounded-2xl border border-border bg-card animate-pulse" aria-hidden />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <div key={i} className="h-[158px] animate-pulse rounded-xl bg-muted" aria-hidden />
           ))}
         </div>
       ) : visible.length === 0 ? (
-        <p className="text-center text-sm text-muted-foreground py-10 border border-dashed border-border rounded-2xl">
-          No published destinations yet.
+        <p className="rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
+          No published destinations yet. Add entries in Destination Master to fill this grid.
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {visible.map((d) => {
-            const country = d.countryName || d.country || d.name;
-            const img = settings.showHeroImage !== false ? d.heroImageUrl || d.coverImageUrl : "";
-            const href = `/erp/#/site/destinations/${encodeURIComponent(d.slug)}`;
-
-            return (
-              <article
-                key={d.id}
-                className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[0_8px_30px_rgba(20,33,61,0.06)] transition-all duration-300 hover:-translate-y-1.5 hover:border-accent/40 hover:shadow-lg"
-              >
-                <a href={href} className="flex min-h-[168px] outline-none" aria-label={`Explore ${country}`}>
-                  <div className="w-[42%] p-4 flex flex-col justify-center gap-2">
-                    {settings.showFlag !== false && (
-                      <div className="size-12 rounded-full border border-border bg-muted flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110 overflow-hidden">
-                        {d.flagUrl ? (
-                          <img src={d.flagUrl} alt="" className="size-full object-cover" loading="lazy" />
-                        ) : (
-                          d.flagEmoji || "🌍"
-                        )}
-                      </div>
-                    )}
-                    <div>
-                      <h3 className="font-bold text-[15px]">{country}</h3>
-                      {d.countryCode && (
-                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mt-0.5">
-                          {d.countryCode}
-                        </p>
-                      )}
-                      {settings.showRegion !== false && d.region && (
-                        <p className="text-[11px] text-muted-foreground mt-1">{d.region}</p>
-                      )}
-                    </div>
-                  </div>
-                  {settings.showHeroImage !== false && (
-                    <div className="relative w-[58%] overflow-hidden min-h-[168px]">
-                      {img ? (
-                        <img
-                          src={img}
-                          alt=""
-                          loading="lazy"
-                          className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-110"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/80 to-primary" />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-l from-black/10 via-black/25 to-black/50" />
-                    </div>
-                  )}
-                </a>
-                <div className="relative flex items-center border-t border-border px-4 py-3 bg-muted/30">
-                  <div>
-                    {settings.showPackageCount !== false && (
-                      <p className="text-[11px] font-semibold text-accent">{formatPkgCount(d.packageCount)}</p>
-                    )}
-                    {settings.showCta !== false && (
-                      <a href={href} className="text-[11px] font-bold text-foreground/80 hover:text-accent mt-0.5 inline-block">
-                        {settings.ctaLabel || "Explore Destination →"}
-                      </a>
-                    )}
-                  </div>
-                  <a
-                    href={href}
-                    className="absolute bottom-3 right-3 size-10 rounded-full bg-accent text-white flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:translate-x-0.5"
-                    aria-label={`Open ${country}`}
-                  >
-                    <ArrowRight size={18} />
-                  </a>
-                </div>
-              </article>
-            );
-          })}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {visible.map((d) => (
+            <DestinationCard key={d.id} destination={d} settings={settings} />
+          ))}
         </div>
       )}
     </Section>
+  );
+}
+
+function DestinationCard({
+  destination: d,
+  settings,
+}: {
+  destination: DestinationRow;
+  settings: DestinationSettings;
+}) {
+  const country = d.countryName || d.country || d.name;
+  const img = settings.showHeroImage === false ? "" : destinationImage(d);
+  const flag = settings.showFlag === false ? "" : flagSrc(d);
+  const href = `/erp/#/site/destinations/${encodeURIComponent(d.slug)}`;
+  // The CMS label sometimes ships with its own arrow; the card already draws one.
+  const ctaLabel = (settings.ctaLabel || "Explore").replace(/[\s→>]+$/, "").trim() || "Explore";
+
+  return (
+    <article className="group relative h-[158px] overflow-hidden rounded-xl bg-muted shadow-[0_2px_12px_rgba(20,33,61,0.06)] ring-1 ring-[rgba(20,33,61,0.08)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(20,33,61,0.16)]">
+      <CoverImage
+        src={img}
+        className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-[1.08]"
+        fallbackClassName="absolute inset-0 bg-gradient-to-br from-primary/70 to-primary"
+      />
+
+      <div
+        className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.9)_0%,rgba(255,255,255,0.7)_30%,rgba(255,255,255,0.24)_58%,rgba(255,255,255,0)_86%)]"
+        aria-hidden
+      />
+
+      <a href={href} className={`relative flex h-full w-[64%] flex-col justify-center gap-1 p-4 ${FOCUS}`}>
+        {flag ? (
+          <img
+            src={flag}
+            alt=""
+            loading="lazy"
+            className="size-9 rounded-full object-cover shadow-[0_2px_8px_rgba(20,33,61,0.2)] ring-2 ring-white transition-transform duration-300 group-hover:scale-110"
+          />
+        ) : (
+          d.flagEmoji && (
+            <span
+              className="grid size-9 place-items-center rounded-full bg-white text-lg shadow-[0_2px_8px_rgba(20,33,61,0.2)] ring-2 ring-white transition-transform duration-300 group-hover:scale-110"
+              aria-hidden
+            >
+              {d.flagEmoji}
+            </span>
+          )
+        )}
+
+        <h3 className="mt-1.5 truncate text-[15px] font-bold text-primary">{country}</h3>
+
+        {settings.showPackageCount !== false && (
+          <p className="text-[11px] text-primary/60">{formatPkgCount(d.packageCount)}</p>
+        )}
+
+        {settings.showRegion === true && d.region && (
+          <p className="truncate text-[10px] uppercase tracking-wider text-primary/40">{d.region}</p>
+        )}
+
+        {settings.showCta !== false && (
+          <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-accent transition-all group-hover:gap-2">
+            {ctaLabel}
+            <ArrowRight size={11} aria-hidden />
+          </span>
+        )}
+      </a>
+
+      <span
+        className="pointer-events-none absolute bottom-3 right-3 grid size-8 translate-x-1 place-items-center rounded-full bg-white/90 text-primary opacity-0 shadow-[0_4px_14px_rgba(20,33,61,0.2)] backdrop-blur-sm transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
+        aria-hidden
+      >
+        <ArrowRight size={15} />
+      </span>
+    </article>
   );
 }

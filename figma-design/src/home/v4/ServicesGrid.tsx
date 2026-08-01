@@ -2,150 +2,143 @@ import { Link } from "react-router";
 import {
   ArrowRight,
   Building2,
-  FileText,
-  Globe,
-  Map,
+  Globe2,
   Plane,
-  Shield,
-  Star,
+  ScrollText,
+  ShieldCheck,
+  Sparkles,
 } from "lucide-react";
-import { Section, SectionHeader } from "./Section";
+import { Section, SectionHeading, ViewAll } from "./Section";
 import type { CmsContent } from "./api";
+import { CARD, CARD_HOVER, FOCUS, ICON_TINTS } from "./tokens";
 
 type ServiceItem = {
+  key: string;
   title: string;
-  summary?: string;
-  coverUrl?: string | null;
-  url?: string;
-  icon?: string;
+  summary: string;
+  url: string;
+  icon: string;
 };
 
 const FALLBACK_SERVICES: ServiceItem[] = [
   {
+    key: "visa",
     title: "Visa Services",
-    summary: "Tourist, business, student & work visas for 100+ countries from Dhaka.",
+    summary: "Tourist, business, student & work visas for 100+ countries.",
     url: "/visa",
     icon: "visa",
   },
   {
-    title: "Air Ticketing",
-    summary: "Best fares on 500+ airlines — domestic and international routes.",
+    key: "air",
+    title: "Air Tickets",
+    summary: "Domestic & international tickets at the best fares.",
     url: "/flights",
     icon: "air",
   },
   {
-    title: "Hotel Booking",
-    summary: "4 & 5-star hotels, resorts and serviced apartments worldwide.",
-    url: "/flights",
-    icon: "hotel",
-  },
-  {
-    title: "Tour Packages",
-    summary: "Curated group and custom itineraries with full ground support.",
-    url: "/tours",
-    icon: "tour",
-  },
-  {
+    key: "hajj",
     title: "Hajj & Umrah",
-    summary: "VIP and economy pilgrimage packages with complete guidance.",
+    summary: "Complete Hajj & Umrah packages with full guidance.",
     url: "/services",
     icon: "hajj",
   },
   {
+    key: "tour",
+    title: "Tour Packages",
+    summary: "Worldwide tour packages for families & groups.",
+    url: "/tours",
+    icon: "tour",
+  },
+  {
+    key: "hotel",
+    title: "Hotel Booking",
+    summary: "800,000+ hotels worldwide at the best rates.",
+    url: "/flights",
+    icon: "hotel",
+  },
+  {
+    key: "insurance",
     title: "Travel Insurance",
-    summary: "Comprehensive coverage for medical, trip cancellation & baggage.",
+    summary: "Safe journeys without the worry of unexpected costs.",
     url: "/services",
     icon: "insurance",
   },
 ];
 
 const ICON_MAP: Record<string, typeof Plane> = {
-  visa: FileText,
+  visa: ScrollText,
   air: Plane,
+  hajj: Sparkles,
+  tour: Globe2,
   hotel: Building2,
-  tour: Map,
-  hajj: Star,
-  insurance: Shield,
-  globe: Globe,
+  insurance: ShieldCheck,
 };
 
-function parseHeroServices(items: CmsContent[]): ServiceItem[] {
+function fromCms(items: CmsContent[]): ServiceItem[] {
   return items
     .filter((c) => c.status !== "draft")
-    .map((c) => ({
+    .slice(0, 6)
+    .map((c, i) => ({
+      key: c.id,
       title: c.title,
-      summary: c.summary || undefined,
-      coverUrl: c.coverUrl,
+      summary: c.summary || "",
       url: (c.meta?.url as string) || (c.meta?.href as string) || "/services",
-      icon: (c.meta?.icon as string) || undefined,
+      icon: (c.meta?.icon as string) || FALLBACK_SERVICES[i]?.icon || "tour",
     }));
 }
 
 type ServicesGridProps = {
-  heroServices?: CmsContent[];
+  services?: CmsContent[];
 };
 
-export function ServicesGrid({ heroServices = [] }: ServicesGridProps) {
-  const fromApi = parseHeroServices(heroServices);
-  const services = fromApi.length ? fromApi.slice(0, 6) : FALLBACK_SERVICES;
+export function ServicesGrid({ services = [] }: ServicesGridProps) {
+  const cms = fromCms(services);
+  const items = cms.length ? cms : FALLBACK_SERVICES;
 
   return (
-    <Section className="py-16 md:py-24 bg-background">
-      <SectionHeader
-        eyebrow="What We Offer"
-        title="Complete Travel Solutions"
-        subtitle="From a single visa to a full pilgrimage programme — all under one roof in Vatara, Dhaka."
-        centered
-      />
+    <Section id="services">
+      <SectionHeading title="Our Services" action={<ViewAll to="/services">View all services</ViewAll>} />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {services.map((s) => {
-          const Icon = (s.icon && ICON_MAP[s.icon]) || Globe;
-          const href = s.url || "/services";
-          const isExternal = href.startsWith("http") || href.startsWith("/erp");
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+        {items.map((service, i) => {
+          const Icon = ICON_MAP[service.icon] || Globe2;
+          const isExternal = service.url.startsWith("http") || service.url.startsWith("/erp");
 
-          const inner = (
+          const body = (
             <>
-              <div className="size-11 rounded-xl bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-accent/15 transition-colors">
-                <Icon size={20} className="text-accent" />
-              </div>
-              <h3 className="text-foreground font-bold mb-2">{s.title}</h3>
-              {s.summary && (
-                <p className="text-sm text-muted-foreground leading-relaxed mb-3">{s.summary}</p>
+              <span
+                className={`grid size-11 place-items-center rounded-full text-white shadow-[0_4px_12px_rgba(20,33,61,0.16)] transition-transform duration-300 group-hover:scale-110 ${
+                  ICON_TINTS[i % ICON_TINTS.length]
+                }`}
+                aria-hidden
+              >
+                <Icon size={19} />
+              </span>
+              <h3 className="mt-3 text-[13px] font-bold text-primary">{service.title}</h3>
+              {service.summary && (
+                <p className="mt-1.5 line-clamp-3 text-[11px] leading-[1.55] text-muted-foreground">
+                  {service.summary}
+                </p>
               )}
-              <span className="text-xs font-semibold text-accent inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                Learn more <ArrowRight size={12} />
+              <span className="mt-auto inline-flex items-center gap-1 pt-3 text-[10px] font-bold text-accent transition-all group-hover:gap-2">
+                Learn More
+                <ArrowRight size={10} aria-hidden />
               </span>
             </>
           );
 
+          const className = `group flex h-full flex-col items-center p-4 text-center ${CARD} ${CARD_HOVER} hover:ring-accent/25 ${FOCUS}`;
+
           return isExternal ? (
-            <a
-              key={s.title}
-              href={href}
-              className="group bg-card rounded-2xl border border-border p-6 shadow-[0_8px_30px_rgba(20,33,61,0.05)] hover:border-accent/30 hover:shadow-md transition-all"
-            >
-              {inner}
+            <a key={service.key} href={service.url} className={className}>
+              {body}
             </a>
           ) : (
-            <Link
-              key={s.title}
-              to={href}
-              className="group bg-card rounded-2xl border border-border p-6 shadow-[0_8px_30px_rgba(20,33,61,0.05)] hover:border-accent/30 hover:shadow-md transition-all"
-            >
-              {inner}
+            <Link key={service.key} to={service.url} className={className}>
+              {body}
             </Link>
           );
         })}
-      </div>
-
-      <div className="text-center mt-10">
-        <Link
-          to="/services"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border text-foreground text-sm font-semibold hover:bg-muted transition-colors"
-        >
-          View All Services <ArrowRight size={14} />
-        </Link>
       </div>
     </Section>
   );

@@ -1,9 +1,9 @@
-import type { PackageRow } from "./api";
+import type { DestinationRow, PackageRow } from "./api";
 
 export function formatPrice(poisha?: number | null, currency = "৳"): string {
   if (poisha == null) return "—";
   const major = poisha / 100;
-  return `${currency}${major.toLocaleString("en-BD", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  return `${currency} ${major.toLocaleString("en-BD", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
 export function formatDuration(days?: number | null, nights?: number | null): string {
@@ -14,20 +14,46 @@ export function formatDuration(days?: number | null, nights?: number | null): st
   return parts.join(" · ") || "—";
 }
 
+/** Compact "5D / 4N" form used on the package cards. */
+export function formatDurationShort(days?: number | null, nights?: number | null): string {
+  const parts: string[] = [];
+  if (days != null) parts.push(`${days}D`);
+  if (nights != null) parts.push(`${nights}N`);
+  return parts.join(" / ");
+}
+
 export function displayPricePoisha(p: PackageRow): number | null {
   if (p.offerPricePoisha != null) return p.offerPricePoisha;
   return p.pricePoisha ?? p.sellingPricePoisha ?? null;
+}
+
+/** Original price, only when an offer price actually undercuts it. */
+export function strikePricePoisha(p: PackageRow): number | null {
+  const base = p.pricePoisha ?? p.sellingPricePoisha ?? null;
+  if (p.offerPricePoisha == null || base == null) return null;
+  return p.offerPricePoisha < base ? base : null;
+}
+
+export function discountPercent(p: PackageRow): number | null {
+  const base = strikePricePoisha(p);
+  if (base == null || p.offerPricePoisha == null) return null;
+  const pct = Math.round(((base - p.offerPricePoisha) / base) * 100);
+  return pct > 0 ? pct : null;
 }
 
 export function packageImage(p: PackageRow): string {
   return p.thumbnailUrl || p.bannerUrl || p.coverImageUrl || p.heroImageUrl || "";
 }
 
-export function packageBadge(p: PackageRow): string | null {
-  if (p.homeFeatured) return "Featured";
-  if (p.featured) return "Featured";
-  if (p.recommended) return "Recommended";
-  if (p.popular) return "Popular";
+export type PackageBadge = { label: string; className: string };
+
+/** Reference badge ladder: BEST SELLER / POPULAR / TRENDING / VALUE PACK / SPECIAL. */
+export function packageBadge(p: PackageRow): PackageBadge | null {
+  if (p.popular) return { label: "Popular", className: "bg-[#22A45D]" };
+  if (p.recommended) return { label: "Trending", className: "bg-[#7C3AED]" };
+  if (p.homeFeatured) return { label: "Best Seller", className: "bg-[#F97316]" };
+  if (discountPercent(p) != null) return { label: "Value Pack", className: "bg-[#2F80ED]" };
+  if (p.featured) return { label: "Featured", className: "bg-[#F97316]" };
   return null;
 }
 
@@ -38,6 +64,18 @@ export function packageRating(p: PackageRow): number | null {
 export function formatPkgCount(n?: number | null): string {
   const c = Math.max(0, Number(n) || 0);
   return c === 1 ? "1 Package" : `${c} Packages`;
+}
+
+/** Circular flag source: explicit asset first, then the ISO code via flagcdn. */
+export function flagSrc(d: DestinationRow): string {
+  if (d.flagUrl) return d.flagUrl;
+  const code = (d.countryCode || "").trim().toLowerCase();
+  if (code.length === 2) return `https://flagcdn.com/w80/${code}.png`;
+  return "";
+}
+
+export function destinationImage(d: DestinationRow): string {
+  return d.heroImageUrl || d.coverImageUrl || "";
 }
 
 export function parseMetaArray<T>(meta: Record<string, unknown> | null | undefined, key: string): T[] {

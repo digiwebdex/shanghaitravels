@@ -1,19 +1,30 @@
 import { useCallback, useEffect, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
-import { ArrowLeft, ArrowRight, Clock, Heart, Star } from "lucide-react";
-import { Link } from "react-router";
-import { Section, SectionHeader } from "./Section";
+import { ChevronLeft, ChevronRight, Clock, Heart, MapPin, Star, Users } from "lucide-react";
+import { CoverImage } from "./CoverImage";
+import { Section, SectionHeading, ViewAll } from "./Section";
 import type { PackageRow } from "./api";
+import { CARD, CARD_HOVER, FOCUS } from "./tokens";
 import {
+  discountPercent,
   displayPricePoisha,
-  formatDuration,
+  formatDurationShort,
   formatPrice,
   packageBadge,
   packageImage,
   packageRating,
+  strikePricePoisha,
 } from "./format";
 
 const WISHLIST_KEY = "st-wishlist";
+
+const XL_COLS: Record<number, string> = {
+  1: "xl:grid-cols-1",
+  2: "xl:grid-cols-2",
+  3: "xl:grid-cols-3",
+  4: "xl:grid-cols-4",
+  5: "xl:grid-cols-5",
+};
 
 function readWishlist(): string[] {
   try {
@@ -22,10 +33,6 @@ function readWishlist(): string[] {
   } catch {
     return [];
   }
-}
-
-function writeWishlist(slugs: string[]) {
-  localStorage.setItem(WISHLIST_KEY, JSON.stringify(slugs));
 }
 
 type FeaturedPackagesProps = {
@@ -38,7 +45,7 @@ export function FeaturedPackages({ packages, loading }: FeaturedPackagesProps) {
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
   const [wishlist, setWishlist] = useState<string[]>(() =>
-    typeof window !== "undefined" ? readWishlist() : [],
+    typeof window === "undefined" ? [] : readWishlist(),
   );
 
   const onSelect = useCallback(() => {
@@ -61,161 +68,211 @@ export function FeaturedPackages({ packages, loading }: FeaturedPackagesProps) {
   function toggleWishlist(slug: string) {
     setWishlist((prev) => {
       const next = prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug];
-      writeWishlist(next);
+      localStorage.setItem(WISHLIST_KEY, JSON.stringify(next));
       return next;
     });
   }
 
   return (
-    <Section className="py-16 md:py-24 bg-white">
-      <SectionHeader
-        eyebrow="Top Picks"
-        title="Featured Tour Packages"
-        subtitle="Hand-picked journeys from our Package Engine — updated when you publish in admin."
-        action={
-          <a
-            href="/erp/#/site/search"
-            className="hidden md:inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-accent transition-colors"
-          >
-            View all packages <ArrowRight size={14} />
-          </a>
-        }
+    <Section id="featured-packages">
+      <SectionHeading
+        title="Featured Packages"
+        action={<ViewAll href="/erp/#/site/search">View all packages</ViewAll>}
       />
 
       {loading ? (
-        <div className="grid md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-80 rounded-2xl bg-muted animate-pulse" aria-hidden />
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-[336px] animate-pulse rounded-xl bg-muted" aria-hidden />
           ))}
         </div>
       ) : packages.length === 0 ? (
-        <p className="text-center text-sm text-muted-foreground py-12 border border-dashed border-border rounded-2xl">
-          No published packages yet. Add packages in admin to populate this carousel.
+        <p className="rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
+          No published packages yet. Publish packages in the Package Engine to fill this carousel.
         </p>
+      ) : packages.length <= 5 ? (
+        // Fewer than a full row: lay out as a grid so the track never ends in a gap.
+        <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 ${XL_COLS[packages.length]}`}>
+          {packages.map((pkg) => (
+            <PackageCard
+              key={pkg.id}
+              pkg={pkg}
+              wished={wishlist.includes(pkg.slug)}
+              onToggleWishlist={() => toggleWishlist(pkg.slug)}
+            />
+          ))}
+        </div>
       ) : (
         <div className="relative">
           <div className="overflow-hidden" ref={emblaRef}>
-            <div className="flex gap-6">
-              {packages.map((pkg) => {
-                const img = packageImage(pkg);
-                const price = displayPricePoisha(pkg);
-                const badge = packageBadge(pkg);
-                const rating = packageRating(pkg);
-                const href = `/erp/#/site/packages/${encodeURIComponent(pkg.slug)}`;
-                const bookHref = `/erp/#/site/packages/${encodeURIComponent(pkg.slug)}/book`;
-                const wished = wishlist.includes(pkg.slug);
-                const dest = pkg.destination || pkg.country || "";
-
-                return (
-                  <article
-                    key={pkg.id}
-                    className="min-w-0 shrink-0 grow-0 basis-full sm:basis-[calc(50%-12px)] lg:basis-[calc(33.333%-16px)]"
-                  >
-                    <div className="group bg-card rounded-2xl border border-border overflow-hidden shadow-[0_8px_30px_rgba(20,33,61,0.08)] hover:shadow-[0_12px_40px_rgba(20,33,61,0.12)] transition-all duration-300 hover:-translate-y-1">
-                      <div className="relative h-52 overflow-hidden">
-                        {img ? (
-                          <img
-                            src={img}
-                            alt=""
-                            loading="lazy"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-primary/80 to-primary" />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
-                        {badge && (
-                          <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-accent text-white text-[10px] font-bold uppercase tracking-wide">
-                            {badge}
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
-                          onClick={() => toggleWishlist(pkg.slug)}
-                          className="absolute top-3 right-3 size-9 rounded-full bg-white/90 flex items-center justify-center hover:bg-white transition-colors"
-                        >
-                          <Heart
-                            size={16}
-                            className={wished ? "fill-accent text-accent" : "text-muted-foreground"}
-                          />
-                        </button>
-                        {rating != null && (
-                          <div className="absolute bottom-3 left-3 flex items-center gap-1">
-                            <Star size={11} className="text-yellow-400 fill-yellow-400" />
-                            <span className="text-xs font-bold text-white">{rating.toFixed(1)}</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-5">
-                        {dest && <p className="text-xs text-muted-foreground mb-1">{dest}</p>}
-                        <h3 className="text-foreground font-bold text-lg mb-3 line-clamp-2">
-                          <a href={href} className="hover:text-accent transition-colors">
-                            {pkg.name}
-                          </a>
-                        </h3>
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Clock size={11} />
-                            {formatDuration(pkg.durationDays, pkg.durationNights)}
-                          </span>
-                          <div className="text-right">
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">From</p>
-                            <p className="font-bold text-primary">{formatPrice(price)}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2 mt-4">
-                          <a
-                            href={href}
-                            className="flex-1 text-center py-2 rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors"
-                          >
-                            Details
-                          </a>
-                          <a
-                            href={bookHref}
-                            className="flex-1 text-center py-2 rounded-lg bg-accent text-white text-sm font-semibold hover:bg-orange-600 transition-colors"
-                          >
-                            Book
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
+            <div className="-ml-4 flex touch-pan-y">
+              {packages.map((pkg) => (
+                <div
+                  key={pkg.id}
+                  className="min-w-0 shrink-0 grow-0 basis-full pl-4 sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
+                >
+                  <PackageCard
+                    pkg={pkg}
+                    wished={wishlist.includes(pkg.slug)}
+                    onToggleWishlist={() => toggleWishlist(pkg.slug)}
+                  />
+                </div>
+              ))}
             </div>
           </div>
 
-          {packages.length > 1 && (
-            <div className="flex justify-center gap-3 mt-8">
-              <button
-                type="button"
-                aria-label="Previous packages"
-                disabled={!canPrev}
-                onClick={() => emblaApi?.scrollPrev()}
-                className="size-10 rounded-full border border-border bg-white flex items-center justify-center disabled:opacity-40 hover:border-accent hover:text-accent transition-colors"
-              >
-                <ArrowLeft size={18} />
-              </button>
-              <button
-                type="button"
-                aria-label="Next packages"
-                disabled={!canNext}
-                onClick={() => emblaApi?.scrollNext()}
-                className="size-10 rounded-full border border-border bg-white flex items-center justify-center disabled:opacity-40 hover:border-accent hover:text-accent transition-colors"
-              >
-                <ArrowRight size={18} />
-              </button>
-            </div>
-          )}
+          <CarouselButton side="left" disabled={!canPrev} onClick={() => emblaApi?.scrollPrev()} />
+          <CarouselButton side="right" disabled={!canNext} onClick={() => emblaApi?.scrollNext()} />
         </div>
       )}
-
-      <div className="text-center mt-8 md:hidden">
-        <Link to="/tours" className="text-sm font-semibold text-primary hover:text-accent">
-          View all packages →
-        </Link>
-      </div>
     </Section>
+  );
+}
+
+function CarouselButton({
+  side,
+  disabled,
+  onClick,
+}: {
+  side: "left" | "right";
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  const Icon = side === "left" ? ChevronLeft : ChevronRight;
+  return (
+    <button
+      type="button"
+      aria-label={side === "left" ? "Previous packages" : "Next packages"}
+      disabled={disabled}
+      onClick={onClick}
+      className={`absolute top-[88px] z-10 hidden size-9 -translate-y-1/2 place-items-center rounded-full bg-white text-primary shadow-[0_6px_18px_rgba(20,33,61,0.18)] ring-1 ring-black/[0.06] transition-all hover:bg-accent hover:text-white disabled:pointer-events-none disabled:opacity-0 md:grid ${
+        side === "left" ? "-left-3" : "-right-3"
+      } ${FOCUS}`}
+    >
+      <Icon size={17} aria-hidden />
+    </button>
+  );
+}
+
+function PackageCard({
+  pkg,
+  wished,
+  onToggleWishlist,
+}: {
+  pkg: PackageRow;
+  wished: boolean;
+  onToggleWishlist: () => void;
+}) {
+  const img = packageImage(pkg);
+  const badge = packageBadge(pkg);
+  const rating = packageRating(pkg);
+  const price = displayPricePoisha(pkg);
+  const strike = strikePricePoisha(pkg);
+  const discount = discountPercent(pkg);
+  const duration = formatDurationShort(pkg.durationDays, pkg.durationNights);
+  const place = pkg.destination || pkg.country || "";
+  const href = `/erp/#/site/packages/${encodeURIComponent(pkg.slug)}`;
+  const bookHref = `${href}/book`;
+
+  return (
+    <article className={`group flex h-full flex-col overflow-hidden ${CARD} ${CARD_HOVER}`}>
+      <div className="relative h-[176px] shrink-0 overflow-hidden bg-muted">
+        <CoverImage
+          src={img}
+          className="size-full object-cover transition-transform duration-700 group-hover:scale-[1.07]"
+        />
+
+        {badge && (
+          <span
+            className={`absolute left-3 top-3 rounded-md px-2 py-1 text-[9px] font-extrabold uppercase tracking-wide text-white shadow-sm ${badge.className}`}
+          >
+            {badge.label}
+          </span>
+        )}
+
+        {discount != null && (
+          <span className="absolute right-3 top-3 rounded-md bg-white/95 px-1.5 py-1 text-[9px] font-extrabold text-accent shadow-sm">
+            -{discount}%
+          </span>
+        )}
+
+        {rating != null && (
+          <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-md bg-black/55 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+            <Star size={10} className="fill-yellow-400 text-yellow-400" aria-hidden />
+            {rating.toFixed(1)}
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col p-4">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="line-clamp-1 text-[14px] font-bold text-primary">
+            <a href={href} className="transition-colors hover:text-accent">
+              {pkg.name}
+            </a>
+          </h3>
+          <button
+            type="button"
+            aria-label={wished ? `Remove ${pkg.name} from wishlist` : `Save ${pkg.name} to wishlist`}
+            aria-pressed={wished}
+            onClick={onToggleWishlist}
+            className={`-mr-1 -mt-0.5 grid size-6 shrink-0 place-items-center rounded-full transition-colors hover:bg-muted ${FOCUS}`}
+          >
+            <Heart
+              size={13}
+              className={wished ? "fill-accent text-accent" : "text-muted-foreground"}
+              aria-hidden
+            />
+          </button>
+        </div>
+
+        {duration && <p className="mt-1 text-[11px] text-muted-foreground">{duration}</p>}
+
+        <ul className="mt-2.5 flex items-center gap-2 text-[10px] text-muted-foreground">
+          {place && (
+            <li className="flex min-w-0 items-center gap-1">
+              <MapPin size={10} className="shrink-0" aria-hidden />
+              <span className="truncate">{place}</span>
+            </li>
+          )}
+          {pkg.durationDays != null && (
+            <>
+              <li className="h-2.5 w-px bg-border" aria-hidden />
+              <li className="flex items-center gap-1">
+                <Clock size={10} aria-hidden />
+                {pkg.durationDays}D
+              </li>
+            </>
+          )}
+          {pkg.reviewCount != null && pkg.reviewCount > 0 && (
+            <>
+              <li className="h-2.5 w-px bg-border" aria-hidden />
+              <li className="flex items-center gap-1">
+                <Users size={10} aria-hidden />
+                {pkg.reviewCount}
+              </li>
+            </>
+          )}
+        </ul>
+
+        <div className="mt-auto flex items-end justify-between gap-2 pt-4">
+          <div className="min-w-0">
+            <p className="text-[10px] text-muted-foreground">From</p>
+            <p className="truncate text-[17px] font-extrabold leading-tight text-primary">
+              {formatPrice(price)}
+            </p>
+            {strike != null && (
+              <p className="text-[10px] text-muted-foreground line-through">{formatPrice(strike)}</p>
+            )}
+          </div>
+          <a
+            href={bookHref}
+            className={`shrink-0 rounded-lg bg-accent px-3.5 py-2 text-[11px] font-bold text-white transition-colors hover:bg-orange-600 ${FOCUS}`}
+          >
+            Book Now
+          </a>
+        </div>
+      </div>
+    </article>
   );
 }
