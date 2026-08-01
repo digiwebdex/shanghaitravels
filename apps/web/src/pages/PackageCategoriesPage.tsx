@@ -1,14 +1,18 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { FolderTree } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { packagesApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import type { PackageCategory } from "@/lib/packages";
 import { slugifyPackage } from "@/lib/packages";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { PackageModuleNav } from "@/components/packages/PackageModuleNav";
 
 export default function PackageCategoriesPage() {
@@ -72,15 +76,13 @@ export default function PackageCategoriesPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="products" />
-      <div className="p-5 max-w-[900px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <FolderTree size={16} className="text-amber-600" /> Package categories
-          </h1>
-        </div>
-        <PackageModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={FolderTree}
+        title="Package categories"
+        breadcrumb={[{ label: "Products", to: "/packages" }, { label: "Package categories" }]}
+      />
+      <PackageModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
 
@@ -148,7 +150,6 @@ export default function PackageCategoriesPage() {
             </tbody>
           </table>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

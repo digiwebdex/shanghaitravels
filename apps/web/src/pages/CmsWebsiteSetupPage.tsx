@@ -1,9 +1,15 @@
 import { Link } from "react-router";
-import { Files, Mail, Megaphone, Search, Sparkles } from "lucide-react";
+import { Eye, Files, LifeBuoy, Mail, Megaphone, Newspaper, Quote, Search, Sparkles } from "lucide-react";
 import { PageHeader, PageShell } from "@/components/enterprise/Page";
 import { CmsModuleNav } from "@/components/cms/CmsModuleNav";
 
 const ITEMS = [
+  {
+    label: "Site Preview",
+    to: "/site",
+    icon: Eye,
+    hint: "Open the public website preview workspace",
+  },
   {
     label: "Hero Services",
     to: "/cms/hero-services",
@@ -15,6 +21,24 @@ const ITEMS = [
     to: "/cms/banners",
     icon: Megaphone,
     hint: "Promotional and homepage banners",
+  },
+  {
+    label: "Blog",
+    to: "/cms/content/blog",
+    icon: Newspaper,
+    hint: "Articles and travel stories for the site",
+  },
+  {
+    label: "FAQ",
+    to: "/cms/content/faq",
+    icon: LifeBuoy,
+    hint: "Frequently asked questions shown on the site",
+  },
+  {
+    label: "Testimonials",
+    to: "/cms/content/testimonial",
+    icon: Quote,
+    hint: "Customer quotes and social proof",
   },
   {
     label: "Forms",
@@ -44,7 +68,7 @@ export default function CmsWebsiteSetupPage() {
     <PageShell>
       <PageHeader
         title="Website Setup"
-        subtitle="Configure homepage services, banners, forms, SEO and the content library."
+        subtitle="Configure homepage services, content types, forms, SEO and preview the live site."
         breadcrumb={[{ label: "Website CMS", to: "/cms" }, { label: "Website Setup" }]}
       />
       <CmsModuleNav />
@@ -53,11 +77,11 @@ export default function CmsWebsiteSetupPage() {
           <Link
             key={item.to}
             to={item.to}
-            className="rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-orange-300 hover:shadow-sm"
+            className="rounded-2xl bg-[var(--card)] p-5 shadow-[var(--shadow-card)] ring-1 ring-[var(--ring-card)] transition-all hover:ring-[var(--orange-300)] hover:shadow-sm"
           >
-            <item.icon size={18} className="text-orange-600" />
-            <p className="mt-3 text-[14px] font-bold text-slate-900">{item.label}</p>
-            <p className="mt-1 text-[11.5px] text-slate-500">{item.hint}</p>
+            <item.icon size={18} className="text-[var(--accent)]" />
+            <p className="mt-3 text-[14px] font-bold text-[var(--navy-700)]">{item.label}</p>
+            <p className="mt-1 text-[11.5px] text-[var(--muted-foreground)]">{item.hint}</p>
           </Link>
         ))}
       </div>

@@ -1,19 +1,30 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { Plus, Search, ChevronLeft } from "lucide-react";
+import { ChevronLeft, Plus, RefreshCw, Search, Users } from "lucide-react";
 import { customersApi } from "@/lib/services";
 import { listOf, ApiError } from "@/lib/api";
 import type { Customer } from "@/lib/types";
 import { passportExpiry } from "@/lib/types";
 import { Can } from "@/auth/Can";
 import { useAuth } from "@/auth/AuthProvider";
-import { DemoBadge } from "@/components/DemoBadge";
-import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
+import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-
-const inputCls =
-  "w-full px-2.5 py-2 text-[11px] border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-amber-400";
-const labelCls = "block text-[10px] font-bold text-slate-500 mb-1";
+import { Column, DataTable } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  ListToolbar,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+  searchInputClassName,
+} from "@/components/enterprise/Page";
 
 export default function CustomersPage() {
   const { can } = useAuth();
@@ -45,6 +56,40 @@ export default function CustomersPage() {
     void load();
   }, [load]);
 
+  const stats = useMemo(() => {
+    const withEmail = rows.filter((c) => !!c.email).length;
+    const withPassport = rows.filter((c) => (c.passports?.length ?? 0) > 0).length;
+    return { withEmail, withPassport };
+  }, [rows]);
+
+  const columns: Column<Customer>[] = [
+    {
+      key: "code",
+      header: "Code",
+      render: (c) => (
+        <button
+          type="button"
+          className="font-mono text-[11.5px] font-bold text-[var(--accent)] hover:underline"
+          onClick={() => setSelected(c)}
+        >
+          {c.code}
+        </button>
+      ),
+    },
+    {
+      key: "name",
+      header: "Name",
+      render: (c) => (
+        <button type="button" className="font-semibold text-[var(--primary)] hover:underline" onClick={() => setSelected(c)}>
+          {c.fullName}
+        </button>
+      ),
+    },
+    { key: "phone", header: "Phone", render: (c) => c.phone || "—" },
+    { key: "email", header: "Email", render: (c) => c.email || "—" },
+    { key: "nationality", header: "Nationality", render: (c) => c.nationality || "—" },
+  ];
+
   if (selected) {
     return (
       <CustomerDetail
@@ -58,100 +103,71 @@ export default function CustomersPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="customers" />
-      <div className="p-5 max-w-[1200px]">
-        <div className="flex items-end justify-between gap-3 mb-4 flex-wrap">
-          <div>
-            <h1 className="text-[16px] font-bold text-slate-800">Customer Management</h1>
-            <p className="text-[11px] text-slate-500 mt-0.5">{total} customers · live API</p>
-          </div>
-          <Can perm="customer:create">
-            <button
-              type="button"
-              onClick={() => setShowCreate(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold text-white"
-              style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
-            >
-              <Plus size={13} /> Add Customer
+    <PageShell wide>
+      <PageHeader
+        icon={Users}
+        title="Customer Management"
+        subtitle="Profiles, contact details, and passport links for bookings."
+        breadcrumb={[{ label: "Customers" }, { label: "Directory" }]}
+        actions={
+          <>
+            <button type="button" className={btnGhost} onClick={() => void load(q)}>
+              <RefreshCw size={12} /> Refresh
             </button>
-          </Can>
-        </div>
+            <Can perm="customer:create">
+              <button type="button" className={btnPrimary} style={btnPrimaryStyle} onClick={() => setShowCreate((s) => !s)}>
+                <Plus size={13} /> Add Customer
+              </button>
+            </Can>
+          </>
+        }
+      />
+      <StatStrip>
+        <KpiCard label="Total customers" value={total} />
+        <KpiCard label="Loaded" value={rows.length} tone="accent" />
+        <KpiCard label="With email" value={stats.withEmail} />
+        <KpiCard label="With passport" value={stats.withPassport} tone="success" />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
 
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
+      {showCreate && can("customer:create") && (
+        <CreateCustomerForm
+          onCancel={() => setShowCreate(false)}
+          onCreated={(c) => {
+            setShowCreate(false);
+            setOk(`Customer created: ${c.code}`);
+            setSelected(c);
+          }}
+        />
+      )}
 
-        {showCreate && can("customer:create") && (
-          <CreateCustomerForm
-            onCancel={() => setShowCreate(false)}
-            onCreated={(c) => {
-              setShowCreate(false);
-              setOk(`Customer created: ${c.code}`);
-              setSelected(c);
-            }}
-          />
-        )}
-
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-slate-100 flex gap-2">
-            <div className="relative flex-1 max-w-sm">
-              <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") void load(q);
-                }}
-                placeholder="Search name / phone / code / email…"
-                className="w-full pl-7 pr-3 py-2 border border-slate-200 rounded-lg text-[11px] focus:outline-none focus:border-amber-400"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => void load(q)}
-              className="px-3 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-600 hover:bg-slate-50"
-            >
-              Search
-            </button>
+      <Surface>
+        <ListToolbar>
+          <div className="relative flex-1">
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && void load(q)}
+              placeholder="Search name / phone / code / email…"
+              className={searchInputClassName}
+            />
           </div>
-
-          {loading ? (
-            <div className="flex justify-center py-16">
-              <InlineSpinner />
-            </div>
-          ) : rows.length === 0 ? (
-            <EmptyState title="No records yet" hint="Create a customer to start a visa case." />
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-[9.5px] uppercase tracking-wider text-slate-400 border-b border-slate-50">
-                  <th className="px-4 py-2 font-bold">Code</th>
-                  <th className="px-4 py-2 font-bold">Name</th>
-                  <th className="px-4 py-2 font-bold">Phone</th>
-                  <th className="px-4 py-2 font-bold">Email</th>
-                  <th className="px-4 py-2 font-bold">Nationality</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((c) => (
-                  <tr
-                    key={c.id}
-                    className="border-b border-slate-50 hover:bg-slate-50/80 cursor-pointer"
-                    onClick={() => setSelected(c)}
-                  >
-                    <td className="px-4 py-2.5 text-[11px] font-mono font-bold text-amber-700">{c.code}</td>
-                    <td className="px-4 py-2.5 text-[11px] font-semibold text-slate-800">{c.fullName}</td>
-                    <td className="px-4 py-2.5 text-[11px] text-slate-600">{c.phone}</td>
-                    <td className="px-4 py-2.5 text-[11px] text-slate-500">{c.email || "—"}</td>
-                    <td className="px-4 py-2.5 text-[11px] text-slate-500">{c.nationality || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    </div>
+          <button type="button" className={btnGhost} onClick={() => void load(q)}>
+            Search
+          </button>
+        </ListToolbar>
+        <DataTable
+          rows={rows}
+          columns={columns}
+          rowKey={(r) => r.id}
+          loading={loading}
+          emptyTitle="No customers yet"
+          emptyHint="Create a customer to start a visa case."
+        />
+      </Surface>
+    </PageShell>
   );
 }
 
@@ -200,53 +216,50 @@ function CreateCustomerForm({
   }
 
   return (
-    <form onSubmit={submit} className="bg-white rounded-xl border border-slate-200 p-4 mb-4">
-      <h2 className="text-[13px] font-bold text-slate-800 mb-3">New customer</h2>
-      <ErrorBanner message={error} />
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div>
-          <label className={labelCls}>Full name *</label>
-          <input className={inputCls} required value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
+    <Surface>
+      <SurfaceHeader title="New customer" hint="Phone and full name are required." />
+      <form onSubmit={submit} className="space-y-3 p-4 sm:p-5">
+        <ErrorBanner message={error} />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div>
+            <label className={labelCls}>Full name *</label>
+            <input className={inputCls} required value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
+          </div>
+          <div>
+            <label className={labelCls}>Phone *</label>
+            <input className={inputCls} required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          </div>
+          <div>
+            <label className={labelCls}>Email</label>
+            <input type="email" className={inputCls} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          </div>
+          <div>
+            <label className={labelCls}>Nationality</label>
+            <input className={inputCls} value={form.nationality} onChange={(e) => setForm({ ...form, nationality: e.target.value })} />
+          </div>
+          <div>
+            <label className={labelCls}>Gender</label>
+            <select className={inputCls} value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}>
+              <option value="">—</option>
+              <option value="male">male</option>
+              <option value="female">female</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Date of birth</label>
+            <input type="date" className={inputCls} value={form.dob} onChange={(e) => setForm({ ...form, dob: e.target.value })} />
+          </div>
         </div>
-        <div>
-          <label className={labelCls}>Phone *</label>
-          <input className={inputCls} required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+        <div className="flex gap-2">
+          <button type="submit" disabled={loading} className={btnPrimary} style={btnPrimaryStyle}>
+            {loading ? "Saving…" : "Create customer"}
+          </button>
+          <button type="button" onClick={onCancel} className={btnGhost}>
+            Cancel
+          </button>
         </div>
-        <div>
-          <label className={labelCls}>Email</label>
-          <input type="email" className={inputCls} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-        </div>
-        <div>
-          <label className={labelCls}>Nationality</label>
-          <input className={inputCls} value={form.nationality} onChange={(e) => setForm({ ...form, nationality: e.target.value })} />
-        </div>
-        <div>
-          <label className={labelCls}>Gender</label>
-          <select className={inputCls} value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}>
-            <option value="">—</option>
-            <option value="male">male</option>
-            <option value="female">female</option>
-          </select>
-        </div>
-        <div>
-          <label className={labelCls}>Date of birth</label>
-          <input type="date" className={inputCls} value={form.dob} onChange={(e) => setForm({ ...form, dob: e.target.value })} />
-        </div>
-      </div>
-      <div className="mt-3 flex gap-2">
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-4 py-2 rounded-lg text-[11px] font-bold text-white disabled:opacity-50"
-          style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
-        >
-          {loading ? "Saving…" : "Create customer"}
-        </button>
-        <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-600">
-          Cancel
-        </button>
-      </div>
-    </form>
+      </form>
+    </Surface>
   );
 }
 
@@ -257,7 +270,16 @@ function CustomerDetail({ id, onBack }: { id: string; onBack: () => void }) {
   const [ok, setOk] = useState("");
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ fullName: "", phone: "", email: "", whatsapp: "", nationality: "", gender: "", address: "", notes: "" });
+  const [form, setForm] = useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    whatsapp: "",
+    nationality: "",
+    gender: "",
+    address: "",
+    notes: "",
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -312,62 +334,57 @@ function CustomerDetail({ id, onBack }: { id: string; onBack: () => void }) {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-20">
-        <InlineSpinner />
-      </div>
+      <PageShell>
+        <div className="flex justify-center py-20">
+          <InlineSpinner />
+        </div>
+      </PageShell>
     );
   }
   if (!c) {
     return (
-      <div className="p-5">
+      <PageShell>
         <ErrorBanner message={error || "Customer not found"} />
-        <button type="button" onClick={onBack} className="text-[11px] text-amber-600 font-semibold">
+        <button type="button" onClick={onBack} className="text-[12px] font-semibold text-[var(--accent)]">
           ← Back
         </button>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="p-5 max-w-[900px]">
-      <button type="button" onClick={onBack} className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-800 mb-3">
-        <ChevronLeft size={14} /> Customers
-      </button>
-      <ErrorBanner message={error} />
-      <SuccessBanner message={ok} />
-
-      <div className="bg-white rounded-xl border border-slate-200 p-5 mb-4">
-        <div className="flex items-start justify-between gap-3 mb-4">
-          <div>
-            <p className="text-[10px] font-mono font-bold text-amber-600">{c.code}</p>
-            <h1 className="text-[18px] font-bold text-slate-800">{c.fullName}</h1>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              {c.phone}
-              {c.email ? ` · ${c.email}` : ""}
-            </p>
-          </div>
-          <div className="flex gap-2">
+    <PageShell>
+      <PageHeader
+        icon={Users}
+        title={c.fullName}
+        subtitle={`${c.code}${c.phone ? ` · ${c.phone}` : ""}${c.email ? ` · ${c.email}` : ""}`}
+        breadcrumb={[
+          { label: "Customers", to: "/customers" },
+          { label: "Directory", to: "/customers" },
+          { label: c.code },
+        ]}
+        actions={
+          <>
+            <button type="button" className={btnGhost} onClick={onBack}>
+              <ChevronLeft size={12} /> Back
+            </button>
             <Can perm="customer:update">
-              <button
-                type="button"
-                onClick={() => setEditing((v) => !v)}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold text-slate-600 hover:bg-slate-50"
-              >
+              <button type="button" className={btnGhost} onClick={() => setEditing((v) => !v)}>
                 {editing ? "Close" : "Edit"}
               </button>
             </Can>
-            <Link
-              to={`/visa/new?customerId=${c.id}`}
-              className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white"
-              style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
-            >
+            <Link to={`/visa/new?customerId=${c.id}`} className={btnPrimary} style={btnPrimaryStyle}>
               New visa case
             </Link>
-          </div>
-        </div>
+          </>
+        }
+      />
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
 
-        {editing && can("customer:update") && (
-          <form onSubmit={save} className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-slate-100 pt-4">
+      <Surface padded>
+        {editing && can("customer:update") ? (
+          <form onSubmit={save} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {(
               [
                 ["fullName", "Full name"],
@@ -396,56 +413,61 @@ function CustomerDetail({ id, onBack }: { id: string; onBack: () => void }) {
               <textarea className={inputCls} rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             </div>
             <div className="sm:col-span-2">
-              <button type="submit" className="px-4 py-2 rounded-lg text-[11px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
                 Save changes
               </button>
             </div>
           </form>
-        )}
-
-        {!editing && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
+        ) : (
+          <div className="grid grid-cols-2 gap-3 text-[12px] sm:grid-cols-4">
             <div>
-              <p className="text-[9px] font-bold text-slate-400 uppercase">Nationality</p>
-              <p className="font-semibold text-slate-700">{c.nationality || "—"}</p>
+              <p className={labelCls}>Nationality</p>
+              <p className="font-semibold text-[var(--primary)]">{c.nationality || "—"}</p>
             </div>
             <div>
-              <p className="text-[9px] font-bold text-slate-400 uppercase">Gender</p>
-              <p className="font-semibold text-slate-700">{c.gender || "—"}</p>
+              <p className={labelCls}>Gender</p>
+              <p className="font-semibold text-[var(--primary)]">{c.gender || "—"}</p>
             </div>
             <div>
-              <p className="text-[9px] font-bold text-slate-400 uppercase">Address</p>
-              <p className="font-semibold text-slate-700">{c.address || "—"}</p>
+              <p className={labelCls}>Address</p>
+              <p className="font-semibold text-[var(--primary)]">{c.address || "—"}</p>
             </div>
             <div>
-              <p className="text-[9px] font-bold text-slate-400 uppercase">Notes</p>
-              <p className="font-semibold text-slate-700">{c.notes || "—"}</p>
+              <p className={labelCls}>Notes</p>
+              <p className="font-semibold text-[var(--primary)]">{c.notes || "—"}</p>
             </div>
           </div>
         )}
-      </div>
+      </Surface>
 
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h2 className="text-[13px] font-bold text-slate-800 mb-3">Passports</h2>
-        {(c.passports || []).length === 0 ? (
-          <p className="text-[11px] text-slate-400">No passports yet — add via Passport Management or a visa case.</p>
-        ) : (
-          <ul className="space-y-2">
-            {c.passports!.map((p) => (
-              <li key={p.id} className="flex items-center justify-between text-[11px] border border-slate-100 rounded-lg px-3 py-2">
-                <span className="font-mono font-bold text-slate-800">{p.passportNo}</span>
-                <span className="text-slate-500">
-                  {p.issuingCountry || "—"} · exp {passportExpiry(p)}
-                  {p.isPrimary ? " · primary" : ""}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-        <Link to={`/passports?customerId=${c.id}`} className="inline-block mt-3 text-[10.5px] font-semibold text-amber-600 hover:underline">
-          Manage passports →
-        </Link>
-      </div>
-    </div>
+      <Surface>
+        <SurfaceHeader title="Passports" />
+        <div className="p-4 sm:p-5">
+          {(c.passports || []).length === 0 ? (
+            <p className="text-[12px] text-[var(--muted-foreground)]">
+              No passports yet — add via Passport Management or a visa case.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {c.passports!.map((p) => (
+                <li
+                  key={p.id}
+                  className="flex items-center justify-between rounded-lg px-3 py-2 text-[12px] ring-1 ring-[var(--ring-card)]"
+                >
+                  <span className="font-mono font-bold text-[var(--primary)]">{p.passportNo}</span>
+                  <span className="text-[var(--muted-foreground)]">
+                    {p.issuingCountry || "—"} · exp {passportExpiry(p)}
+                    {p.isPrimary ? " · primary" : ""}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Link to={`/passports?customerId=${c.id}`} className="mt-3 inline-block text-[11px] font-semibold text-[var(--accent)] hover:underline">
+            Manage passports →
+          </Link>
+        </div>
+      </Surface>
+    </PageShell>
   );
 }

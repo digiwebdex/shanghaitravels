@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
-import { CheckCircle2, Circle } from "lucide-react";
+import { CheckCircle2, Circle, FileCheck } from "lucide-react";
 import {
   applicationsApi,
   financeApi,
@@ -21,7 +21,6 @@ import type {
 } from "@/lib/types";
 import { Can } from "@/auth/Can";
 import { useAuth } from "@/auth/AuthProvider";
-import { DemoBadge } from "@/components/DemoBadge";
 import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import {
@@ -30,6 +29,7 @@ import {
   type ChinaChecklist,
 } from "@/config/checklist";
 import CaseTimeline from "@/admin/shared/CaseTimeline";
+import { PageHeader, PageShell } from "@/components/enterprise/Page";
 import { CaseAssignCard } from "@/components/cases/CaseAssignCard";
 import { CaseDocumentsCard } from "@/components/cases/CaseDocumentsCard";
 import { CaseFinanceCard } from "@/components/cases/CaseFinanceCard";
@@ -209,42 +209,29 @@ export default function VisaCasePage() {
     app.status === "approved" ? "approved" : app.status === "rejected" ? "refused" : undefined;
 
   return (
-    <div>
-      <DemoBadge moduleKey="visa" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <Link to="/visa" className="text-[11px] font-semibold text-slate-500 hover:text-slate-800">
-          ← Visa cases
-        </Link>
-
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
-
-        {/* Header */}
-        <section className="bg-white rounded-xl border border-slate-200 p-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-mono font-bold text-amber-600">{app.referenceNo}</p>
-              <h1 className="text-[16px] font-bold text-slate-800">
-                {app.customer?.fullName || "Customer"} · China visa
-              </h1>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                {app.title || "—"} · priority {app.priority} · stage {app.currentStage}/{app.totalStages}
-                <span className={`ml-2 text-[9.5px] font-bold px-2 py-0.5 rounded ${STATUS_PILL[app.status] || "bg-slate-100"}`}>
-                  {app.status}
-                </span>
-              </p>
-            </div>
-            <div className="text-[11px] text-slate-500 text-right">
-              <p>
-                Customer:{" "}
-                <Link to="/customers" className="text-amber-700 font-semibold hover:underline">
-                  {app.customer?.code}
-                </Link>
-              </p>
-              <p>{app.customer?.phone}</p>
-            </div>
+    <PageShell>
+      <PageHeader
+        icon={FileCheck}
+        title={`${app.customer?.fullName || "Customer"} · China visa`}
+        subtitle={`${app.title || "—"} · priority ${app.priority} · stage ${app.currentStage}/${app.totalStages}`}
+        breadcrumb={[{ label: "Visa Services", to: "/visa" }, { label: app.referenceNo }]}
+        actions={
+          <div className="flex flex-col items-end gap-1 text-[11px] text-[var(--muted-foreground)]">
+            <span className={`text-[9.5px] font-bold px-2 py-0.5 rounded ${STATUS_PILL[app.status] || "bg-slate-100"}`}>
+              {app.status}
+            </span>
+            <p>
+              Customer:{" "}
+              <Link to="/customers" className="font-semibold text-[var(--accent)] hover:underline">
+                {app.customer?.code}
+              </Link>
+            </p>
+            <p>{app.customer?.phone}</p>
           </div>
-        </section>
+        }
+      />
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
 
         {/* Processing / status tracking */}
         <section className="bg-white rounded-xl border border-slate-200 p-4">
@@ -305,7 +292,7 @@ export default function VisaCasePage() {
                     )
                   }
                   className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white disabled:opacity-50"
-                  style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+                  style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
                 >
                   Advance stage →
                 </button>
@@ -464,8 +451,7 @@ export default function VisaCasePage() {
             </ul>
           )}
         </section>
-      </div>
-    </div>
+    </PageShell>
   );
 }
 
@@ -563,7 +549,7 @@ function VisaDetailCard({
           <input className={inputCls} value={form.applicationNo} onChange={(e) => setForm({ ...form, applicationNo: e.target.value })} disabled={!can("application:update")} />
         </div>
         <Can perm="application:update">
-          <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+          <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
             Save visa details
           </button>
         </Can>
@@ -681,7 +667,7 @@ function PassportOcrCard({
           <input type="checkbox" checked={primary} onChange={(e) => setPrimary(e.target.checked)} /> Primary passport
         </label>
         <Can perm="ocr:apply">
-          <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white w-fit" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+          <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white w-fit" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
             Save passport
           </button>
         </Can>

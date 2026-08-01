@@ -1,12 +1,10 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, RefreshCw } from "lucide-react";
 import { analyticsApi, type AnalyticsFilters, type AnalyticsSchedule, type AnalyticsTemplate } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { AnalyticsModuleNav } from "@/components/analytics/AnalyticsModuleNav";
 import { AnalyticsFiltersBar } from "@/components/analytics/AnalyticsFiltersBar";
 import { ERP } from "@/config/env";
@@ -17,6 +15,20 @@ import {
   validateReportTemplate,
   validateSchedule,
 } from "@/lib/analytics";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 
 export default function AnalyticsReportsPage() {
   const [templates, setTemplates] = useState<AnalyticsTemplate[]>([]);
@@ -101,24 +113,48 @@ export default function AnalyticsReportsPage() {
     }
   }
 
+  const tplColumns: Column<AnalyticsTemplate>[] = [
+    { key: "code", header: "Code", render: (t) => <span className="font-bold">{t.code}</span> },
+    { key: "name", header: "Name", render: (t) => t.name },
+    { key: "category", header: "Category", render: (t) => t.category },
+  ];
+
+  const schedColumns: Column<AnalyticsSchedule>[] = [
+    { key: "name", header: "Name", render: (s) => <span className="font-bold">{s.name}</span> },
+    { key: "cron", header: "Cron", render: (s) => s.cronExpr },
+    { key: "format", header: "Format", render: (s) => s.format },
+    {
+      key: "status",
+      header: "Status",
+      render: (s) => <Pill value={s.isActive ? "active" : "inactive"} tone={statusTone(s.isActive ? "active" : "inactive")} />,
+    },
+  ];
+
   return (
-    <div>
-      <DemoBadge moduleKey="analytics" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <FileSpreadsheet size={16} className="text-amber-600" /> Analytics reports
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Saved templates, dashboard filters, CSV/Excel/PDF export, scheduled report definitions.
-          </p>
-        </div>
-        <AnalyticsModuleNav />
-        <AnalyticsFiltersBar value={filters} onChange={setFilters} onApply={() => setOk("Filters ready for export / templates")} />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
-        <Can perm="analytics:export">
-          <div className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2 items-end">
+    <PageShell wide>
+      <PageHeader
+        icon={FileSpreadsheet}
+        title="Analytics reports"
+        subtitle="Saved templates, dashboard filters, CSV/Excel/PDF export, scheduled report definitions."
+        breadcrumb={[{ label: "Analytics" }, { label: "Reports" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <AnalyticsModuleNav />
+      <StatStrip>
+        <KpiCard label="Templates" value={templates.length} />
+        <KpiCard label="Schedules" value={schedules.length} tone="accent" />
+      </StatStrip>
+      <AnalyticsFiltersBar value={filters} onChange={setFilters} onApply={() => setOk("Filters ready for export / templates")} />
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
+
+      <Can perm="analytics:export">
+        <Surface padded>
+          <div className="grid grid-cols-1 items-end gap-2 sm:grid-cols-4">
             <div>
               <label className={labelCls}>Report</label>
               <select className={inputCls} value={exportReport} onChange={(e) => setExportReport(e.target.value)}>
@@ -141,8 +177,8 @@ export default function AnalyticsReportsPage() {
             </div>
             <div className="sm:col-span-2">
               <a
-                className="inline-block px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white"
-                style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+                className={btnPrimary}
+                style={btnPrimaryStyle}
                 href={`${ERP}${analyticsApi.exportUrl(exportReport, exportFormat, filters)}`}
                 target="_blank"
                 rel="noreferrer"
@@ -151,83 +187,89 @@ export default function AnalyticsReportsPage() {
               </a>
             </div>
           </div>
-        </Can>
-        {loading ? (
+        </Surface>
+      </Can>
+
+      {loading ? (
+        <Surface padded>
           <div className="flex justify-center py-16">
             <InlineSpinner />
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <section className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
-              <h2 className="text-[12px] font-bold">Saved templates</h2>
-              <Can perm="analytics:manage">
-                <form onSubmit={(e) => void createTpl(e)} className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <input className={inputCls} placeholder="code" value={code} onChange={(e) => setCode(e.target.value)} />
-                  <input className={inputCls} placeholder="name" value={name} onChange={(e) => setName(e.target.value)} />
-                  <select className={inputCls} value={category} onChange={(e) => setCategory(e.target.value)}>
-                    {ANALYTICS_CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                  <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-semibold border border-slate-200">
-                    Save template
-                  </button>
-                </form>
-              </Can>
-              <ul className="text-[11px] space-y-1">
-                {templates.map((t) => (
-                  <li key={t.id} className="border-b border-slate-50 pb-1">
-                    <span className="font-bold">{t.code}</span> {t.name} · {t.category}
-                  </li>
-                ))}
-              </ul>
-            </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
-              <h2 className="text-[12px] font-bold">Scheduled definitions</h2>
-              <p className="text-[10px] text-slate-500">Definitions only — execution engine later.</p>
-              <Can perm="analytics:manage">
-                <form onSubmit={(e) => void createSched(e)} className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <input className={inputCls} placeholder="schedule name" value={schedName} onChange={(e) => setSchedName(e.target.value)} />
-                  <select className={inputCls} value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
-                    {templates.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.code}
-                      </option>
-                    ))}
-                  </select>
-                  <select className={inputCls} value={cronExpr} onChange={(e) => setCronExpr(e.target.value)}>
-                    {CRON_PRESETS.map((c) => (
-                      <option key={c.value} value={c.value}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
-                  <select className={inputCls} value={schedFormat} onChange={(e) => setSchedFormat(e.target.value)}>
-                    {EXPORT_FORMATS.map((f) => (
-                      <option key={f} value={f}>
-                        {f}
-                      </option>
-                    ))}
-                  </select>
-                  <button type="submit" className="sm:col-span-2 px-3 py-1.5 rounded-lg text-[10.5px] font-semibold border border-slate-200">
-                    Save schedule definition
-                  </button>
-                </form>
-              </Can>
-              <ul className="text-[11px] space-y-1">
-                {schedules.map((s) => (
-                  <li key={s.id} className="border-b border-slate-50 pb-1">
-                    <span className="font-bold">{s.name}</span> · {s.cronExpr} · {s.format} · {s.isActive ? "active" : "off"}
-                  </li>
-                ))}
-                {schedules.length === 0 && <li className="text-slate-400">No schedules.</li>}
-              </ul>
-            </section>
-          </div>
-        )}
-      </div>
-    </div>
+        </Surface>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Surface>
+            <SurfaceHeader title="Saved templates" />
+            <Can perm="analytics:manage">
+              <form onSubmit={(e) => void createTpl(e)} className="grid grid-cols-1 gap-2 border-b border-[var(--border)] p-4 sm:grid-cols-2 sm:p-5">
+                <input className={inputCls} placeholder="code" value={code} onChange={(e) => setCode(e.target.value)} />
+                <input className={inputCls} placeholder="name" value={name} onChange={(e) => setName(e.target.value)} />
+                <select className={inputCls} value={category} onChange={(e) => setCategory(e.target.value)}>
+                  {ANALYTICS_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+                <button type="submit" className={btnGhost}>
+                  Save template
+                </button>
+              </form>
+            </Can>
+            <DataTable
+              rows={templates}
+              columns={tplColumns}
+              rowKey={(r) => r.id}
+              emptyTitle="No templates"
+              maxHeight={280}
+            />
+          </Surface>
+          <Surface>
+            <SurfaceHeader title="Scheduled definitions" hint="Definitions only — execution engine later." />
+            <Can perm="analytics:manage">
+              <form onSubmit={(e) => void createSched(e)} className="grid grid-cols-1 gap-2 border-b border-[var(--border)] p-4 sm:grid-cols-2 sm:p-5">
+                <input
+                  className={inputCls}
+                  placeholder="schedule name"
+                  value={schedName}
+                  onChange={(e) => setSchedName(e.target.value)}
+                />
+                <select className={inputCls} value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
+                  {templates.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.code}
+                    </option>
+                  ))}
+                </select>
+                <select className={inputCls} value={cronExpr} onChange={(e) => setCronExpr(e.target.value)}>
+                  {CRON_PRESETS.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+                <select className={inputCls} value={schedFormat} onChange={(e) => setSchedFormat(e.target.value)}>
+                  {EXPORT_FORMATS.map((f) => (
+                    <option key={f} value={f}>
+                      {f}
+                    </option>
+                  ))}
+                </select>
+                <button type="submit" className={`${btnGhost} sm:col-span-2`}>
+                  Save schedule definition
+                </button>
+              </form>
+            </Can>
+            <DataTable
+              rows={schedules}
+              columns={schedColumns}
+              rowKey={(r) => r.id}
+              emptyTitle="No schedules"
+              maxHeight={280}
+            />
+          </Surface>
+        </div>
+      )}
+    </PageShell>
   );
 }

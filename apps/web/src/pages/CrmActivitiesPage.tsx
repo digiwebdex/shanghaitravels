@@ -1,12 +1,16 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { CalendarClock } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { crmApi, type CrmActivity, type CrmLead } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CrmModuleNav } from "@/components/crm/CrmModuleNav";
 import { ACTIVITY_TYPES } from "@/lib/crm";
 
@@ -62,16 +66,14 @@ export default function CrmActivitiesPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="crm" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <CalendarClock size={16} className="text-amber-600" /> Activities
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">Calls, meetings, email, WhatsApp, tasks, follow-ups.</p>
-        </div>
-        <CrmModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={CalendarClock}
+        title="Activities"
+        subtitle="Calls, meetings, email, WhatsApp, tasks, follow-ups."
+        breadcrumb={[{ label: "CRM", to: "/crm" }, { label: "Activities" }]}
+      />
+      <CrmModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         <Can perm="communication:manage">
@@ -105,7 +107,7 @@ export default function CrmActivitiesPage() {
               <input type="datetime-local" className={inputCls} value={dueAt} onChange={(e) => setDueAt(e.target.value)} />
             </div>
             <div className="sm:col-span-4">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                 Log activity
               </button>
             </div>
@@ -143,7 +145,6 @@ export default function CrmActivitiesPage() {
             {rows.length === 0 && <p className="text-[11px] text-slate-400">No activities.</p>}
           </ul>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

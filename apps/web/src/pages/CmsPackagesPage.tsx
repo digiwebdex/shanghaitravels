@@ -1,15 +1,24 @@
-import { useCallback, useEffect, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { RefreshCw, Sparkles } from "lucide-react";
 import { packagesApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import type { PackageMaster } from "@/lib/packages";
 import { DEFAULT_COLLECTIONS, PACKAGE_COLLECTIONS } from "@/lib/packages";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
 import { CmsModuleNav } from "@/components/cms/CmsModuleNav";
 import { PackageCard } from "@/components/packages/PackageCard";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  selectClassName,
+} from "@/components/enterprise/Page";
 
 export default function CmsPackagesPage() {
   const [rows, setRows] = useState<PackageMaster[]>([]);
@@ -54,96 +63,125 @@ export default function CmsPackagesPage() {
     return p.status === "published";
   });
 
-  return (
-    <div>
-      <DemoBadge moduleKey="cms" />
-      <div className="p-5 max-w-[1200px] space-y-4">
+  const stats = useMemo(
+    () => ({
+      home: rows.filter((p) => p.homeFeatured).length,
+      popular: rows.filter((p) => p.popular).length,
+      recommended: rows.filter((p) => p.recommended).length,
+    }),
+    [rows],
+  );
+
+  const columns: Column<PackageMaster>[] = [
+    {
+      key: "pkg",
+      header: "Package",
+      render: (p) => (
         <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Sparkles size={16} className="text-amber-600" /> Featured packages (CMS)
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Toggle homepage and collection flags on published packages.
-          </p>
+          <span className="font-semibold">{p.name}</span>
+          <span className="block font-mono text-[10px] text-[var(--muted-foreground)]">{p.code}</span>
         </div>
-        <CmsModuleNav />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
+      ),
+    },
+    { key: "status", header: "Status", render: (p) => <Pill value={p.status} tone={statusTone(p.status)} /> },
+    {
+      key: "home",
+      header: "Home",
+      render: (p) => (
+        <Can perm="cms:manage">
+          <button
+            type="button"
+            className="font-semibold text-[var(--accent)]"
+            onClick={() => void toggleFlag(p, "homeFeatured")}
+          >
+            {p.homeFeatured ? "On" : "Off"}
+          </button>
+        </Can>
+      ),
+    },
+    {
+      key: "popular",
+      header: "Popular",
+      render: (p) => (
+        <Can perm="cms:manage">
+          <button type="button" className="font-semibold text-[var(--accent)]" onClick={() => void toggleFlag(p, "popular")}>
+            {p.popular ? "On" : "Off"}
+          </button>
+        </Can>
+      ),
+    },
+    {
+      key: "recommended",
+      header: "Recommended",
+      render: (p) => (
+        <Can perm="cms:manage">
+          <button
+            type="button"
+            className="font-semibold text-[var(--accent)]"
+            onClick={() => void toggleFlag(p, "recommended")}
+          >
+            {p.recommended ? "On" : "Off"}
+          </button>
+        </Can>
+      ),
+    },
+  ];
 
-        {loading ? (
-          <InlineSpinner />
-        ) : (
-          <>
-            <table className="w-full text-[11px] bg-white border border-slate-200 rounded-xl overflow-hidden">
-              <thead className="bg-slate-50 text-slate-500">
-                <tr>
-                  <th className="text-left p-2">Package</th>
-                  <th className="text-left p-2">Status</th>
-                  <th className="text-left p-2">Home</th>
-                  <th className="text-left p-2">Popular</th>
-                  <th className="text-left p-2">Recommended</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((p) => (
-                  <tr key={p.id} className="border-t border-slate-100">
-                    <td className="p-2">
-                      <span className="font-semibold">{p.name}</span>
-                      <span className="text-slate-400 block font-mono text-[10px]">{p.code}</span>
-                    </td>
-                    <td className="p-2">{p.status}</td>
-                    <td className="p-2">
-                      <Can perm="cms:manage">
-                        <button type="button" className="text-amber-700" onClick={() => void toggleFlag(p, "homeFeatured")}>
-                          {p.homeFeatured ? "On" : "Off"}
-                        </button>
-                      </Can>
-                    </td>
-                    <td className="p-2">
-                      <Can perm="cms:manage">
-                        <button type="button" className="text-amber-700" onClick={() => void toggleFlag(p, "popular")}>
-                          {p.popular ? "On" : "Off"}
-                        </button>
-                      </Can>
-                    </td>
-                    <td className="p-2">
-                      <Can perm="cms:manage">
-                        <button type="button" className="text-amber-700" onClick={() => void toggleFlag(p, "recommended")}>
-                          {p.recommended ? "On" : "Off"}
-                        </button>
-                      </Can>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+  return (
+    <PageShell wide>
+      <PageHeader
+        icon={Sparkles}
+        title="Featured packages (CMS)"
+        subtitle="Toggle homepage and collection flags on published packages."
+        breadcrumb={[{ label: "Website & CMS" }, { label: "Packages" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <CmsModuleNav />
+      <StatStrip>
+        <KpiCard label="Packages" value={rows.length} />
+        <KpiCard label="Home featured" value={stats.home} tone="accent" />
+        <KpiCard label="Popular" value={stats.popular} />
+        <KpiCard label="Recommended" value={stats.recommended} tone="success" />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
 
-            <div>
-              <p className="text-[11px] font-bold text-slate-700 mb-2">Collection preview</p>
-              <div className="flex flex-wrap gap-2 mb-3">
-                {PACKAGE_COLLECTIONS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setPreview(c)}
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold border ${
-                      preview === c ? "bg-amber-50 border-amber-300 text-amber-900" : "bg-white border-slate-200"
-                    }`}
-                  >
-                    {DEFAULT_COLLECTIONS[c]}
-                  </button>
-                ))}
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {previewRows.slice(0, 6).map((p) => (
-                  <PackageCard key={p.id} pkg={p} variant="portal" detailPath={`/site/packages/${p.slug}`} />
-                ))}
-                {!previewRows.length && <p className="text-[11px] text-slate-400">No packages in this collection.</p>}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+      <Surface>
+        <SurfaceHeader title="Collection flags" />
+        <DataTable rows={rows} columns={columns} rowKey={(r) => r.id} loading={loading} emptyTitle="No packages" />
+      </Surface>
+
+      <Surface>
+        <SurfaceHeader title="Collection preview" />
+        <div className="space-y-3 p-4 sm:p-5">
+          <div className="flex flex-wrap gap-2">
+            {PACKAGE_COLLECTIONS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setPreview(c)}
+                className={`${selectClassName} ${
+                  preview === c ? "!border-[var(--accent)] !bg-[var(--orange-50)] font-bold text-[var(--accent)]" : ""
+                }`}
+              >
+                {DEFAULT_COLLECTIONS[c]}
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {previewRows.slice(0, 6).map((p) => (
+              <PackageCard key={p.id} pkg={p} variant="portal" detailPath={`/site/packages/${p.slug}`} />
+            ))}
+            {!previewRows.length && (
+              <p className="text-[12px] text-[var(--muted-foreground)]">No packages in this collection.</p>
+            )}
+          </div>
+        </div>
+      </Surface>
+    </PageShell>
   );
 }

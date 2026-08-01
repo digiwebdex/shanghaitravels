@@ -11,7 +11,7 @@ export default function NotFoundPage() {
       <Link
         to="/"
         className="mt-2 px-4 py-2 rounded-lg text-[11px] font-bold text-white"
-        style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+        style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
       >
         Go to dashboard
       </Link>

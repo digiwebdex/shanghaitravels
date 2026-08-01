@@ -1,12 +1,16 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { FileText } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { crmApi, type CrmLead, type CrmOpportunity, type CrmQuotation } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CrmModuleNav } from "@/components/crm/CrmModuleNav";
 import { formatBdt, QUOTE_SERVICES, toPoisha, validateQuoteLines } from "@/lib/crm";
 
@@ -70,16 +74,14 @@ export default function CrmQuotationsPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="crm" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <FileText size={16} className="text-amber-600" /> Quotations
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">Visa, ticket, hotel, tour, and Hajj &amp; Umrah quotes.</p>
-        </div>
-        <CrmModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={FileText}
+        title="Quotations"
+        subtitle="Visa, ticket, hotel, tour, and Hajj & Umrah quotes."
+        breadcrumb={[{ label: "CRM", to: "/crm" }, { label: "Quotations" }]}
+      />
+      <CrmModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         <Can perm="quote:manage">
@@ -125,7 +127,7 @@ export default function CrmQuotationsPage() {
               <input className={inputCls} value={desc} onChange={(e) => setDesc(e.target.value)} required />
             </div>
             <div className="sm:col-span-4">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                 Create quotation
               </button>
             </div>
@@ -164,7 +166,6 @@ export default function CrmQuotationsPage() {
             {rows.length === 0 && <p className="text-[11px] text-slate-400">No quotations.</p>}
           </ul>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

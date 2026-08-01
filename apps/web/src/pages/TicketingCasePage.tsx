@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
-import { CheckCircle2, Circle } from "lucide-react";
+import { CheckCircle2, Circle, FileText } from "lucide-react";
 import { applicationsApi, financeApi, usersApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import type {
@@ -13,7 +13,6 @@ import type {
 } from "@/lib/types";
 import { Can } from "@/auth/Can";
 import { useAuth } from "@/auth/AuthProvider";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { STATUS_PILL, inputCls } from "@/components/cases/formStyles";
@@ -23,6 +22,7 @@ import { CaseFinanceCard } from "@/components/cases/CaseFinanceCard";
 import { AirTicketDetailCard } from "@/components/cases/AirTicketDetailCard";
 import { TicketOpsCard } from "@/components/cases/TicketOpsCard";
 import CaseTimeline from "@/admin/shared/CaseTimeline";
+import { PageHeader, PageShell } from "@/components/enterprise/Page";
 
 export default function TicketingCasePage() {
   const { id } = useParams();
@@ -150,27 +150,20 @@ export default function TicketingCasePage() {
   const doneAll = stages.length > 0 && stages.every((s) => s.status === "done");
 
   return (
-    <div>
-      <DemoBadge moduleKey="ticketing" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <Link to="/ticketing" className="text-[10px] font-semibold text-amber-600 hover:underline">
-              ← Air ticketing
-            </Link>
-            <h1 className="text-[16px] font-bold text-slate-800 mt-1">{app.referenceNo}</h1>
-            <p className="text-[11px] text-slate-500">
-              {app.customer?.fullName || "Customer"} · {app.title || "Air ticket"} · stage {app.currentStage}/
-              {app.totalStages}
-            </p>
-          </div>
+    <PageShell>
+      <PageHeader
+        icon={FileText}
+        title={app.referenceNo}
+        subtitle={`${app.customer?.fullName || "Customer"} · ${app.title || "Air ticket"} · stage ${app.currentStage}/${app.totalStages}`}
+        breadcrumb={[{ label: "Air ticketing", to: "/ticketing" }, { label: app.referenceNo }]}
+        actions={
           <span className={`text-[10px] font-bold px-2 py-1 rounded ${STATUS_PILL[app.status] || STATUS_PILL.draft}`}>
             {app.status}
           </span>
-        </div>
-
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
+        }
+      />
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
 
         <section className="bg-white rounded-xl border border-slate-200 p-4">
           <h2 className="text-[12px] font-bold text-slate-800 mb-3">Workflow stages</h2>
@@ -226,7 +219,7 @@ export default function TicketingCasePage() {
                   )
                 }
                 className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white disabled:opacity-50"
-                style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+                style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
               >
                 Advance stage
               </button>
@@ -313,7 +306,6 @@ export default function TicketingCasePage() {
             </ul>
           )}
         </section>
-      </div>
-    </div>
+    </PageShell>
   );
 }

@@ -1,12 +1,16 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Link2 } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { cmsApi, type CmsRedirect } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CmsModuleNav } from "@/components/cms/CmsModuleNav";
 import { validateRedirectInput } from "@/lib/cms";
 import { ERP } from "@/config/env";
@@ -58,18 +62,14 @@ export default function CmsSeoPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="cms" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Link2 size={16} className="text-amber-600" /> SEO & redirects
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Redirect manager plus links to public sitemap and robots.txt.
-          </p>
-        </div>
-        <CmsModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={Link2}
+        title="SEO & redirects"
+        subtitle="Redirect manager plus links to public sitemap and robots.txt."
+        breadcrumb={[{ label: "CMS", to: "/cms" }, { label: "SEO & redirects" }]}
+      />
+      <CmsModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         <div className="bg-white border border-slate-200 rounded-xl p-4 text-[11px] space-y-1">
@@ -126,7 +126,6 @@ export default function CmsSeoPage() {
             ))}
           </ul>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

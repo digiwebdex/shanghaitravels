@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { BarChart2 } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+} from "@/components/enterprise/Page";
 import { applicationsApi, hajjGroupsApi, hajjPackagesApi, hajjPilgrimsApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import type { Application, HajjGroup, HajjPilgrim, HajjUmrahPackageProduct } from "@/lib/types";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { HajjModuleNav } from "@/components/hajj/HajjModuleNav";
@@ -60,18 +63,14 @@ export default function HajjReportsPage() {
   const costPoisha = packages.reduce((s, p) => s + (p.supplierCostPoisha || 0), 0);
 
   return (
-    <div>
-      <DemoBadge moduleKey="hajj" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <BarChart2 size={16} className="text-amber-600" /> Hajj / Umrah reports
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Pilgrims, visa status, flight manifest, rooming, payments, supplier costs, profitability.
-          </p>
-        </div>
-        <HajjModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={BarChart2}
+        title="Hajj / Umrah reports"
+        subtitle="Pilgrims, visa status, flight manifest, rooming, payments, supplier costs, profitability."
+        breadcrumb={[{ label: "Hajj & Umrah", to: "/hajj" }, { label: "Hajj / Umrah reports" }]}
+      />
+      <HajjModuleNav />
         <ErrorBanner message={error} />
 
         {loading ? (
@@ -199,7 +198,6 @@ export default function HajjReportsPage() {
             </section>
           </>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

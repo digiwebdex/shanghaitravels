@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { BarChart2 } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+} from "@/components/enterprise/Page";
 import { applicationsApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import type { Application } from "@/lib/types";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { TransportModuleNav } from "@/components/transport/TransportModuleNav";
@@ -41,18 +44,14 @@ export default function TransportReportsPage() {
   const cancelled = rows.filter((a) => a.status === "cancelled").length;
 
   return (
-    <div>
-      <DemoBadge moduleKey="transport" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <BarChart2 size={16} className="text-amber-600" /> Transport reports
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Ops snapshot from transport Application cases (BDT finance stays on each case).
-          </p>
-        </div>
-        <TransportModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={BarChart2}
+        title="Transport reports"
+        subtitle="Ops snapshot from transport Application cases (BDT finance stays on each case)."
+        breadcrumb={[{ label: "Transport", to: "/transport" }, { label: "Transport reports" }]}
+      />
+      <TransportModuleNav />
         <ErrorBanner message={error} />
 
         {loading ? (
@@ -110,7 +109,6 @@ export default function TransportReportsPage() {
             </section>
           </>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

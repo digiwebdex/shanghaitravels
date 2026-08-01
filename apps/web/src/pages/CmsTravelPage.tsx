@@ -1,12 +1,16 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Plane } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { cmsApi, type CmsTravelOffer } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CmsModuleNav } from "@/components/cms/CmsModuleNav";
 import { TRAVEL_TYPES, validateTravelInput } from "@/lib/cms";
 
@@ -62,18 +66,14 @@ export default function CmsTravelPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="cms" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Plane size={16} className="text-amber-600" /> Travel content
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Visa, air tickets, tours, Hajj & Umrah, hotels, transport offerings for the website.
-          </p>
-        </div>
-        <CmsModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={Plane}
+        title="Travel content"
+        subtitle="Visa, air tickets, tours, Hajj & Umrah, hotels, transport offerings for the website."
+        breadcrumb={[{ label: "CMS", to: "/cms" }, { label: "Travel content" }]}
+      />
+      <CmsModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         <Can perm="cms:manage">
@@ -137,7 +137,6 @@ export default function CmsTravelPage() {
             </tbody>
           </table>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

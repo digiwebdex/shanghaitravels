@@ -2,7 +2,7 @@
 
 export const ERP = (import.meta.env.VITE_ERP_BASE as string) || "/api2";
 
-/** Modules that are live (no DemoBadge). Phase A set. */
+/** Modules considered live for Phase A rollout tracking. */
 export const LIVE_MODULES = new Set<string>([
   "customers",
   "passports",

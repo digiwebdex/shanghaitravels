@@ -1,13 +1,17 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Layers } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { glApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { GlAccountGroup } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import { GL_TYPES } from "@/lib/gl";
 
@@ -50,16 +54,14 @@ export default function FinanceGroupsPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="finance" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Layers size={16} className="text-amber-600" /> Account groups
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">Assets, Liabilities, Equity, Income, Expenses — configurable hierarchy.</p>
-        </div>
-        <FinanceModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={Layers}
+        title="Account groups"
+        subtitle="Assets, Liabilities, Equity, Income, Expenses — configurable hierarchy."
+        breadcrumb={[{ label: "Finance ERP", to: "/finance" }, { label: "Account groups" }]}
+      />
+      <FinanceModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         <Can perm="gl:manage">
@@ -83,7 +85,7 @@ export default function FinanceGroupsPage() {
               </select>
             </div>
             <div className="sm:col-span-4">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                 Save group
               </button>
             </div>
@@ -119,7 +121,6 @@ export default function FinanceGroupsPage() {
             </table>
           )}
         </div>
-      </div>
-    </div>
+    </PageShell>
   );
 }

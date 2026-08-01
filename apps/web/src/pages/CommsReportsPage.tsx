@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { BarChart2 } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+} from "@/components/enterprise/Page";
 import { commsApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { CommsModuleNav } from "@/components/comms/CommsModuleNav";
@@ -43,18 +46,14 @@ export default function CommsReportsPage() {
   }, [load]);
 
   return (
-    <div>
-      <DemoBadge moduleKey="comms" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <BarChart2 size={16} className="text-amber-600" /> Communication reports
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Volume, response time, SLA compliance, activity completion, executive productivity.
-          </p>
-        </div>
-        <CommsModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={BarChart2}
+        title="Communication reports"
+        subtitle="Volume, response time, SLA compliance, activity completion, executive productivity."
+        breadcrumb={[{ label: "Communications", to: "/comms" }, { label: "Communication reports" }]}
+      />
+      <CommsModuleNav />
         <ErrorBanner message={error} />
         {loading ? (
           <div className="flex justify-center py-16">
@@ -104,7 +103,6 @@ export default function CommsReportsPage() {
             </section>
           </div>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

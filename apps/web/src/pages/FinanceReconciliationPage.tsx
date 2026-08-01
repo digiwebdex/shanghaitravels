@@ -1,13 +1,17 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Scale } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { bankingApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { BankAccountRow } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import { formatBdt } from "@/lib/gl";
 
@@ -78,18 +82,14 @@ export default function FinanceReconciliationPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="finance" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Scale size={16} className="text-amber-600" /> Bank reconciliation
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            CSV statement import, match/unmatch lines, complete reconciliation session.
-          </p>
-        </div>
-        <FinanceModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={Scale}
+        title="Bank reconciliation"
+        subtitle="CSV statement import, match/unmatch lines, complete reconciliation session."
+        breadcrumb={[{ label: "Finance ERP", to: "/finance" }, { label: "Bank reconciliation" }]}
+      />
+      <FinanceModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
 
@@ -113,7 +113,7 @@ export default function FinanceReconciliationPage() {
               <form onSubmit={(e) => void importCsv(e)} className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
                 <p className="text-[10px] font-bold text-slate-500 uppercase">Import CSV</p>
                 <textarea className={inputCls + " min-h-[120px] font-mono text-[10px]"} value={csv} onChange={(e) => setCsv(e.target.value)} />
-                <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+                <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                   Import statement
                 </button>
               </form>
@@ -149,7 +149,6 @@ export default function FinanceReconciliationPage() {
             </div>
           </Can>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

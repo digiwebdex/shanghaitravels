@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { BarChart2 } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+} from "@/components/enterprise/Page";
 import { salesApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { SalesModuleNav } from "@/components/sales/SalesModuleNav";
@@ -53,18 +56,14 @@ export default function SalesReportsPage() {
   }, [load]);
 
   return (
-    <div>
-      <DemoBadge moduleKey="sales" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <BarChart2 size={16} className="text-amber-600" /> Sales reports
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Quotation status, win/loss, funnel, executives, conversion time, forecast accuracy.
-          </p>
-        </div>
-        <SalesModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={BarChart2}
+        title="Sales reports"
+        subtitle="Quotation status, win/loss, funnel, executives, conversion time, forecast accuracy."
+        breadcrumb={[{ label: "Sales", to: "/sales" }, { label: "Sales reports" }]}
+      />
+      <SalesModuleNav />
         <ErrorBanner message={error} />
         {loading ? (
           <div className="flex justify-center py-16">
@@ -120,7 +119,6 @@ export default function SalesReportsPage() {
             </section>
           </div>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

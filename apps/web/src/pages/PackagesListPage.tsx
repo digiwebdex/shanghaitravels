@@ -19,13 +19,17 @@ import {
   displayPricePoisha,
 } from "@/lib/packages";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { PackageModuleNav } from "@/components/packages/PackageModuleNav";
-import { btnPrimary, btnPrimaryStyle } from "@/components/enterprise/Page";
-import { brand } from "@/styles/tokens";
+import {
+  PageHeader,
+  PageShell,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 
 type DayRow = { day: number; title: string; body: string };
 
@@ -135,19 +139,14 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="products" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <PackageIcon size={16} style={{ color: brand.accent }} />
-            {pricingFocus ? "Package pricing" : "Products & packages"}
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Package master links optional supplier cost to Supplier Center — website, portals, CRM, and bookings share the same PackageID.
-          </p>
-        </div>
-        <PackageModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={PackageIcon}
+        title={pricingFocus ? "Package pricing" : "Products & packages"}
+        subtitle="Package master links optional supplier cost to Supplier Center — website, portals, CRM, and bookings share the same PackageID."
+        breadcrumb={[{ label: "Products", to: "/packages" }, { label: pricingFocus ? "Package pricing" : "Products & packages" }]}
+      />
+      <PackageModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
 
@@ -460,7 +459,6 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
             </table>
           </div>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

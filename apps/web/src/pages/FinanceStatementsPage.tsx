@@ -1,18 +1,37 @@
 import { useCallback, useEffect, useState } from "react";
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, RefreshCw } from "lucide-react";
 import { fsApi, glApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { ERP } from "@/config/env";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import { formatBdt } from "@/lib/gl";
 import { downloadBlob, statementBalanced, validateDateRange } from "@/lib/statements";
+import { Column, DataTable } from "@/components/enterprise/DataTable";
+import {
+  PageHeader,
+  PageShell,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+  selectClassName,
+} from "@/components/enterprise/Page";
 
 type Tab = "balance-sheet" | "profit-loss" | "cash-flow" | "equity" | "trial-balance";
+type Row = {
+  code: string;
+  name: string;
+  displayPoisha?: number;
+  balancePoisha?: number;
+  debitPoisha?: number;
+  creditPoisha?: number;
+};
 
 export default function FinanceStatementsPage() {
   const [tab, setTab] = useState<Tab>("balance-sheet");
@@ -75,10 +94,12 @@ export default function FinanceStatementsPage() {
     setLoading(true);
     setError("");
     try {
-      setData((await fsApi.multiPeriod({ report: tab === "profit-loss" ? "profit-loss" : "balance-sheet", periodIds })) as Record<
-        string,
-        unknown
-      >);
+      setData(
+        (await fsApi.multiPeriod({
+          report: tab === "profit-loss" ? "profit-loss" : "balance-sheet",
+          periodIds,
+        })) as Record<string, unknown>,
+      );
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Multi-period failed");
     } finally {
@@ -112,44 +133,48 @@ export default function FinanceStatementsPage() {
   const totals = (bs as { totals?: { assetsPoisha?: number; liabilitiesAndEquityPoisha?: number; balanced?: boolean } })?.totals;
 
   return (
-    <div>
-      <DemoBadge moduleKey="finance" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <FileSpreadsheet size={16} className="text-amber-600" /> Financial statements
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Balance Sheet, P&amp;L, Cash Flow, Equity — built from posted journals only.
-          </p>
-        </div>
-        <FinanceModuleNav />
-        <ErrorBanner message={error} />
+    <PageShell wide>
+      <PageHeader
+        icon={FileSpreadsheet}
+        title="Financial statements"
+        subtitle="Balance Sheet, P&L, Cash Flow, Equity — built from posted journals only."
+        breadcrumb={[{ label: "Finance ERP" }, { label: "Statements" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <FinanceModuleNav />
+      <ErrorBanner message={error} />
 
-        <div className="flex flex-wrap gap-1">
-          {(
-            [
-              ["balance-sheet", "Balance Sheet"],
-              ["profit-loss", "Profit & Loss"],
-              ["cash-flow", "Cash Flow"],
-              ["equity", "Equity"],
-              ["trial-balance", "Trial Balance"],
-            ] as const
-          ).map(([k, label]) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setTab(k)}
-              className={`px-2.5 py-1.5 rounded-lg text-[10.5px] font-semibold border ${
-                tab === k ? "border-amber-300 bg-amber-50 text-amber-800" : "border-slate-200 text-slate-600"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      <div className="flex flex-wrap gap-1.5">
+        {(
+          [
+            ["balance-sheet", "Balance Sheet"],
+            ["profit-loss", "Profit & Loss"],
+            ["cash-flow", "Cash Flow"],
+            ["equity", "Equity"],
+            ["trial-balance", "Trial Balance"],
+          ] as const
+        ).map(([k, label]) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => setTab(k)}
+            className={`${selectClassName} ${
+              tab === k
+                ? "!border-[var(--accent)] !bg-[var(--orange-50)] font-bold text-[var(--accent)]"
+                : ""
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+      <Surface padded>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
           {(tab === "balance-sheet" || tab === "trial-balance") && (
             <>
               <div>
@@ -159,7 +184,12 @@ export default function FinanceStatementsPage() {
               {tab === "balance-sheet" && (
                 <div>
                   <label className={labelCls}>Compare as of</label>
-                  <input type="date" className={inputCls} value={compareAsOf} onChange={(e) => setCompareAsOf(e.target.value)} />
+                  <input
+                    type="date"
+                    className={inputCls}
+                    value={compareAsOf}
+                    onChange={(e) => setCompareAsOf(e.target.value)}
+                  />
                 </div>
               )}
             </>
@@ -176,39 +206,28 @@ export default function FinanceStatementsPage() {
               </div>
             </>
           )}
-          <div className="sm:col-span-4 flex flex-wrap gap-2 items-end">
-            <button
-              type="button"
-              onClick={() => void load()}
-              className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white"
-              style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
-            >
+          <div className="flex flex-wrap items-end gap-2 sm:col-span-4">
+            <button type="button" onClick={() => void load()} className={btnPrimary} style={btnPrimaryStyle}>
               Refresh
             </button>
             <Can perm="fs:export">
-              <button
-                type="button"
-                onClick={() => void exportReport("csv")}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold"
-              >
+              <button type="button" onClick={() => void exportReport("csv")} className={btnGhost}>
                 Export Excel (CSV)
               </button>
-              <button
-                type="button"
-                onClick={() => void exportReport("html")}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold"
-              >
+              <button type="button" onClick={() => void exportReport("html")} className={btnGhost}>
                 Print / PDF
               </button>
             </Can>
-            <span className="text-[10px] text-slate-400">API {ERP}</span>
+            <span className="text-[10px] text-[var(--muted-foreground)]">API {ERP}</span>
           </div>
         </div>
+      </Surface>
 
-        <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
-          <h2 className="text-[12px] font-bold text-slate-800">Multi-period</h2>
-          <div className="flex flex-wrap gap-2 items-end">
-            <div className="flex-1 min-w-[200px]">
+      <Surface>
+        <SurfaceHeader title="Multi-period" />
+        <div className="space-y-2 p-4 sm:p-5">
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="min-w-[200px] flex-1">
               <label className={labelCls}>Period IDs (comma-separated)</label>
               <input
                 className={inputCls}
@@ -217,85 +236,78 @@ export default function FinanceStatementsPage() {
                 placeholder={periods.slice(0, 2).map((p) => p.id).join(",") || "period-id,…"}
               />
             </div>
-            <button
-              type="button"
-              onClick={() => void loadMulti()}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold"
-            >
+            <button type="button" onClick={() => void loadMulti()} className={btnGhost}>
               Run multi-period
             </button>
           </div>
           {periods.length > 0 && (
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[10px] text-[var(--muted-foreground)]">
               Available: {periods.slice(0, 8).map((p) => p.code).join(", ")}
               {periods.length > 8 ? "…" : ""}
             </p>
           )}
         </div>
+      </Surface>
 
-        {loading ? (
+      {loading ? (
+        <Surface padded>
           <div className="flex justify-center py-16">
             <InlineSpinner />
           </div>
-        ) : data ? (
-          <section className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
-            {tab === "balance-sheet" && bs && (
-              <>
-                <p className="text-[11px] text-slate-600">
-                  Assets {formatBdt(totals?.assetsPoisha)} · L+E {formatBdt(totals?.liabilitiesAndEquityPoisha)} ·{" "}
-                  {statementBalanced(totals) ? "Balanced ✓" : "Check imbalance"}
-                </p>
-                <StatementSection title="Assets" rows={(bs as { assets?: Row[] }).assets} />
-                <StatementSection title="Liabilities" rows={(bs as { liabilities?: Row[] }).liabilities} />
-                <StatementSection title="Equity" rows={(bs as { equity?: Row[] }).equity} />
-              </>
-            )}
-            {tab === "profit-loss" && (
-              <>
-                <p className="text-[11px] text-slate-600">
-                  Net income {formatBdt((data as { totals?: { netIncomePoisha?: number } }).totals?.netIncomePoisha)}
-                </p>
-                <StatementSection title="Income" rows={(data as { income?: Row[] }).income} />
-                <StatementSection title="Expenses" rows={(data as { expenses?: Row[] }).expenses} />
-              </>
-            )}
-            {(tab === "cash-flow" || tab === "equity" || tab === "trial-balance" || "columns" in data) && (
-              <pre className="text-[10px] bg-slate-50 p-3 rounded-lg overflow-auto max-h-[480px] whitespace-pre-wrap">
-                {JSON.stringify(data, null, 2)}
-              </pre>
-            )}
-          </section>
-        ) : null}
-      </div>
-    </div>
+        </Surface>
+      ) : data ? (
+        <Surface padded className="space-y-3">
+          {tab === "balance-sheet" && bs && (
+            <>
+              <p className="text-[12px] text-[var(--muted-foreground)]">
+                Assets {formatBdt(totals?.assetsPoisha)} · L+E {formatBdt(totals?.liabilitiesAndEquityPoisha)} ·{" "}
+                {statementBalanced(totals) ? "Balanced ✓" : "Check imbalance"}
+              </p>
+              <StatementSection title="Assets" rows={(bs as { assets?: Row[] }).assets} />
+              <StatementSection title="Liabilities" rows={(bs as { liabilities?: Row[] }).liabilities} />
+              <StatementSection title="Equity" rows={(bs as { equity?: Row[] }).equity} />
+            </>
+          )}
+          {tab === "profit-loss" && (
+            <>
+              <p className="text-[12px] text-[var(--muted-foreground)]">
+                Net income {formatBdt((data as { totals?: { netIncomePoisha?: number } }).totals?.netIncomePoisha)}
+              </p>
+              <StatementSection title="Income" rows={(data as { income?: Row[] }).income} />
+              <StatementSection title="Expenses" rows={(data as { expenses?: Row[] }).expenses} />
+            </>
+          )}
+          {(tab === "cash-flow" || tab === "equity" || tab === "trial-balance" || "columns" in data) && (
+            <pre className="max-h-[480px] overflow-auto whitespace-pre-wrap rounded-lg bg-[var(--navy-50)] p-3 text-[10px]">
+              {JSON.stringify(data, null, 2)}
+            </pre>
+          )}
+        </Surface>
+      ) : null}
+    </PageShell>
   );
 }
 
-type Row = { code: string; name: string; displayPoisha?: number; balancePoisha?: number; debitPoisha?: number; creditPoisha?: number };
-
 function StatementSection({ title, rows }: { title: string; rows?: Row[] }) {
-  if (!rows?.length) return <p className="text-[11px] text-slate-400">{title}: none</p>;
+  const columns: Column<Row>[] = [
+    { key: "code", header: "Code", render: (r) => <span className="font-semibold">{r.code}</span> },
+    { key: "name", header: "Name", render: (r) => r.name },
+    {
+      key: "amount",
+      header: "Amount",
+      className: "text-right tabular-nums",
+      render: (r) => formatBdt(r.displayPoisha ?? r.balancePoisha),
+    },
+  ];
+
+  if (!rows?.length) {
+    return <p className="text-[12px] text-[var(--muted-foreground)]">{title}: none</p>;
+  }
+
   return (
     <div>
-      <h3 className="text-[11px] font-bold text-slate-700 mb-1">{title}</h3>
-      <table className="w-full text-left mb-3">
-        <thead>
-          <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
-            <th className="px-2 py-1 font-bold">Code</th>
-            <th className="px-2 py-1 font-bold">Name</th>
-            <th className="px-2 py-1 font-bold">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.code} className="border-b border-slate-50 text-[11px]">
-              <td className="px-2 py-1 font-semibold">{r.code}</td>
-              <td className="px-2 py-1">{r.name}</td>
-              <td className="px-2 py-1">{formatBdt(r.displayPoisha ?? r.balancePoisha)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <h3 className="mb-1 text-[12px] font-bold text-[var(--primary)]">{title}</h3>
+      <DataTable rows={rows} columns={columns} rowKey={(r) => r.code} emptyTitle={`${title}: none`} maxHeight={320} />
     </div>
   );
 }

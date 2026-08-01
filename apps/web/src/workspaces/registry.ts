@@ -181,6 +181,7 @@ export const WORKSPACES: Workspace[] = [
       { kind: "settings", label: "Directory", to: "/crm/directory", perm: "crm:read" },
       { kind: "reports", label: "CRM Reports", to: "/crm/reports", perm: "crm:read" },
       { kind: "reports", label: "Sales Reports", to: "/sales/reports", perm: "opportunity:read" },
+      { kind: "work", label: "Communications", to: "/comms", end: true, perm: "comms:read" },
     ],
   },
   {
@@ -262,9 +263,7 @@ export const WORKSPACES: Workspace[] = [
       { kind: "work", label: "Media", to: "/cms/media", perm: "cms:read" },
       { kind: "work", label: "Packages", to: "/cms/packages", perm: "cms:read" },
       { kind: "work", label: "Destinations", to: "/cms/destinations", perm: "cms:read" },
-      { kind: "work", label: "Blog", to: "/cms/content/blog", perm: "cms:read" },
-      { kind: "work", label: "FAQ", to: "/cms/content/faq", perm: "cms:read" },
-      { kind: "work", label: "Testimonials", to: "/cms/content/testimonial", perm: "cms:read" },
+      { kind: "work", label: "Site Preview", to: "/site", perm: "cms:read" },
       { kind: "settings", label: "Website Setup", to: "/cms/setup", perm: "cms:read" },
     ],
   },

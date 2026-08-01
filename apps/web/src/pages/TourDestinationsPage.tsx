@@ -1,13 +1,17 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Globe2 } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { tourDestinationsApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import type { TourDestination } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { TourModuleNav } from "@/components/tours/TourModuleNav";
 import { SEASONS } from "@/lib/tour";
 
@@ -71,18 +75,14 @@ export default function TourDestinationsPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="tours" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Globe2 size={16} className="text-amber-600" /> Destinations
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Countries, cities, and season tags for package products. Countries also available via reference API.
-          </p>
-        </div>
-        <TourModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={Globe2}
+        title="Destinations"
+        subtitle="Countries, cities, and season tags for package products."
+        breadcrumb={[{ label: "Tours", to: "/tours" }, { label: "Destinations" }]}
+      />
+      <TourModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
 
@@ -140,7 +140,7 @@ export default function TourDestinationsPage() {
               <button
                 type="submit"
                 className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white"
-                style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+                style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
               >
                 Add destination
               </button>
@@ -199,7 +199,6 @@ export default function TourDestinationsPage() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </PageShell>
   );
 }

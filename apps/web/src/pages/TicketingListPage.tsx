@@ -1,14 +1,40 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Plus, Search, Plane } from "lucide-react";
+import { Plane, Plus, RefreshCw, Search } from "lucide-react";
 import { applicationsApi, customersApi } from "@/lib/services";
 import { listOf, ApiError } from "@/lib/api";
 import type { Application, Customer } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
-import { EmptyState, ErrorBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
-import { STATUS_PILL, inputCls, labelCls } from "@/components/cases/formStyles";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  ListPageShell,
+  ListToolbar,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+  searchInputClassName,
+  selectClassName,
+} from "@/components/enterprise/Page";
+import { ErrorBanner } from "@/components/Feedback";
+
+const STATUSES = [
+  "draft",
+  "in_progress",
+  "docs_required",
+  "on_hold",
+  "submitted",
+  "approved",
+  "rejected",
+  "completed",
+  "cancelled",
+];
 
 export default function TicketingListPage() {
   const [rows, setRows] = useState<Application[]>([]);
@@ -42,121 +68,108 @@ export default function TicketingListPage() {
     void load();
   }, [load]);
 
+  const stats = useMemo(() => {
+    const done = rows.filter((r) => r.status === "approved" || r.status === "completed").length;
+    const active = rows.filter((r) => r.status === "in_progress" || r.status === "submitted").length;
+    const hold = rows.filter((r) => r.status === "on_hold" || r.status === "docs_required").length;
+    return { done, active, hold };
+  }, [rows]);
+
+  const columns: Column<Application>[] = [
+    {
+      key: "ref",
+      header: "Reference",
+      render: (a) => (
+        <Link to={`/ticketing/${a.id}`} className="font-mono text-[11.5px] font-bold text-[var(--accent)] hover:underline">
+          {a.referenceNo}
+        </Link>
+      ),
+    },
+    { key: "customer", header: "Customer", render: (a) => a.customer?.fullName || a.customerId.slice(0, 8) },
+    {
+      key: "title",
+      header: "Title",
+      className: "max-w-[220px] truncate",
+      render: (a) => <span className="text-[var(--muted-foreground)]">{a.title || "—"}</span>,
+    },
+    {
+      key: "stage",
+      header: "Stage",
+      render: (a) => (
+        <span className="tabular-nums">
+          {a.currentStage}/{a.totalStages}
+        </span>
+      ),
+    },
+    { key: "status", header: "Status", render: (a) => <Pill value={a.status} tone={statusTone(a.status)} /> },
+  ];
+
   return (
-    <div>
-      <DemoBadge moduleKey="ticketing" />
-      <div className="p-5 max-w-[1200px]">
-        <div className="flex items-end justify-between gap-3 mb-4 flex-wrap">
-          <div>
-            <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-              <Plane size={16} className="text-amber-600" /> Air Ticketing
-            </h1>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              {total} cases · manual PNR / ticket records (no GDS)
-            </p>
-          </div>
+    <ListPageShell
+      wide
+      icon={Plane}
+      title="Air Ticketing"
+      subtitle="Manual PNR / ticket records (no GDS)."
+      breadcrumb={[{ label: "Bookings", to: "/ticketing" }, { label: "Air Ticketing" }]}
+      actions={
+        <>
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
           <Can perm="application:create">
-            <Link
-              to="/ticketing/new"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold text-white"
-              style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
-            >
-              <Plus size={13} /> New air ticket case
+            <Link to="/ticketing/new" className={btnPrimary} style={btnPrimaryStyle}>
+              <Plus size={13} /> New Air Ticket Case
             </Link>
           </Can>
-        </div>
-
-        <ErrorBanner message={error} />
-
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-slate-100 flex flex-wrap gap-2">
-            <div className="relative flex-1 min-w-[180px] max-w-sm">
-              <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && void load()}
-                placeholder="Search ref / customer…"
-                className="w-full pl-7 pr-3 py-2 border border-slate-200 rounded-lg text-[11px] focus:outline-none focus:border-amber-400"
-                aria-label="Search air ticket cases"
-              />
-            </div>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="px-2.5 py-2 border border-slate-200 rounded-lg text-[11px] bg-white"
-              aria-label="Filter by status"
-            >
-              <option value="">All statuses</option>
-              {["draft", "in_progress", "docs_required", "on_hold", "submitted", "approved", "rejected", "completed", "cancelled"].map(
-                (s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ),
-              )}
-            </select>
-            <button
-              type="button"
-              onClick={() => void load()}
-              className="px-3 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-600"
-            >
-              Refresh
-            </button>
+        </>
+      }
+      stats={
+        <StatStrip>
+          <KpiCard label="Total cases" value={total} />
+          <KpiCard label="In progress" value={stats.active} tone="accent" />
+          <KpiCard label="Needs action" value={stats.hold} tone="warning" />
+          <KpiCard label="Completed" value={stats.done} tone="success" />
+        </StatStrip>
+      }
+      toolbar={
+        <ListToolbar>
+          <div className="relative flex-1">
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && void load()}
+              placeholder="Search ref / customer…"
+              className={searchInputClassName}
+              aria-label="Search air ticket cases"
+            />
           </div>
-
-          {loading ? (
-            <div className="flex justify-center py-16">
-              <InlineSpinner />
-            </div>
-          ) : rows.length === 0 ? (
-            <div className="p-8">
-              <EmptyState
-                title="No air ticket cases"
-                hint="Create a case, then enter PNR / flight details from your consolidator."
-              />
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px]">
-                <thead>
-                  <tr className="text-left text-[9.5px] uppercase text-slate-400 border-b border-slate-100">
-                    <th className="px-4 py-2 font-bold">Reference</th>
-                    <th className="px-4 py-2 font-bold">Customer</th>
-                    <th className="px-4 py-2 font-bold">Title</th>
-                    <th className="px-4 py-2 font-bold">Stage</th>
-                    <th className="px-4 py-2 font-bold">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((a) => (
-                    <tr key={a.id} className="border-b border-slate-50 hover:bg-slate-50/80">
-                      <td className="px-4 py-2.5">
-                        <Link to={`/ticketing/${a.id}`} className="text-[11px] font-bold text-amber-700 hover:underline">
-                          {a.referenceNo}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-2.5 text-[11px] text-slate-700">
-                        {a.customer?.fullName || a.customerId.slice(0, 8)}
-                      </td>
-                      <td className="px-4 py-2.5 text-[11px] text-slate-600">{a.title || "—"}</td>
-                      <td className="px-4 py-2.5 text-[11px] text-slate-500">
-                        {a.currentStage}/{a.totalStages}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${STATUS_PILL[a.status] || STATUS_PILL.draft}`}>
-                          {a.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className={selectClassName}
+            aria-label="Filter by status"
+          >
+            <option value="">All statuses</option>
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </ListToolbar>
+      }
+      error={error}
+    >
+      <DataTable
+        rows={rows}
+        columns={columns}
+        rowKey={(r) => r.id}
+        loading={loading}
+        emptyTitle="No air ticket cases yet"
+        emptyHint="Create a case, then enter PNR / flight details from your consolidator."
+      />
+    </ListPageShell>
   );
 }
 
@@ -202,65 +215,76 @@ export function NewTicketingCasePage() {
   }
 
   return (
-    <div className="p-5 max-w-[640px]">
-      <h1 className="text-[16px] font-bold text-slate-800 mb-1">New air ticket case</h1>
-      <p className="text-[11px] text-slate-500 mb-4">
-        Creates an Application and applies the active air_ticket workflow template.
-      </p>
+    <PageShell>
+      <PageHeader
+        icon={Plane}
+        title="New Air Ticket Case"
+        subtitle="Creates an application and applies the active air_ticket workflow template."
+        breadcrumb={[
+          { label: "Bookings", to: "/ticketing" },
+          { label: "Air Ticketing", to: "/ticketing" },
+          { label: "New" },
+        ]}
+      />
       <ErrorBanner message={error} />
-      <form onSubmit={(e) => void submit(e)} className="bg-white rounded-xl border border-slate-200 p-5 space-y-3">
-        <div>
-          <label className={labelCls} htmlFor="tk-customer">
-            Customer *
-          </label>
-          <select id="tk-customer" className={inputCls} required value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
-            <option value="">— select —</option>
-            {customers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.fullName} ({c.code})
-              </option>
-            ))}
-          </select>
-          <Link to="/customers" className="text-[10px] text-amber-600 font-semibold mt-1 inline-block">
-            Create customer first →
-          </Link>
-        </div>
-        <div>
-          <label className={labelCls} htmlFor="tk-priority">
-            Priority
-          </label>
-          <select id="tk-priority" className={inputCls} value={priority} onChange={(e) => setPriority(e.target.value)}>
-            {["low", "medium", "high", "urgent"].map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className={labelCls} htmlFor="tk-title">
-            Title
-          </label>
-          <input id="tk-title" className={inputCls} placeholder="Auto if blank" value={title} onChange={(e) => setTitle(e.target.value)} />
-        </div>
-        <div className="flex gap-2 pt-1">
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-2 rounded-lg text-[11px] font-bold text-white disabled:opacity-50"
-            style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
-          >
-            {loading ? "Creating…" : "Create case"}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate("/ticketing")}
-            className="px-4 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-600"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
+      <Surface padded className="max-w-xl space-y-3">
+        <form onSubmit={(e) => void submit(e)} className="space-y-3">
+          <div>
+            <label className={labelCls} htmlFor="tk-customer">
+              Customer *
+            </label>
+            <select
+              id="tk-customer"
+              className={inputCls}
+              required
+              value={customerId}
+              onChange={(e) => setCustomerId(e.target.value)}
+            >
+              <option value="">— select —</option>
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.fullName} ({c.code})
+                </option>
+              ))}
+            </select>
+            <Link to="/customers" className="mt-1 inline-block text-[11px] font-semibold text-[var(--accent)]">
+              Create customer first →
+            </Link>
+          </div>
+          <div>
+            <label className={labelCls} htmlFor="tk-priority">
+              Priority
+            </label>
+            <select id="tk-priority" className={inputCls} value={priority} onChange={(e) => setPriority(e.target.value)}>
+              {["low", "medium", "high", "urgent"].map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelCls} htmlFor="tk-title">
+              Title
+            </label>
+            <input
+              id="tk-title"
+              className={inputCls}
+              placeholder="Auto if blank"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button type="submit" disabled={loading} className={btnPrimary} style={btnPrimaryStyle}>
+              {loading ? "Creating…" : "Create case"}
+            </button>
+            <button type="button" onClick={() => navigate("/ticketing")} className={btnGhost}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </Surface>
+    </PageShell>
   );
 }

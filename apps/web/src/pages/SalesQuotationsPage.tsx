@@ -1,16 +1,27 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { FileText } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FileText, RefreshCw } from "lucide-react";
 import { crmApi, salesApi, type CrmLead, type CrmOpportunity, type SalesQuotation } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { SalesModuleNav } from "@/components/sales/SalesModuleNav";
 import { ERP } from "@/config/env";
 import { formatBdt, QUOTE_SERVICES, toPoisha } from "@/lib/crm";
 import { canApproveQuote, canConvertQuote, canSubmitQuote, validateSalesQuote } from "@/lib/sales";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 
 export default function SalesQuotationsPage() {
   const [rows, setRows] = useState<SalesQuotation[]>([]);
@@ -90,23 +101,150 @@ export default function SalesQuotationsPage() {
     }
   }
 
-  return (
-    <div>
-      <DemoBadge moduleKey="sales" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <FileText size={16} className="text-amber-600" /> Sales quotations
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Versioned quotes with discounts, tax, validity, approval, PDF/HTML export, and booking conversion.
-          </p>
+  const stats = useMemo(() => {
+    const approved = rows.filter((q) => q.status === "approved" || q.status === "accepted").length;
+    const draft = rows.filter((q) => q.status === "draft").length;
+    const total = rows.reduce((s, q) => s + (q.totalPoisha || 0), 0);
+    return { approved, draft, total };
+  }, [rows]);
+
+  const columns: Column<SalesQuotation>[] = [
+    {
+      key: "no",
+      header: "Quote",
+      render: (q) => (
+        <span className="font-bold">
+          {q.quoteNo} <span className="font-normal text-[var(--muted-foreground)]">v{q.version}</span>
+        </span>
+      ),
+    },
+    { key: "service", header: "Service", render: (q) => q.serviceType },
+    { key: "status", header: "Status", render: (q) => <Pill value={q.status} tone={statusTone(q.status)} /> },
+    {
+      key: "total",
+      header: "Total",
+      className: "text-right tabular-nums font-semibold",
+      render: (q) => formatBdt(q.totalPoisha),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (q) => (
+        <div className="flex flex-wrap gap-1">
+          {canSubmitQuote(q.status) && (
+            <Can perm="quote:manage">
+              <button
+                type="button"
+                className="rounded border border-[var(--border)] px-2 py-0.5 text-[10px]"
+                onClick={() => void act("Submitted", () => salesApi.submitQuotation(q.id))}
+              >
+                Submit
+              </button>
+            </Can>
+          )}
+          {canApproveQuote(q.status) && (
+            <Can perm="quote:approve">
+              <button
+                type="button"
+                className="rounded border border-emerald-200 px-2 py-0.5 text-[10px] text-emerald-800"
+                onClick={() => void act("Approved", () => salesApi.approveQuotation(q.id))}
+              >
+                Approve
+              </button>
+              <button
+                type="button"
+                className="rounded border border-rose-200 px-2 py-0.5 text-[10px] text-rose-800"
+                onClick={() => void act("Rejected", () => salesApi.rejectQuotation(q.id, "Needs revision"))}
+              >
+                Reject
+              </button>
+            </Can>
+          )}
+          {(q.status === "approved" || q.status === "accepted") && (
+            <Can perm="quote:manage">
+              <button
+                type="button"
+                className="rounded border border-[var(--border)] px-2 py-0.5 text-[10px]"
+                onClick={() =>
+                  void salesApi
+                    .sendQuotation(q.id)
+                    .then((r) => {
+                      setEmailPreview(r.emailReady.html);
+                      setOk("Email-ready quotation prepared");
+                      return load();
+                    })
+                    .catch((e) => setError(e instanceof ApiError ? e.message : "Send failed"))
+                }
+              >
+                Send
+              </button>
+            </Can>
+          )}
+          <Can perm="quote:manage">
+            <button
+              type="button"
+              className="rounded border border-[var(--border)] px-2 py-0.5 text-[10px]"
+              onClick={() => void act("Revised", () => salesApi.reviseQuotation(q.id))}
+            >
+              Revise
+            </button>
+          </Can>
+          <a
+            className="rounded border border-[var(--border)] px-2 py-0.5 text-[10px]"
+            href={`${ERP}${salesApi.exportQuotationUrl(q.id)}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            PDF
+          </a>
+          {canConvertQuote(q.status) && (
+            <Can perm="crm:convert">
+              <button
+                type="button"
+                className="rounded border border-[var(--border)] px-2 py-0.5 text-[10px] font-semibold text-[var(--accent)]"
+                onClick={() =>
+                  void act("Converted", async () => {
+                    const r = await salesApi.convert({ quotationId: q.id, serviceType: q.serviceType });
+                    setOk(`Converted → ${r.application.referenceNo}`);
+                  })
+                }
+              >
+                Convert
+              </button>
+            </Can>
+          )}
         </div>
-        <SalesModuleNav />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
-        <Can perm="quote:manage">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+      ),
+    },
+  ];
+
+  return (
+    <PageShell wide>
+      <PageHeader
+        icon={FileText}
+        title="Sales quotations"
+        subtitle="Versioned quotes with discounts, tax, validity, approval, PDF/HTML export, and booking conversion."
+        breadcrumb={[{ label: "Sales" }, { label: "Quotations" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <SalesModuleNav />
+      <StatStrip>
+        <KpiCard label="Quotes" value={rows.length} />
+        <KpiCard label="Draft" value={stats.draft} tone="warning" />
+        <KpiCard label="Approved" value={stats.approved} tone="success" />
+        <KpiCard label="Quoted value" value={formatBdt(stats.total)} tone="accent" />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
+
+      <Can perm="quote:manage">
+        <Surface>
+          <SurfaceHeader title="Create quotation" />
+          <form onSubmit={(e) => void create(e)} className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-4 sm:p-5">
             <div>
               <label className={labelCls}>Service</label>
               <select className={inputCls} value={serviceType} onChange={(e) => setServiceType(e.target.value)}>
@@ -160,106 +298,33 @@ export default function SalesQuotationsPage() {
               <input className={inputCls} value={taxBdt} onChange={(e) => setTaxBdt(e.target.value)} />
             </div>
             <div className="sm:col-span-4">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
                 Create quotation
               </button>
             </div>
           </form>
-        </Can>
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <InlineSpinner />
+        </Surface>
+      </Can>
+
+      <Surface>
+        <SurfaceHeader title={`${rows.length} quotation${rows.length === 1 ? "" : "s"}`} />
+        <DataTable
+          rows={rows}
+          columns={columns}
+          rowKey={(r) => r.id}
+          loading={loading}
+          emptyTitle="No sales quotations yet"
+        />
+      </Surface>
+
+      {emailPreview && (
+        <Surface>
+          <SurfaceHeader title="Email-ready preview" />
+          <div className="p-4 sm:p-5">
+            <iframe title="quote-email" className="h-64 w-full rounded-lg ring-1 ring-[var(--ring-card)]" srcDoc={emailPreview} />
           </div>
-        ) : (
-          <ul className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
-            {rows.map((q) => (
-              <li key={q.id} className="text-[11px] border-b border-slate-50 pb-3 space-y-1">
-                <div className="flex flex-wrap gap-2 items-center">
-                  <span className="font-bold">{q.quoteNo}</span>
-                  <span>v{q.version}</span>
-                  <span>{q.serviceType}</span>
-                  <span className="text-slate-500">{q.status}</span>
-                  <span className="font-semibold">{formatBdt(q.totalPoisha)}</span>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {canSubmitQuote(q.status) && (
-                    <Can perm="quote:manage">
-                      <button type="button" className="px-2 py-0.5 rounded border border-slate-200 text-[10px]" onClick={() => void act("Submitted", () => salesApi.submitQuotation(q.id))}>
-                        Submit
-                      </button>
-                    </Can>
-                  )}
-                  {canApproveQuote(q.status) && (
-                    <Can perm="quote:approve">
-                      <button type="button" className="px-2 py-0.5 rounded border border-emerald-200 text-[10px] text-emerald-800" onClick={() => void act("Approved", () => salesApi.approveQuotation(q.id))}>
-                        Approve
-                      </button>
-                      <button
-                        type="button"
-                        className="px-2 py-0.5 rounded border border-rose-200 text-[10px] text-rose-800"
-                        onClick={() => void act("Rejected", () => salesApi.rejectQuotation(q.id, "Needs revision"))}
-                      >
-                        Reject
-                      </button>
-                    </Can>
-                  )}
-                  {(q.status === "approved" || q.status === "accepted") && (
-                    <Can perm="quote:manage">
-                      <button
-                        type="button"
-                        className="px-2 py-0.5 rounded border border-slate-200 text-[10px]"
-                        onClick={() =>
-                          void salesApi
-                            .sendQuotation(q.id)
-                            .then((r) => {
-                              setEmailPreview(r.emailReady.html);
-                              setOk("Email-ready quotation prepared");
-                              return load();
-                            })
-                            .catch((e) => setError(e instanceof ApiError ? e.message : "Send failed"))
-                        }
-                      >
-                        Send / email-ready
-                      </button>
-                    </Can>
-                  )}
-                  <Can perm="quote:manage">
-                    <button type="button" className="px-2 py-0.5 rounded border border-slate-200 text-[10px]" onClick={() => void act("Revised", () => salesApi.reviseQuotation(q.id))}>
-                      Revise
-                    </button>
-                  </Can>
-                  <a className="px-2 py-0.5 rounded border border-slate-200 text-[10px]" href={`${ERP}${salesApi.exportQuotationUrl(q.id)}`} target="_blank" rel="noreferrer">
-                    PDF / HTML
-                  </a>
-                  {canConvertQuote(q.status) && (
-                    <Can perm="crm:convert">
-                      <button
-                        type="button"
-                        className="px-2 py-0.5 rounded border border-amber-200 text-[10px] text-amber-900 font-semibold"
-                        onClick={() =>
-                          void act("Converted", async () => {
-                            const r = await salesApi.convert({ quotationId: q.id, serviceType: q.serviceType });
-                            setOk(`Converted → ${r.application.referenceNo}`);
-                          })
-                        }
-                      >
-                        Convert to booking
-                      </button>
-                    </Can>
-                  )}
-                </div>
-              </li>
-            ))}
-            {rows.length === 0 && <p className="text-[11px] text-slate-400">No sales quotations yet.</p>}
-          </ul>
-        )}
-        {emailPreview && (
-          <section className="bg-white rounded-xl border border-slate-200 p-4">
-            <h2 className="text-[12px] font-bold mb-2">Email-ready preview</h2>
-            <iframe title="quote-email" className="w-full h-64 border border-slate-100 rounded-lg" srcDoc={emailPreview} />
-          </section>
-        )}
-      </div>
-    </div>
+        </Surface>
+      )}
+    </PageShell>
   );
 }

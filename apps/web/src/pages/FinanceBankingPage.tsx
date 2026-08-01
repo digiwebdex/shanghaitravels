@@ -1,16 +1,26 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Landmark } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { Landmark, RefreshCw } from "lucide-react";
 import { bankingApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { BankAccountRow, BankMaster } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
-import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls } from "@/components/cases/formStyles";
+import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import { ACCOUNT_KINDS } from "@/lib/banking";
 import { formatBdt } from "@/lib/gl";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+} from "@/components/enterprise/Page";
 
 export default function FinanceBankingPage() {
   const [accounts, setAccounts] = useState<BankAccountRow[]>([]);
@@ -83,41 +93,88 @@ export default function FinanceBankingPage() {
     }
   }
 
-  return (
-    <div>
-      <DemoBadge moduleKey="finance" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-              <Landmark size={16} className="text-amber-600" /> Banking & cash
-            </h1>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              Bank masters, cash/petty cash/bank accounts linked to GL — opening balances via C1 journals.
-            </p>
-          </div>
-          <Can perm="banking:manage">
-            <button type="button" onClick={() => void bootstrap()} className="px-3 py-1.5 rounded-lg border text-[10.5px] font-semibold">
-              Bootstrap defaults
-            </button>
-          </Can>
-        </div>
-        <FinanceModuleNav />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
+  const stats = useMemo(() => {
+    const bank = accounts.filter((a) => a.kind === "bank").length;
+    const cash = accounts.filter((a) => a.kind === "cash" || a.kind === "petty_cash").length;
+    const opening = accounts.reduce((s, a) => s + (a.openingBalancePoisha || 0), 0);
+    return { bank, cash, opening };
+  }, [accounts]);
 
-        <Can perm="banking:manage">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <form onSubmit={(e) => void createMaster(e)} className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
-              <p className="text-[10px] font-bold text-slate-500 uppercase">Bank master</p>
-              <input className={inputCls} placeholder="Code (e.g. DBBL)" value={masterCode} onChange={(e) => setMasterCode(e.target.value)} required />
-              <input className={inputCls} placeholder="Name" value={masterName} onChange={(e) => setMasterName(e.target.value)} required />
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+  const columns: Column<BankAccountRow>[] = [
+    { key: "name", header: "Name", render: (a) => <span className="font-semibold">{a.name}</span> },
+    { key: "kind", header: "Kind", render: (a) => <Pill value={a.kind} tone={statusTone(a.kind)} /> },
+    { key: "no", header: "Account No", render: (a) => a.accountNo || "—" },
+    { key: "bank", header: "Bank", render: (a) => a.bankMaster?.name || "—" },
+    {
+      key: "gl",
+      header: "GL",
+      render: (a) => `${a.glAccount?.code || ""} ${a.glAccount?.name || ""}`.trim() || "—",
+    },
+    {
+      key: "opening",
+      header: "Opening",
+      className: "text-right tabular-nums",
+      render: (a) => formatBdt(a.openingBalancePoisha),
+    },
+  ];
+
+  return (
+    <PageShell wide>
+      <PageHeader
+        icon={Landmark}
+        title="Banking & cash"
+        subtitle="Bank masters, cash/petty cash/bank accounts linked to GL — opening balances via C1 journals."
+        breadcrumb={[{ label: "Finance ERP" }, { label: "Banking" }]}
+        actions={
+          <>
+            <button type="button" className={btnGhost} onClick={() => void load()}>
+              <RefreshCw size={12} /> Refresh
+            </button>
+            <Can perm="banking:manage">
+              <button type="button" onClick={() => void bootstrap()} className={btnGhost}>
+                Bootstrap defaults
+              </button>
+            </Can>
+          </>
+        }
+      />
+      <FinanceModuleNav />
+      <StatStrip>
+        <KpiCard label="Accounts" value={accounts.length} />
+        <KpiCard label="Bank" value={stats.bank} tone="accent" />
+        <KpiCard label="Cash" value={stats.cash} />
+        <KpiCard label="Opening total" value={formatBdt(stats.opening)} />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
+
+      <Can perm="banking:manage">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <Surface>
+            <SurfaceHeader title="Bank master" />
+            <form onSubmit={(e) => void createMaster(e)} className="space-y-2 p-4 sm:p-5">
+              <input
+                className={inputCls}
+                placeholder="Code (e.g. DBBL)"
+                value={masterCode}
+                onChange={(e) => setMasterCode(e.target.value)}
+                required
+              />
+              <input
+                className={inputCls}
+                placeholder="Name"
+                value={masterName}
+                onChange={(e) => setMasterName(e.target.value)}
+                required
+              />
+              <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
                 Add bank
               </button>
             </form>
-            <form onSubmit={(e) => void createAccount(e)} className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
-              <p className="text-[10px] font-bold text-slate-500 uppercase">Account</p>
+          </Surface>
+          <Surface>
+            <SurfaceHeader title="Account" />
+            <form onSubmit={(e) => void createAccount(e)} className="space-y-2 p-4 sm:p-5">
               <select className={inputCls} value={kind} onChange={(e) => setKind(e.target.value)}>
                 {ACCOUNT_KINDS.map((k) => (
                   <option key={k} value={k}>
@@ -125,52 +182,38 @@ export default function FinanceBankingPage() {
                   </option>
                 ))}
               </select>
-              <input className={inputCls} placeholder="Account name" value={name} onChange={(e) => setName(e.target.value)} required />
-              <input className={inputCls} placeholder="Account number" value={accountNo} onChange={(e) => setAccountNo(e.target.value)} />
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <input
+                className={inputCls}
+                placeholder="Account name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+              <input
+                className={inputCls}
+                placeholder="Account number"
+                value={accountNo}
+                onChange={(e) => setAccountNo(e.target.value)}
+              />
+              <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
                 Create account
               </button>
             </form>
-          </div>
-        </Can>
+          </Surface>
+        </div>
+      </Can>
 
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <InlineSpinner />
-          </div>
-        ) : accounts.length === 0 ? (
-          <EmptyState title="No bank accounts" hint="Bootstrap defaults or create a cash/bank account." />
-        ) : (
-          <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
-            <table className="w-full text-left text-[11px]">
-              <thead>
-                <tr className="text-[10px] uppercase text-slate-500 border-b">
-                  <th className="px-3 py-2">Name</th>
-                  <th className="px-3 py-2">Kind</th>
-                  <th className="px-3 py-2">Account No</th>
-                  <th className="px-3 py-2">Bank</th>
-                  <th className="px-3 py-2">GL</th>
-                  <th className="px-3 py-2">Opening</th>
-                </tr>
-              </thead>
-              <tbody>
-                {accounts.map((a) => (
-                  <tr key={a.id} className="border-b border-slate-50">
-                    <td className="px-3 py-2 font-semibold">{a.name}</td>
-                    <td className="px-3 py-2">{a.kind}</td>
-                    <td className="px-3 py-2">{a.accountNo || "—"}</td>
-                    <td className="px-3 py-2">{a.bankMaster?.name || "—"}</td>
-                    <td className="px-3 py-2">
-                      {a.glAccount?.code} {a.glAccount?.name}
-                    </td>
-                    <td className="px-3 py-2">{formatBdt(a.openingBalancePoisha)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
+      <Surface>
+        <SurfaceHeader title={`${accounts.length} account${accounts.length === 1 ? "" : "s"}`} hint={`${masters.length} bank masters`} />
+        <DataTable
+          rows={accounts}
+          columns={columns}
+          rowKey={(r) => r.id}
+          loading={loading}
+          emptyTitle="No bank accounts"
+          emptyHint="Bootstrap defaults or create a cash/bank account."
+        />
+      </Surface>
+    </PageShell>
   );
 }

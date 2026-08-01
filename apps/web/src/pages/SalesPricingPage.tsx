@@ -1,12 +1,16 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Tags } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { salesApi, type PriceBook, type PriceTemplate } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { SalesModuleNav } from "@/components/sales/SalesModuleNav";
 import { formatBdt, QUOTE_SERVICES, toPoisha } from "@/lib/crm";
 import { PRICE_BOOK_KINDS, validatePriceBook } from "@/lib/sales";
@@ -95,18 +99,14 @@ export default function SalesPricingPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="sales" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Tags size={16} className="text-amber-600" /> Sales pricing
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Product templates plus customer, corporate, agent, and promotional price books.
-          </p>
-        </div>
-        <SalesModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={Tags}
+        title="Sales pricing"
+        subtitle="Product templates plus customer, corporate, agent, and promotional price books."
+        breadcrumb={[{ label: "Sales", to: "/sales" }, { label: "Sales pricing" }]}
+      />
+      <SalesModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         <Can perm="sales:pricing">
@@ -135,7 +135,7 @@ export default function SalesPricingPage() {
                 <label className={labelCls}>Unit price (BDT)</label>
                 <input className={inputCls} value={tplPrice} onChange={(e) => setTplPrice(e.target.value)} required />
               </div>
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                 Save template
               </button>
             </form>
@@ -176,7 +176,7 @@ export default function SalesPricingPage() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+                <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                   Save price book
                 </button>
                 <button type="button" className="px-3 py-1.5 rounded-lg text-[10.5px] font-semibold border border-slate-200" onClick={() => void resolve()}>
@@ -229,7 +229,6 @@ export default function SalesPricingPage() {
             </section>
           </div>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

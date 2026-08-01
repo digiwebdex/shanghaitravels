@@ -1,14 +1,25 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Building } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { Building, RefreshCw } from "lucide-react";
 import { crmApi, type CrmOrganization } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CrmModuleNav } from "@/components/crm/CrmModuleNav";
 import { ORG_TYPES } from "@/lib/crm";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 
 export default function CrmOrganizationsPage() {
   const [rows, setRows] = useState<CrmOrganization[]>([]);
@@ -46,21 +57,48 @@ export default function CrmOrganizationsPage() {
     }
   }
 
+  const stats = useMemo(() => {
+    const active = rows.filter((o) => o.isActive).length;
+    return { active, inactive: rows.length - active };
+  }, [rows]);
+
+  const columns: Column<CrmOrganization>[] = [
+    { key: "code", header: "Code", render: (o) => <span className="font-mono font-bold">{o.code}</span> },
+    { key: "name", header: "Name", render: (o) => o.name },
+    { key: "type", header: "Type", render: (o) => <Pill value={o.type} tone={statusTone(o.type)} /> },
+    {
+      key: "status",
+      header: "Status",
+      render: (o) => <Pill value={o.isActive ? "active" : "inactive"} tone={statusTone(o.isActive ? "active" : "inactive")} />,
+    },
+  ];
+
   return (
-    <div>
-      <DemoBadge moduleKey="crm" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Building size={16} className="text-amber-600" /> Organizations
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">Corporate customers, travel agents, partner agencies.</p>
-        </div>
-        <CrmModuleNav />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
-        <Can perm="corporate:manage">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+    <PageShell wide>
+      <PageHeader
+        icon={Building}
+        title="Organizations"
+        subtitle="Corporate customers, travel agents, partner agencies."
+        breadcrumb={[{ label: "CRM" }, { label: "Organizations" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <CrmModuleNav />
+      <StatStrip>
+        <KpiCard label="Total" value={rows.length} />
+        <KpiCard label="Active" value={stats.active} tone="success" />
+        <KpiCard label="Inactive" value={stats.inactive} tone="warning" />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
+
+      <Can perm="corporate:manage">
+        <Surface>
+          <SurfaceHeader title="Create organization" />
+          <form onSubmit={(e) => void create(e)} className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-3 sm:p-5">
             <div>
               <label className={labelCls}>Name *</label>
               <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} required />
@@ -80,30 +118,24 @@ export default function CrmOrganizationsPage() {
               <input className={inputCls} value={phone} onChange={(e) => setPhone(e.target.value)} />
             </div>
             <div className="sm:col-span-3">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
                 Create organization
               </button>
             </div>
           </form>
-        </Can>
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <InlineSpinner />
-          </div>
-        ) : (
-          <ul className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
-            {rows.map((o) => (
-              <li key={o.id} className="text-[11px] flex flex-wrap gap-x-3 border-b border-slate-50 pb-2">
-                <span className="font-bold">{o.code}</span>
-                <span>{o.name}</span>
-                <span className="text-slate-500">{o.type}</span>
-                <span className="text-slate-400">{o.isActive ? "active" : "inactive"}</span>
-              </li>
-            ))}
-            {rows.length === 0 && <p className="text-[11px] text-slate-400">No organizations.</p>}
-          </ul>
-        )}
-      </div>
-    </div>
+        </Surface>
+      </Can>
+
+      <Surface>
+        <SurfaceHeader title={`${rows.length} organization${rows.length === 1 ? "" : "s"}`} />
+        <DataTable
+          rows={rows}
+          columns={columns}
+          rowKey={(r) => r.id}
+          loading={loading}
+          emptyTitle="No organizations"
+        />
+      </Surface>
+    </PageShell>
   );
 }

@@ -1,13 +1,17 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { bankingApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { BankAccountRow, BankMovement } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import { MOVEMENT_TYPES, toPoishaBdt, validateMovement } from "@/lib/banking";
 import { formatBdt } from "@/lib/gl";
@@ -70,18 +74,14 @@ export default function FinanceBankMovementsPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="finance" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <ArrowLeftRight size={16} className="text-amber-600" /> Bank & cash movements
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Deposits, withdrawals, transfers, charges, interest — posted through Phase C1 GL.
-          </p>
-        </div>
-        <FinanceModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={ArrowLeftRight}
+        title="Bank & cash movements"
+        subtitle="Deposits, withdrawals, transfers, charges, interest — posted through Phase C1 GL."
+        breadcrumb={[{ label: "Finance ERP", to: "/finance" }, { label: "Bank & cash movements" }]}
+      />
+      <FinanceModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
 
@@ -128,7 +128,7 @@ export default function FinanceBankMovementsPage() {
               <input className={inputCls} value={memo} onChange={(e) => setMemo(e.target.value)} />
             </div>
             <div className="sm:col-span-3">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                 Create & post
               </button>
             </div>
@@ -171,7 +171,6 @@ export default function FinanceBankMovementsPage() {
             </table>
           </div>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

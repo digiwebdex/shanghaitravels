@@ -1,13 +1,17 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Coins } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { glApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { CurrencyRow, ExchangeRateRow } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 
 export default function FinanceCurrenciesPage() {
@@ -72,16 +76,14 @@ export default function FinanceCurrenciesPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="finance" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Coins size={16} className="text-amber-600" /> Currencies & exchange rates
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">Base currency BDT; multi-currency ready for future FX journals.</p>
-        </div>
-        <FinanceModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={Coins}
+        title="Currencies & exchange rates"
+        subtitle="Base currency BDT; multi-currency ready for future FX journals."
+        breadcrumb={[{ label: "Finance ERP", to: "/finance" }, { label: "Currencies & exchange rates" }]}
+      />
+      <FinanceModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         {loading ? (
@@ -106,7 +108,7 @@ export default function FinanceCurrenciesPage() {
                   <input className={inputCls} value={symbol} onChange={(e) => setSymbol(e.target.value)} />
                 </div>
                 <div className="flex items-end">
-                  <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+                  <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                     Save
                   </button>
                 </div>
@@ -190,7 +192,6 @@ export default function FinanceCurrenciesPage() {
             </section>
           </>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

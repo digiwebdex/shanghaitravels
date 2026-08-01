@@ -4,7 +4,6 @@ import { fsApi, glApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { JournalEntry } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
@@ -70,7 +69,6 @@ export default function FinanceJournalDetailPage() {
 
   return (
     <div>
-      <DemoBadge moduleKey="finance" />
       <div className="p-5 max-w-[1100px] space-y-4">
         <div>
           <Link to="/finance/journals" className="text-[10px] font-semibold text-amber-600 hover:underline">
@@ -146,7 +144,7 @@ export default function FinanceJournalDetailPage() {
                   type="button"
                   disabled={busy}
                   className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white disabled:opacity-50"
-                  style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+                  style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
                   onClick={() => run(() => glApi.approveJournal(je.id), "Approved")}
                 >
                   Approve

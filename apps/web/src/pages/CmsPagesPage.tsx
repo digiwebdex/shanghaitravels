@@ -1,14 +1,27 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { FileText } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FileText, RefreshCw } from "lucide-react";
 import { cmsApi, type CmsPage } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CmsModuleNav } from "@/components/cms/CmsModuleNav";
 import { PAGE_STATUSES, validatePageInput } from "@/lib/cms";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  ListToolbar,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+  selectClassName,
+} from "@/components/enterprise/Page";
 
 export default function CmsPagesPage() {
   const [rows, setRows] = useState<CmsPage[]>([]);
@@ -80,34 +93,88 @@ export default function CmsPagesPage() {
     }
   }
 
+  const stats = useMemo(() => {
+    const published = rows.filter((r) => r.status === "published").length;
+    const draft = rows.filter((r) => r.status === "draft").length;
+    return { published, draft };
+  }, [rows]);
+
+  const columns: Column<CmsPage>[] = [
+    { key: "title", header: "Title", render: (r) => <span className="font-semibold">{r.title}</span> },
+    { key: "slug", header: "Slug", render: (r) => r.slug },
+    { key: "status", header: "Status", render: (r) => <Pill value={r.status} tone={statusTone(r.status)} /> },
+    { key: "branch", header: "Branch", render: (r) => r.branchId || "—" },
+    {
+      key: "actions",
+      header: "Actions",
+      className: "text-right",
+      render: (r) => (
+        <div className="flex flex-wrap justify-end gap-2">
+          <Can perm="cms:manage">
+            <button
+              type="button"
+              className="text-[11px] font-semibold text-[var(--accent)] hover:underline"
+              onClick={() => void act(r.id, "review")}
+            >
+              Review
+            </button>
+          </Can>
+          <Can perm="cms:publish">
+            <button
+              type="button"
+              className="text-[11px] font-semibold text-emerald-700 hover:underline"
+              onClick={() => void act(r.id, "publish")}
+            >
+              Publish
+            </button>
+            <button
+              type="button"
+              className="text-[11px] font-semibold text-[var(--muted-foreground)] hover:underline"
+              onClick={() => void act(r.id, "unpublish")}
+            >
+              Unpublish
+            </button>
+          </Can>
+          <Can perm="cms:manage">
+            <button
+              type="button"
+              className="text-[11px] font-semibold text-rose-600 hover:underline"
+              onClick={() => void act(r.id, "delete")}
+            >
+              Delete
+            </button>
+          </Can>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <div>
-      <DemoBadge moduleKey="cms" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <FileText size={16} className="text-amber-600" /> CMS pages
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Page builder, draft → review → publish workflow, SEO metadata, version history.
-          </p>
-        </div>
-        <CmsModuleNav />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
-        <div className="flex gap-2 items-center">
-          <label className={labelCls}>Status</label>
-          <select className={inputCls + " max-w-[160px]"} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="">All</option>
-            {PAGE_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </div>
-        <Can perm="cms:manage">
-          <form onSubmit={save} className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+    <PageShell wide>
+      <PageHeader
+        icon={FileText}
+        title="CMS pages"
+        subtitle="Page builder, draft → review → publish workflow, SEO metadata, version history."
+        breadcrumb={[{ label: "Website & CMS" }, { label: "Pages" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <CmsModuleNav />
+      <StatStrip>
+        <KpiCard label="Pages" value={rows.length} />
+        <KpiCard label="Draft" value={stats.draft} tone="warning" />
+        <KpiCard label="Published" value={stats.published} tone="success" />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
+
+      <Can perm="cms:manage">
+        <Surface>
+          <SurfaceHeader title="Save page" />
+          <form onSubmit={save} className="grid grid-cols-1 gap-3 p-4 md:grid-cols-2 sm:p-5">
             <div>
               <label className={labelCls}>Title</label>
               <input className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -129,62 +196,27 @@ export default function CmsPagesPage() {
               <input className={inputCls} value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} />
             </div>
             <div className="md:col-span-2">
-              <button type="submit" className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-[11px] font-semibold">
+              <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
                 Save page
               </button>
             </div>
           </form>
-        </Can>
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <InlineSpinner />
-          </div>
-        ) : (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <table className="w-full text-[11px]">
-              <thead className="bg-slate-50 text-slate-500">
-                <tr>
-                  <th className="text-left p-2">Title</th>
-                  <th className="text-left p-2">Slug</th>
-                  <th className="text-left p-2">Status</th>
-                  <th className="text-left p-2">Branch</th>
-                  <th className="text-right p-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.id} className="border-t border-slate-100">
-                    <td className="p-2 font-semibold">{r.title}</td>
-                    <td className="p-2">{r.slug}</td>
-                    <td className="p-2">{r.status}</td>
-                    <td className="p-2">{r.branchId || "—"}</td>
-                    <td className="p-2 text-right space-x-1">
-                      <Can perm="cms:manage">
-                        <button type="button" className="text-amber-700 underline" onClick={() => void act(r.id, "review")}>
-                          Review
-                        </button>
-                      </Can>
-                      <Can perm="cms:publish">
-                        <button type="button" className="text-emerald-700 underline" onClick={() => void act(r.id, "publish")}>
-                          Publish
-                        </button>
-                        <button type="button" className="text-slate-600 underline" onClick={() => void act(r.id, "unpublish")}>
-                          Unpublish
-                        </button>
-                      </Can>
-                      <Can perm="cms:manage">
-                        <button type="button" className="text-red-600 underline" onClick={() => void act(r.id, "delete")}>
-                          Delete
-                        </button>
-                      </Can>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
+        </Surface>
+      </Can>
+
+      <Surface>
+        <ListToolbar>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={selectClassName}>
+            <option value="">All statuses</option>
+            {PAGE_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </ListToolbar>
+        <DataTable rows={rows} columns={columns} rowKey={(r) => r.id} loading={loading} emptyTitle="No pages" />
+      </Surface>
+    </PageShell>
   );
 }

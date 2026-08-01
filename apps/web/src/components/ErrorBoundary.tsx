@@ -24,7 +24,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <button
             type="button"
             className="px-4 py-2 rounded-lg text-[11px] font-bold text-white"
-            style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+            style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
             onClick={() => {
               this.setState({ error: null });
               window.location.reload();

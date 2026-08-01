@@ -1,12 +1,16 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { CalendarDays } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { commsApi, crmApi, type CommActivity, type CrmLead } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CommsModuleNav } from "@/components/comms/CommsModuleNav";
 import { RECURRENCE_RULES } from "@/lib/comms";
 
@@ -70,18 +74,14 @@ export default function CommsActivitiesPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="comms" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <CalendarDays size={16} className="text-amber-600" /> Engagement activities
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Calendar, follow-ups, recurring tasks, team assignment, escalations, and SLA dashboard.
-          </p>
-        </div>
-        <CommsModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={CalendarDays}
+        title="Engagement activities"
+        subtitle="Calendar, follow-ups, recurring tasks, team assignment, escalations, and SLA dashboard."
+        breadcrumb={[{ label: "Communications", to: "/comms" }, { label: "Engagement activities" }]}
+      />
+      <CommsModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         {sla && (
@@ -135,7 +135,7 @@ export default function CommsActivitiesPage() {
               <input className={inputCls} value={slaHours} onChange={(e) => setSlaHours(e.target.value)} />
             </div>
             <div className="sm:col-span-4">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                 Schedule activity
               </button>
             </div>
@@ -196,7 +196,6 @@ export default function CommsActivitiesPage() {
             </section>
           </div>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

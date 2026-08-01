@@ -1,8 +1,11 @@
 export function EmptyState({ title, hint }: { title: string; hint?: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-slate-200 bg-white/70 px-4 py-14 text-center" role="status">
-      <p className="text-[12px] font-bold text-slate-600">{title}</p>
-      {hint && <p className="mt-1 text-[10.5px] text-slate-400">{hint}</p>}
+    <div
+      className="rounded-2xl bg-[var(--navy-50)] px-4 py-14 text-center ring-1 ring-[var(--ring-card)]"
+      role="status"
+    >
+      <p className="text-[12px] font-bold text-[var(--navy-700)]">{title}</p>
+      {hint && <p className="mt-1 text-[10.5px] text-[var(--muted-foreground)]">{hint}</p>}
     </div>
   );
 }

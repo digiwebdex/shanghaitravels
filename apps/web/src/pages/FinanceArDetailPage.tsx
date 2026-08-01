@@ -4,7 +4,6 @@ import { arApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { ArDocument } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
@@ -66,7 +65,6 @@ export default function FinanceArDetailPage() {
 
   return (
     <div>
-      <DemoBadge moduleKey="finance" />
       <div className="p-5 max-w-[1100px] space-y-4">
         <Link to="/finance/ar" className="text-[10px] font-semibold text-amber-600 hover:underline">
           ← AR
@@ -90,7 +88,7 @@ export default function FinanceArDetailPage() {
             )}
             {doc.status === "pending_approval" && !doc.approvedBy && (
               <>
-                <button disabled={busy} type="button" onClick={() => void run(() => arApi.approve(doc.id), "Approved")} className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+                <button disabled={busy} type="button" onClick={() => void run(() => arApi.approve(doc.id), "Approved")} className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                   Approve
                 </button>
                 <button disabled={busy} type="button" onClick={() => void run(() => arApi.reject(doc.id, "Rejected"), "Rejected")} className="px-3 py-1.5 rounded-lg border border-red-200 text-[10.5px] font-semibold text-red-700">

@@ -1,12 +1,16 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { LayoutGrid } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { cmsApi, type CmsContent } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CmsModuleNav } from "@/components/cms/CmsModuleNav";
 import {
   DEFAULT_HERO_SERVICES,
@@ -156,18 +160,14 @@ export default function CmsHeroServicesPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="cms" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <LayoutGrid size={16} className="text-amber-600" /> Home · Hero Services
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Featured service cards on the homepage hero. Enable up to {HERO_SERVICE_MAX} services.
-          </p>
-        </div>
-        <CmsModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={LayoutGrid}
+        title="Home · Hero Services"
+        subtitle="Featured service cards on the homepage hero."
+        breadcrumb={[{ label: "CMS", to: "/cms" }, { label: "Home · Hero Services" }]}
+      />
+      <CmsModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
 
@@ -333,7 +333,6 @@ export default function CmsHeroServicesPage() {
             )}
           </ul>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

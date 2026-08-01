@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { BarChart2 } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+} from "@/components/enterprise/Page";
 import { crmApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { CrmModuleNav } from "@/components/crm/CrmModuleNav";
@@ -45,18 +48,14 @@ export default function CrmReportsPage() {
   }, [load]);
 
   return (
-    <div>
-      <DemoBadge moduleKey="crm" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <BarChart2 size={16} className="text-amber-600" /> CRM reports
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Lead sources, conversion, pipeline, team performance, revenue forecast.
-          </p>
-        </div>
-        <CrmModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={BarChart2}
+        title="CRM reports"
+        subtitle="Lead sources, conversion, pipeline, team performance, revenue forecast."
+        breadcrumb={[{ label: "CRM", to: "/crm" }, { label: "CRM reports" }]}
+      />
+      <CrmModuleNav />
         <ErrorBanner message={error} />
         {loading ? (
           <div className="flex justify-center py-16">
@@ -103,7 +102,6 @@ export default function CrmReportsPage() {
             </section>
           </div>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

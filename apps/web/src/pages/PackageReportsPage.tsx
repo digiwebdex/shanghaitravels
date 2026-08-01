@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { BarChart2 } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+} from "@/components/enterprise/Page";
 import { packagesApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { PackageReportSummary } from "@/lib/packages";
 import { formatPrice } from "@/lib/packages";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { PackageModuleNav } from "@/components/packages/PackageModuleNav";
@@ -31,15 +34,13 @@ export default function PackageReportsPage() {
   }, [load]);
 
   return (
-    <div>
-      <DemoBadge moduleKey="products" />
-      <div className="p-5 max-w-[1000px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <BarChart2 size={16} className="text-amber-600" /> Package reports
-          </h1>
-        </div>
-        <PackageModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={BarChart2}
+        title="Package reports"
+        breadcrumb={[{ label: "Products", to: "/packages" }, { label: "Package reports" }]}
+      />
+      <PackageModuleNav />
         <ErrorBanner message={error} />
 
         {loading ? (
@@ -84,7 +85,6 @@ export default function PackageReportsPage() {
             )}
           </div>
         ) : null}
-      </div>
-    </div>
+    </PageShell>
   );
 }

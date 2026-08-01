@@ -1,15 +1,28 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Landmark } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { Landmark, RefreshCw, Search } from "lucide-react";
 import { glApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { GlAccount, GlAccountGroup } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
-import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
+import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import { GL_TYPES } from "@/lib/gl";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  ListToolbar,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+  searchInputClassName,
+} from "@/components/enterprise/Page";
 
 export default function FinanceAccountsPage() {
   const [rows, setRows] = useState<GlAccount[]>([]);
@@ -83,38 +96,57 @@ export default function FinanceAccountsPage() {
     }
   }
 
-  return (
-    <div>
-      <DemoBadge moduleKey="finance" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-              <Landmark size={16} className="text-amber-600" /> Chart of Accounts
-            </h1>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              Configurable GL accounts — Assets, Liabilities, Equity, Income, Expenses. No hard-coded IDs.
-            </p>
-          </div>
-          <Can perm="gl:manage">
-            <button
-              type="button"
-              onClick={() => void bootstrap()}
-              className="px-3 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold"
-            >
-              Bootstrap foundation
-            </button>
-          </Can>
-        </div>
-        <FinanceModuleNav />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
+  const stats = useMemo(() => {
+    const postable = rows.filter((a) => a.isPostable !== false && !a.isHeader).length;
+    const byType = new Set(rows.map((a) => a.type)).size;
+    return { postable, byType };
+  }, [rows]);
 
-        <Can perm="gl:manage">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
-            <div className="sm:col-span-4">
-              <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Add GL account</p>
-            </div>
+  const columns: Column<GlAccount>[] = [
+    { key: "code", header: "Code", render: (a) => <span className="font-semibold text-[var(--primary)]">{a.code}</span> },
+    { key: "name", header: "Name", render: (a) => a.name },
+    { key: "type", header: "Type", render: (a) => <Pill value={a.type} tone={statusTone(a.type)} /> },
+    { key: "group", header: "Group", render: (a) => a.group?.name || "—" },
+    {
+      key: "postable",
+      header: "Postable",
+      render: (a) => (a.isPostable === false || a.isHeader ? "no" : "yes"),
+    },
+  ];
+
+  return (
+    <PageShell wide>
+      <PageHeader
+        icon={Landmark}
+        title="Chart of Accounts"
+        subtitle="Configurable GL accounts — Assets, Liabilities, Equity, Income, Expenses. No hard-coded IDs."
+        breadcrumb={[{ label: "Finance ERP" }, { label: "Chart of Accounts" }]}
+        actions={
+          <>
+            <button type="button" className={btnGhost} onClick={() => void load()}>
+              <RefreshCw size={12} /> Refresh
+            </button>
+            <Can perm="gl:manage">
+              <button type="button" onClick={() => void bootstrap()} className={btnGhost}>
+                Bootstrap foundation
+              </button>
+            </Can>
+          </>
+        }
+      />
+      <FinanceModuleNav />
+      <StatStrip>
+        <KpiCard label="Accounts" value={rows.length} />
+        <KpiCard label="Postable" value={stats.postable} tone="accent" />
+        <KpiCard label="Types in view" value={stats.byType} />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
+
+      <Can perm="gl:manage">
+        <Surface>
+          <SurfaceHeader title="Add GL account" />
+          <form onSubmit={(e) => void create(e)} className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-4 sm:p-5">
             <div>
               <label className={labelCls}>Code *</label>
               <input className={inputCls} value={code} onChange={(e) => setCode(e.target.value)} required />
@@ -145,67 +177,46 @@ export default function FinanceAccountsPage() {
               </select>
             </div>
             <div className="flex items-end gap-2 pb-1">
-              <label className="flex items-center gap-1.5 text-[11px] text-slate-600">
+              <label className="flex items-center gap-1.5 text-[11px] text-[var(--muted-foreground)]">
                 <input type="checkbox" checked={isHeader} onChange={(e) => setIsHeader(e.target.checked)} />
                 Header (non-postable)
               </label>
             </div>
             <div className="sm:col-span-4">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
                 Save account
               </button>
             </div>
           </form>
-        </Can>
+        </Surface>
+      </Can>
 
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-slate-100 flex gap-2">
+      <Surface>
+        <ListToolbar>
+          <div className="relative flex-1">
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
             <input
-              className="flex-1 max-w-sm px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
+              className={searchInputClassName}
               placeholder="Search code / name…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && void load()}
               aria-label="Search chart of accounts"
             />
-            <button type="button" onClick={() => void load()} className="px-3 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold">
-              Refresh
-            </button>
           </div>
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <InlineSpinner />
-            </div>
-          ) : rows.length === 0 ? (
-            <EmptyState title="No GL accounts" hint="Click Bootstrap foundation or add an account." />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
-                    <th className="px-4 py-2 font-bold">Code</th>
-                    <th className="px-4 py-2 font-bold">Name</th>
-                    <th className="px-4 py-2 font-bold">Type</th>
-                    <th className="px-4 py-2 font-bold">Group</th>
-                    <th className="px-4 py-2 font-bold">Postable</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((a) => (
-                    <tr key={a.id} className="border-b border-slate-50 text-[11px]">
-                      <td className="px-4 py-2.5 font-semibold text-slate-800">{a.code}</td>
-                      <td className="px-4 py-2.5 text-slate-700">{a.name}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{a.type}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{a.group?.name || "—"}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{a.isPostable === false || a.isHeader ? "no" : "yes"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+          <button type="button" onClick={() => void load()} className={btnGhost}>
+            Search
+          </button>
+        </ListToolbar>
+        <DataTable
+          rows={rows}
+          columns={columns}
+          rowKey={(r) => r.id}
+          loading={loading}
+          emptyTitle="No GL accounts"
+          emptyHint="Click Bootstrap foundation or add an account."
+        />
+      </Surface>
+    </PageShell>
   );
 }

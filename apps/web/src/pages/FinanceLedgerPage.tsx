@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router";
 import { BookOpen } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { fsApi, glApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { GlAccount } from "@/lib/types";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import { formatBdt } from "@/lib/gl";
 
@@ -61,16 +65,14 @@ export default function FinanceLedgerPage() {
   }, [load]);
 
   return (
-    <div>
-      <DemoBadge moduleKey="finance" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <BookOpen size={16} className="text-amber-600" /> Ledger inquiry
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">Drill into posted journal lines with running balance.</p>
-        </div>
-        <FinanceModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={BookOpen}
+        title="Ledger inquiry"
+        subtitle="Drill into posted journal lines with running balance."
+        breadcrumb={[{ label: "Finance ERP", to: "/finance" }, { label: "Ledger inquiry" }]}
+      />
+      <FinanceModuleNav />
         <ErrorBanner message={error} />
 
         <div className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
@@ -138,7 +140,6 @@ export default function FinanceLedgerPage() {
             )}
           </section>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { BarChart2 } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+} from "@/components/enterprise/Page";
 import { applicationsApi, tourPackagesApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import type { Application, TourPackageProduct } from "@/lib/types";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { TourModuleNav } from "@/components/tours/TourModuleNav";
@@ -64,18 +67,14 @@ export default function TourReportsPage() {
   }, [packages]);
 
   return (
-    <div>
-      <DemoBadge moduleKey="tours" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <BarChart2 size={16} className="text-amber-600" /> Tour reports
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Bookings, package performance, supplier cost vs sell (catalog). Case invoice finance stays on each booking.
-          </p>
-        </div>
-        <TourModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={BarChart2}
+        title="Tour reports"
+        subtitle="Bookings, package performance, supplier cost vs sell (catalog)."
+        breadcrumb={[{ label: "Tours", to: "/tours" }, { label: "Tour reports" }]}
+      />
+      <TourModuleNav />
         <ErrorBanner message={error} />
 
         {loading ? (
@@ -166,7 +165,6 @@ export default function TourReportsPage() {
             </section>
           </>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

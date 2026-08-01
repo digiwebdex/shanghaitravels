@@ -1,14 +1,25 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { MessagesSquare } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { MessagesSquare, RefreshCw } from "lucide-react";
 import { commsApi, crmApi, type CommTimelineItem, type CrmLead } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CommsModuleNav } from "@/components/comms/CommsModuleNav";
 import { COMM_CHANNELS, validateCommLog } from "@/lib/comms";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 
 export default function CommsTimelinePage() {
   const [leads, setLeads] = useState<CrmLead[]>([]);
@@ -84,22 +95,63 @@ export default function CommsTimelinePage() {
     }
   }
 
-  return (
-    <div>
-      <DemoBadge moduleKey="comms" />
-      <div className="p-5 max-w-[1200px] space-y-4">
+  const stats = useMemo(() => {
+    const channels = new Set(items.map((i) => i.channel)).size;
+    const inbound = items.filter((i) => i.direction === "inbound").length;
+    return { channels, inbound };
+  }, [items]);
+
+  const columns: Column<CommTimelineItem>[] = [
+    {
+      key: "channel",
+      header: "Channel",
+      render: (it) => <span className="font-bold uppercase text-[var(--accent)]">{it.channel}</span>,
+    },
+    { key: "kind", header: "Kind", render: (it) => it.kind },
+    { key: "direction", header: "Direction", render: (it) => it.direction },
+    { key: "status", header: "Status", render: (it) => <Pill value={it.status} tone={statusTone(it.status)} /> },
+    {
+      key: "when",
+      header: "When",
+      render: (it) => new Date(it.createdAt).toLocaleString("en-BD"),
+    },
+    {
+      key: "summary",
+      header: "Summary",
+      className: "max-w-[280px]",
+      render: (it) => (
         <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <MessagesSquare size={16} className="text-amber-600" /> Communication timeline
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Unified hub for calls, email, WhatsApp, SMS, notes, meetings, and attachments.
-          </p>
+          <div className="font-semibold text-[var(--primary)]">{it.summary}</div>
+          {it.body && <p className="mt-0.5 whitespace-pre-wrap text-[var(--muted-foreground)]">{it.body}</p>}
         </div>
-        <CommsModuleNav />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-white rounded-xl border border-slate-200 p-4">
+      ),
+    },
+  ];
+
+  return (
+    <PageShell wide>
+      <PageHeader
+        icon={MessagesSquare}
+        title="Communication timeline"
+        subtitle="Unified hub for calls, email, WhatsApp, SMS, notes, meetings, and attachments."
+        breadcrumb={[{ label: "Communications" }, { label: "Timeline" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void loadTimeline()} disabled={!relatedId}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <CommsModuleNav />
+      <StatStrip>
+        <KpiCard label="Entries" value={items.length} />
+        <KpiCard label="Channels used" value={stats.channels} tone="accent" />
+        <KpiCard label="Inbound" value={stats.inbound} />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
+
+      <Surface padded>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <div>
             <label className={labelCls}>Related type</label>
             <select className={inputCls} value={relatedType} onChange={(e) => setRelatedType(e.target.value)}>
@@ -122,12 +174,21 @@ export default function CommsTimelinePage() {
                 ))}
               </select>
             ) : (
-              <input className={inputCls} value={relatedId} onChange={(e) => setRelatedId(e.target.value)} placeholder="UUID" />
+              <input
+                className={inputCls}
+                value={relatedId}
+                onChange={(e) => setRelatedId(e.target.value)}
+                placeholder="UUID"
+              />
             )}
           </div>
         </div>
-        <Can perm="comms:manage">
-          <form onSubmit={(e) => void log(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+      </Surface>
+
+      <Can perm="comms:manage">
+        <Surface>
+          <SurfaceHeader title="Log communication" />
+          <form onSubmit={(e) => void log(e)} className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-4 sm:p-5">
             <div>
               <label className={labelCls}>Channel</label>
               <select className={inputCls} value={channel} onChange={(e) => setChannel(e.target.value)}>
@@ -144,42 +205,36 @@ export default function CommsTimelinePage() {
             </div>
             <div>
               <label className={labelCls}>Attachment name</label>
-              <input className={inputCls} value={fileName} onChange={(e) => setFileName(e.target.value)} placeholder="optional.pdf" />
+              <input
+                className={inputCls}
+                value={fileName}
+                onChange={(e) => setFileName(e.target.value)}
+                placeholder="optional.pdf"
+              />
             </div>
             <div className="sm:col-span-4">
               <label className={labelCls}>Notes / body</label>
               <textarea className={inputCls} rows={2} value={body} onChange={(e) => setBody(e.target.value)} />
             </div>
             <div className="sm:col-span-4">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
                 Log communication
               </button>
             </div>
           </form>
-        </Can>
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <InlineSpinner />
-          </div>
-        ) : (
-          <ul className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
-            {items.map((it) => (
-              <li key={`${it.kind}-${it.id}`} className="text-[11px] border-b border-slate-50 pb-2">
-                <div className="flex flex-wrap gap-2">
-                  <span className="font-bold uppercase text-amber-800">{it.channel}</span>
-                  <span className="text-slate-500">{it.kind}</span>
-                  <span>{it.direction}</span>
-                  <span className="text-slate-400">{it.status}</span>
-                  <span className="text-slate-400">{new Date(it.createdAt).toLocaleString("en-BD")}</span>
-                </div>
-                <div className="font-semibold text-slate-800 mt-0.5">{it.summary}</div>
-                {it.body && <p className="text-slate-600 mt-0.5 whitespace-pre-wrap">{it.body}</p>}
-              </li>
-            ))}
-            {items.length === 0 && <p className="text-[11px] text-slate-400">No timeline entries yet.</p>}
-          </ul>
-        )}
-      </div>
-    </div>
+        </Surface>
+      </Can>
+
+      <Surface>
+        <SurfaceHeader title="Timeline" />
+        <DataTable
+          rows={items}
+          columns={columns}
+          rowKey={(r) => `${r.kind}-${r.id}`}
+          loading={loading}
+          emptyTitle="No timeline entries yet"
+        />
+      </Surface>
+    </PageShell>
   );
 }

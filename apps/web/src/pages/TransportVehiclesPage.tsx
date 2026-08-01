@@ -1,13 +1,17 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Car } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { transportVehiclesApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import type { TransportVehicleType } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { TransportModuleNav } from "@/components/transport/TransportModuleNav";
 import { VEHICLE_CATEGORIES } from "@/lib/transport";
 
@@ -65,18 +69,14 @@ export default function TransportVehiclesPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="transport" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Car size={16} className="text-amber-600" /> Vehicle catalog
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Supplier vehicle offers by category ({VEHICLE_CATEGORIES.join(", ")}). Not owned fleet inventory.
-          </p>
-        </div>
-        <TransportModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={Car}
+        title="Vehicle catalog"
+        subtitle="Supplier vehicle offers by category. Not owned fleet inventory."
+        breadcrumb={[{ label: "Transport", to: "/transport" }, { label: "Vehicle catalog" }]}
+      />
+      <TransportModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
 
@@ -129,7 +129,7 @@ export default function TransportVehiclesPage() {
               <button
                 type="submit"
                 className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white"
-                style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+                style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
               >
                 Add vehicle offer
               </button>
@@ -186,7 +186,6 @@ export default function TransportVehiclesPage() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </PageShell>
   );
 }

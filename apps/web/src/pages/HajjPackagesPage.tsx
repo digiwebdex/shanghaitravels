@@ -1,13 +1,17 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Package } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { hajjPackagesApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import type { HajjUmrahPackageProduct } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { HajjModuleNav } from "@/components/hajj/HajjModuleNav";
 import {
   HAJJ_KINDS,
@@ -107,18 +111,14 @@ export default function HajjPackagesPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="hajj" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Package size={16} className="text-amber-600" /> Hajj / Umrah packages
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Package templates with pricing, occupancy, inclusions — operator products, not an OTA catalog.
-          </p>
-        </div>
-        <HajjModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={Package}
+        title="Hajj / Umrah packages"
+        subtitle="Package templates with pricing, occupancy, inclusions — operator products, not an OTA catalog."
+        breadcrumb={[{ label: "Hajj & Umrah", to: "/hajj" }, { label: "Hajj / Umrah packages" }]}
+      />
+      <HajjModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
 
@@ -221,7 +221,7 @@ export default function HajjPackagesPage() {
               <input className={inputCls} value={notes} onChange={(e) => setNotes(e.target.value)} />
             </div>
             <div className="sm:col-span-3">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                 Save package
               </button>
             </div>
@@ -279,7 +279,6 @@ export default function HajjPackagesPage() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </PageShell>
   );
 }

@@ -1,14 +1,25 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { TrendingUp } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { RefreshCw, TrendingUp } from "lucide-react";
 import { crmApi, salesApi, type CrmOpportunity, type LostReason, type SalesStage } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { SalesModuleNav } from "@/components/sales/SalesModuleNav";
 import { formatBdt, probabilityLabel } from "@/lib/crm";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 
 export default function SalesPipelinePage() {
   const [stages, setStages] = useState<SalesStage[]>([]);
@@ -75,119 +86,150 @@ export default function SalesPipelinePage() {
     }
   }
 
-  return (
-    <div>
-      <DemoBadge moduleKey="sales" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <TrendingUp size={16} className="text-amber-600" /> Sales pipeline
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Configurable stages, probability scoring, win/loss tracking, and stage history.
-          </p>
-        </div>
-        <SalesModuleNav />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <InlineSpinner />
-          </div>
-        ) : (
-          <>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold mb-2">Stages</h2>
-              <div className="flex flex-wrap gap-2">
-                {stages.map((s) => (
-                  <div key={s.id} className="px-2.5 py-1.5 rounded-lg border border-slate-100 bg-slate-50 text-[10.5px]">
-                    <span className="font-semibold">{s.name}</span>
-                    <span className="text-slate-500 ml-1">{probabilityLabel(s.defaultProbabilityBps)}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-            <Can perm="opportunity:manage">
-              <form onSubmit={(e) => void markLost(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <div>
-                  <label className={labelCls}>Mark lost — opportunity</label>
-                  <select className={inputCls} value={lostOppId} onChange={(e) => setLostOppId(e.target.value)}>
-                    <option value="">Select…</option>
-                    {opps
-                      .filter((o) => o.status === "open")
-                      .map((o) => (
-                        <option key={o.id} value={o.id}>
-                          {o.opportunityNo} — {o.title}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-                <div>
-                  <label className={labelCls}>Lost reason</label>
-                  <select className={inputCls} value={lostReasonId} onChange={(e) => setLostReasonId(e.target.value)}>
-                    <option value="">Select…</option>
-                    {reasons.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex items-end">
-                  <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
-                    Record loss
-                  </button>
-                </div>
-              </form>
-            </Can>
-            <section className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
-              {opps.map((o) => (
-                <div key={o.id} className="border-b border-slate-50 pb-3 text-[11px]">
-                  <div className="flex flex-wrap gap-2 items-center">
-                    <span className="font-bold text-slate-800">{o.opportunityNo}</span>
-                    <span>{o.title}</span>
-                    <span className="text-slate-500">{o.stage}</span>
-                    <span>{probabilityLabel(o.probabilityBps)}</span>
-                    <span className="font-semibold">{formatBdt(o.expectedRevenuePoisha)}</span>
-                    <span className="text-slate-400">{o.status}</span>
-                  </div>
-                  <Can perm="opportunity:manage">
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {stages
-                        .filter((s) => s.code !== o.stage && !s.isLost)
-                        .slice(0, 6)
-                        .map((s) => (
-                          <button
-                            key={s.code}
-                            type="button"
-                            className="px-2 py-0.5 rounded border border-slate-200 text-[10px]"
-                            onClick={() => void setStage(o.id, s.code)}
-                          >
-                            → {s.name}
-                          </button>
-                        ))}
-                      <button
-                        type="button"
-                        className="px-2 py-0.5 rounded border border-amber-200 text-[10px] text-amber-800"
-                        onClick={() => void showHistory(o.id)}
-                      >
-                        History
-                      </button>
-                    </div>
-                  </Can>
-                </div>
+  const stats = useMemo(() => {
+    const open = opps.filter((o) => o.status === "open").length;
+    const won = opps.filter((o) => o.stage === "won" || o.status === "won").length;
+    const pipeline = opps.reduce((s, o) => s + (o.expectedRevenuePoisha || 0), 0);
+    return { open, won, pipeline };
+  }, [opps]);
+
+  const columns: Column<CrmOpportunity>[] = [
+    { key: "no", header: "No", render: (o) => <span className="font-bold">{o.opportunityNo}</span> },
+    { key: "title", header: "Title", render: (o) => o.title },
+    { key: "stage", header: "Stage", render: (o) => <Pill value={o.stage} tone={statusTone(o.stage)} /> },
+    { key: "prob", header: "Probability", render: (o) => probabilityLabel(o.probabilityBps) },
+    {
+      key: "revenue",
+      header: "Expected",
+      className: "text-right tabular-nums",
+      render: (o) => formatBdt(o.expectedRevenuePoisha),
+    },
+    { key: "status", header: "Status", render: (o) => <Pill value={o.status} tone={statusTone(o.status)} /> },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (o) => (
+        <Can perm="opportunity:manage">
+          <div className="flex flex-wrap gap-1">
+            {stages
+              .filter((s) => s.code !== o.stage && !s.isLost)
+              .slice(0, 5)
+              .map((s) => (
+                <button
+                  key={s.code}
+                  type="button"
+                  className="rounded border border-[var(--border)] px-2 py-0.5 text-[10px]"
+                  onClick={() => void setStage(o.id, s.code)}
+                >
+                  → {s.name}
+                </button>
               ))}
-              {opps.length === 0 && <p className="text-[11px] text-slate-400">No opportunities — create them in CRM first.</p>}
-            </section>
-            {historyId && (
-              <section className="bg-white rounded-xl border border-slate-200 p-4">
-                <h2 className="text-[12px] font-bold mb-2">Stage history</h2>
-                <pre className="text-[10px] bg-slate-50 p-2 rounded-lg overflow-auto max-h-56">{JSON.stringify(history, null, 2)}</pre>
-              </section>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+            <button
+              type="button"
+              className="rounded border border-[var(--border)] px-2 py-0.5 text-[10px] font-semibold text-[var(--accent)]"
+              onClick={() => void showHistory(o.id)}
+            >
+              History
+            </button>
+          </div>
+        </Can>
+      ),
+    },
+  ];
+
+  return (
+    <PageShell wide>
+      <PageHeader
+        icon={TrendingUp}
+        title="Sales pipeline"
+        subtitle="Configurable stages, probability scoring, win/loss tracking, and stage history."
+        breadcrumb={[{ label: "Sales" }, { label: "Pipeline" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <SalesModuleNav />
+      <StatStrip>
+        <KpiCard label="Opportunities" value={opps.length} />
+        <KpiCard label="Open" value={stats.open} tone="accent" />
+        <KpiCard label="Won" value={stats.won} tone="success" />
+        <KpiCard label="Pipeline value" value={formatBdt(stats.pipeline)} />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
+
+      <Surface>
+        <SurfaceHeader title="Stages" />
+        <div className="flex flex-wrap gap-2 p-4 sm:p-5">
+          {stages.map((s) => (
+            <div key={s.id} className="rounded-lg bg-[var(--navy-50)] px-2.5 py-1.5 text-[10.5px] ring-1 ring-[var(--ring-card)]">
+              <span className="font-semibold">{s.name}</span>
+              <span className="ml-1 text-[var(--muted-foreground)]">{probabilityLabel(s.defaultProbabilityBps)}</span>
+            </div>
+          ))}
+          {stages.length === 0 && !loading && (
+            <p className="text-[12px] text-[var(--muted-foreground)]">No stages configured.</p>
+          )}
+        </div>
+      </Surface>
+
+      <Can perm="opportunity:manage">
+        <Surface>
+          <SurfaceHeader title="Mark lost" />
+          <form onSubmit={(e) => void markLost(e)} className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-3 sm:p-5">
+            <div>
+              <label className={labelCls}>Opportunity</label>
+              <select className={inputCls} value={lostOppId} onChange={(e) => setLostOppId(e.target.value)}>
+                <option value="">Select…</option>
+                {opps
+                  .filter((o) => o.status === "open")
+                  .map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.opportunityNo} — {o.title}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Lost reason</label>
+              <select className={inputCls} value={lostReasonId} onChange={(e) => setLostReasonId(e.target.value)}>
+                <option value="">Select…</option>
+                {reasons.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
+                Record loss
+              </button>
+            </div>
+          </form>
+        </Surface>
+      </Can>
+
+      <Surface>
+        <SurfaceHeader title={`${opps.length} opportunit${opps.length === 1 ? "y" : "ies"}`} />
+        <DataTable
+          rows={opps}
+          columns={columns}
+          rowKey={(r) => r.id}
+          loading={loading}
+          emptyTitle="No opportunities"
+          emptyHint="Create them in CRM first."
+        />
+      </Surface>
+
+      {historyId && (
+        <Surface>
+          <SurfaceHeader title="Stage history" />
+          <pre className="max-h-56 overflow-auto p-4 text-[10px] sm:p-5">{JSON.stringify(history, null, 2)}</pre>
+        </Surface>
+      )}
+    </PageShell>
   );
 }

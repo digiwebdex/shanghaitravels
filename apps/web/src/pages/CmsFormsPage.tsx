@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Inbox } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+} from "@/components/enterprise/Page";
 import { Link } from "react-router";
 import { cmsApi, type CmsFormSubmission } from "@/lib/services";
 import { ApiError } from "@/lib/api";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { CmsModuleNav } from "@/components/cms/CmsModuleNav";
@@ -30,18 +33,14 @@ export default function CmsFormsPage() {
   }, [load]);
 
   return (
-    <div>
-      <DemoBadge moduleKey="cms" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Inbox size={16} className="text-amber-600" /> Form submissions
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Website intake inbox. Enquiry forms create CRM leads where applicable.
-          </p>
-        </div>
-        <CmsModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={Inbox}
+        title="Form submissions"
+        subtitle="Website intake inbox. Enquiry forms create CRM leads where applicable."
+        breadcrumb={[{ label: "CMS", to: "/cms" }, { label: "Form submissions" }]}
+      />
+      <CmsModuleNav />
         <ErrorBanner message={error} />
         {loading ? (
           <div className="flex justify-center py-16">
@@ -87,7 +86,6 @@ export default function CmsFormsPage() {
             </tbody>
           </table>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

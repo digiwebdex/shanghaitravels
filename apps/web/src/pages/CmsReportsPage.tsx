@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { BarChart2 } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+} from "@/components/enterprise/Page";
 import { cmsApi, type CmsReports } from "@/lib/services";
 import { ApiError } from "@/lib/api";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { CmsModuleNav } from "@/components/cms/CmsModuleNav";
@@ -28,18 +31,14 @@ export default function CmsReportsPage() {
   }, [load]);
 
   return (
-    <div>
-      <DemoBadge moduleKey="cms" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <BarChart2 size={16} className="text-amber-600" /> CMS reports
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Page views, form submissions, lead generation by page, publishing metrics.
-          </p>
-        </div>
-        <CmsModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={BarChart2}
+        title="CMS reports"
+        subtitle="Page views, form submissions, lead generation by page, publishing metrics."
+        breadcrumb={[{ label: "CMS", to: "/cms" }, { label: "CMS reports" }]}
+      />
+      <CmsModuleNav />
         <ErrorBanner message={error} />
         {loading || !data ? (
           <div className="flex justify-center py-16">
@@ -99,7 +98,6 @@ export default function CmsReportsPage() {
             </section>
           </div>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

@@ -312,7 +312,7 @@ export function TransportDetailCard({
           <button
             type="submit"
             className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white"
-            style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+            style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
           >
             Save transport details
           </button>

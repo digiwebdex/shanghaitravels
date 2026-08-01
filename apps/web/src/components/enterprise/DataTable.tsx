@@ -89,13 +89,13 @@ export function DataTable<T>({
       aria-label="Results"
     >
       <table className="w-full border-collapse text-left">
-        <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur">
-          <tr className="border-b border-slate-200">
+        <thead className="sticky top-0 z-10 bg-[var(--navy-50)]/95 backdrop-blur">
+          <tr className="border-b border-[var(--border)]">
             {columns.map((c) => (
               <th
                 key={c.key}
                 scope="col"
-                className={`whitespace-nowrap px-4 py-2.5 text-[9.5px] font-bold uppercase tracking-[0.06em] text-slate-500 ${
+                className={`whitespace-nowrap px-4 py-2.5 text-[9.5px] font-bold uppercase tracking-[0.08em] text-[var(--muted-foreground)] ${
                   c.className ?? ""
                 }`}
               >
@@ -113,11 +113,11 @@ export function DataTable<T>({
           {slice.map((row) => (
             <tr
               key={rowKey(row)}
-              className="border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50/70"
+              className="border-b border-[var(--border)] transition-colors last:border-0 hover:bg-[var(--navy-50)]/60"
               style={virtualize ? { height: ROW_HEIGHT } : undefined}
             >
               {columns.map((c) => (
-                <td key={c.key} className={`px-4 py-2.5 text-[11.5px] text-slate-700 ${c.className ?? ""}`}>
+                <td key={c.key} className={`px-4 py-2.5 text-[12px] text-[var(--foreground)] ${c.className ?? ""}`}>
                   {c.render(row)}
                 </td>
               ))}

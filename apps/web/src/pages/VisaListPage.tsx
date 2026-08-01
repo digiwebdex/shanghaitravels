@@ -1,26 +1,29 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import { Plus, Search } from "lucide-react";
+import { FileCheck, Plus, RefreshCw, Search } from "lucide-react";
 import { applicationsApi, customersApi } from "@/lib/services";
 import { listOf, ApiError } from "@/lib/api";
 import type { Application, Customer } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
-import { EmptyState, ErrorBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  ListPageShell,
+  ListToolbar,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+  searchInputClassName,
+  selectClassName,
+} from "@/components/enterprise/Page";
+import { ErrorBanner } from "@/components/Feedback";
 import { VISA_TYPE_OPTIONS } from "@/config/checklist";
-
-const STATUS_PILL: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-600",
-  in_progress: "bg-amber-100 text-amber-800",
-  docs_required: "bg-orange-100 text-orange-800",
-  on_hold: "bg-slate-200 text-slate-700",
-  submitted: "bg-blue-100 text-blue-800",
-  approved: "bg-emerald-100 text-emerald-800",
-  rejected: "bg-red-100 text-red-800",
-  completed: "bg-emerald-50 text-emerald-700",
-  cancelled: "bg-slate-100 text-slate-500",
-};
 
 export default function VisaListPage() {
   const [rows, setRows] = useState<Application[]>([]);
@@ -54,108 +57,113 @@ export default function VisaListPage() {
     void load();
   }, [load]);
 
+  const stats = useMemo(() => {
+    const approved = rows.filter((r) => r.status === "approved" || r.status === "completed").length;
+    const active = rows.filter((r) => r.status === "in_progress" || r.status === "submitted").length;
+    const hold = rows.filter((r) => r.status === "on_hold" || r.status === "docs_required").length;
+    return { approved, active, hold };
+  }, [rows]);
+
+  const columns: Column<Application>[] = [
+    {
+      key: "ref",
+      header: "Reference",
+      render: (a) => (
+        <Link to={`/visa/${a.id}`} className="font-mono text-[11.5px] font-bold text-[var(--accent)] hover:underline">
+          {a.referenceNo}
+        </Link>
+      ),
+    },
+    { key: "customer", header: "Customer", render: (a) => a.customer?.fullName || "—" },
+    {
+      key: "title",
+      header: "Title",
+      className: "max-w-[220px] truncate",
+      render: (a) => <span className="text-[var(--muted-foreground)]">{a.title || "—"}</span>,
+    },
+    {
+      key: "stage",
+      header: "Stage",
+      render: (a) => (
+        <span className="tabular-nums">
+          {a.currentStage}/{a.totalStages}
+        </span>
+      ),
+    },
+    { key: "priority", header: "Priority", render: (a) => a.priority },
+    { key: "status", header: "Status", render: (a) => <Pill value={a.status} tone={statusTone(a.status)} /> },
+  ];
+
   return (
-    <div>
-      <DemoBadge moduleKey="visa" />
-      <div className="p-5 max-w-[1200px]">
-        <div className="flex items-end justify-between gap-3 mb-4 flex-wrap">
-          <div>
-            <h1 className="text-[16px] font-bold text-slate-800">Visa Management</h1>
-            <p className="text-[11px] text-slate-500 mt-0.5">{total} China visa cases · CVASC workflow</p>
-          </div>
+    <ListPageShell
+      wide
+      icon={FileCheck}
+      title="Visa Services"
+      subtitle="China visa cases on the CVASC workflow."
+      breadcrumb={[{ label: "Bookings", to: "/visa" }, { label: "Visa Services" }]}
+      actions={
+        <>
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
           <Can perm="application:create">
-            <Link
-              to="/visa/new"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-bold text-white"
-              style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
-            >
+            <Link to="/visa/new" className={btnPrimary} style={btnPrimaryStyle}>
               <Plus size={13} /> New Visa Case
             </Link>
           </Can>
-        </div>
-
-        <ErrorBanner message={error} />
-
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-slate-100 flex flex-wrap gap-2">
-            <div className="relative flex-1 min-w-[180px] max-w-sm">
-              <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && void load()}
-                placeholder="Search ref / customer…"
-                className="w-full pl-7 pr-3 py-2 border border-slate-200 rounded-lg text-[11px] focus:outline-none focus:border-amber-400"
-              />
-            </div>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="px-2.5 py-2 border border-slate-200 rounded-lg text-[11px] bg-white"
-            >
-              <option value="">All statuses</option>
-              {["draft", "in_progress", "docs_required", "on_hold", "submitted", "approved", "rejected", "completed", "cancelled"].map(
-                (s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ),
-              )}
-            </select>
-            <button
-              type="button"
-              onClick={() => void load()}
-              className="px-3 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-600 hover:bg-slate-50"
-            >
-              Refresh
-            </button>
+        </>
+      }
+      stats={
+        <StatStrip>
+          <KpiCard label="Total cases" value={total} />
+          <KpiCard label="In progress" value={stats.active} tone="accent" />
+          <KpiCard label="Needs action" value={stats.hold} tone="warning" />
+          <KpiCard label="Approved" value={stats.approved} tone="success" />
+        </StatStrip>
+      }
+      toolbar={
+        <ListToolbar>
+          <div className="relative flex-1">
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && void load()}
+              placeholder="Search ref / customer…"
+              className={searchInputClassName}
+            />
           </div>
-
-          {loading ? (
-            <div className="flex justify-center py-16">
-              <InlineSpinner />
-            </div>
-          ) : rows.length === 0 ? (
-            <EmptyState title="No records yet" hint="Create a China visa case to start the CVASC pipeline." />
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-[9.5px] uppercase tracking-wider text-slate-400 border-b border-slate-50">
-                  <th className="px-4 py-2 font-bold">Ref</th>
-                  <th className="px-4 py-2 font-bold">Customer</th>
-                  <th className="px-4 py-2 font-bold">Title</th>
-                  <th className="px-4 py-2 font-bold">Stage</th>
-                  <th className="px-4 py-2 font-bold">Priority</th>
-                  <th className="px-4 py-2 font-bold">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((a) => (
-                  <tr key={a.id} className="border-b border-slate-50 hover:bg-slate-50/80">
-                    <td className="px-4 py-2.5">
-                      <Link to={`/visa/${a.id}`} className="text-[11px] font-mono font-bold text-amber-700 hover:underline">
-                        {a.referenceNo}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-2.5 text-[11px] text-slate-700">{a.customer?.fullName || "—"}</td>
-                    <td className="px-4 py-2.5 text-[11px] text-slate-500 max-w-[220px] truncate">{a.title || "—"}</td>
-                    <td className="px-4 py-2.5 text-[11px] text-slate-600">
-                      {a.currentStage}/{a.totalStages}
-                    </td>
-                    <td className="px-4 py-2.5 text-[11px] text-slate-500">{a.priority}</td>
-                    <td className="px-4 py-2.5">
-                      <span className={`text-[9.5px] font-bold px-2 py-0.5 rounded ${STATUS_PILL[a.status] || "bg-slate-100 text-slate-600"}`}>
-                        {a.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    </div>
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className={selectClassName}>
+            <option value="">All statuses</option>
+            {[
+              "draft",
+              "in_progress",
+              "docs_required",
+              "on_hold",
+              "submitted",
+              "approved",
+              "rejected",
+              "completed",
+              "cancelled",
+            ].map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </ListToolbar>
+      }
+      error={error}
+    >
+      <DataTable
+        rows={rows}
+        columns={columns}
+        rowKey={(r) => r.id}
+        loading={loading}
+        emptyTitle="No visa cases yet"
+        emptyHint="Create a China visa case to start the CVASC pipeline."
+      />
+    </ListPageShell>
   );
 }
 
@@ -172,7 +180,10 @@ export function NewVisaCasePage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    void customersApi.list({ limit: 200 }).then((r) => setCustomers(listOf<Customer>(r))).catch(() => setCustomers([]));
+    void customersApi
+      .list({ limit: 200 })
+      .then((r) => setCustomers(listOf<Customer>(r)))
+      .catch(() => setCustomers([]));
   }, []);
 
   const selected = useMemo(() => customers.find((c) => c.id === customerId), [customers, customerId]);
@@ -210,67 +221,69 @@ export function NewVisaCasePage() {
     }
   }
 
-  const inputCls =
-    "w-full px-2.5 py-2 text-[11px] border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-amber-400";
-
   return (
-    <div className="p-5 max-w-[640px]">
-      <h1 className="text-[16px] font-bold text-slate-800 mb-1">New China visa case</h1>
-      <p className="text-[11px] text-slate-500 mb-4">Creates an Application and applies the active CVASC workflow template.</p>
+    <PageShell>
+      <PageHeader
+        icon={FileCheck}
+        title="New Visa Case"
+        subtitle="Creates an application and applies the active CVASC workflow template."
+        breadcrumb={[
+          { label: "Bookings", to: "/visa" },
+          { label: "Visa Services", to: "/visa" },
+          { label: "New" },
+        ]}
+      />
       <ErrorBanner message={error} />
-      <form onSubmit={submit} className="bg-white rounded-xl border border-slate-200 p-5 space-y-3">
-        <div>
-          <label className="block text-[10px] font-bold text-slate-500 mb-1">Customer *</label>
-          <select className={inputCls} required value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
-            <option value="">— select —</option>
-            {customers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.fullName} ({c.code})
-              </option>
-            ))}
-          </select>
-          <Link to="/customers" className="text-[10px] text-amber-600 font-semibold mt-1 inline-block">
-            Create customer first →
-          </Link>
-        </div>
-        <div>
-          <label className="block text-[10px] font-bold text-slate-500 mb-1">Visa type</label>
-          <select className={inputCls} value={visaType} onChange={(e) => setVisaType(e.target.value)}>
-            {VISA_TYPE_OPTIONS.map((v) => (
-              <option key={v.value} value={v.value}>
-                {v.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-[10px] font-bold text-slate-500 mb-1">Priority</label>
-          <select className={inputCls} value={priority} onChange={(e) => setPriority(e.target.value)}>
-            {["low", "medium", "high", "urgent"].map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-[10px] font-bold text-slate-500 mb-1">Title</label>
-          <input className={inputCls} placeholder="Auto if blank" value={title} onChange={(e) => setTitle(e.target.value)} />
-        </div>
-        <div className="flex gap-2 pt-1">
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-2 rounded-lg text-[11px] font-bold text-white disabled:opacity-50"
-            style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
-          >
-            {loading ? "Creating…" : "Create case"}
-          </button>
-          <button type="button" onClick={() => navigate("/visa")} className="px-4 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-600">
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
+      <Surface padded className="max-w-xl space-y-3">
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <label className={labelCls}>Customer *</label>
+            <select className={inputCls} required value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
+              <option value="">— select —</option>
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.fullName} ({c.code})
+                </option>
+              ))}
+            </select>
+            <Link to="/customers" className="mt-1 inline-block text-[11px] font-semibold text-[var(--accent)]">
+              Create customer first →
+            </Link>
+          </div>
+          <div>
+            <label className={labelCls}>Visa type</label>
+            <select className={inputCls} value={visaType} onChange={(e) => setVisaType(e.target.value)}>
+              {VISA_TYPE_OPTIONS.map((v) => (
+                <option key={v.value} value={v.value}>
+                  {v.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Priority</label>
+            <select className={inputCls} value={priority} onChange={(e) => setPriority(e.target.value)}>
+              {["low", "medium", "high", "urgent"].map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Title</label>
+            <input className={inputCls} placeholder="Auto if blank" value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button type="submit" disabled={loading} className={btnPrimary} style={btnPrimaryStyle}>
+              {loading ? "Creating…" : "Create case"}
+            </button>
+            <button type="button" onClick={() => navigate("/visa")} className={btnGhost}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </Surface>
+    </PageShell>
   );
 }

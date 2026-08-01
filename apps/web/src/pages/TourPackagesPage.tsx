@@ -1,13 +1,17 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Package } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { tourPackagesApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import type { TourPackageProduct } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { TourModuleNav } from "@/components/tours/TourModuleNav";
 import {
   PACKAGE_CATEGORIES,
@@ -204,18 +208,14 @@ export default function TourPackagesPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="tours" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Package size={16} className="text-amber-600" /> Package master / builder
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Curated products: categories, destinations, day-by-day itinerary, inclusions, pricing. Not an OTA catalog.
-          </p>
-        </div>
-        <TourModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={Package}
+        title="Package master / builder"
+        subtitle="Curated products: categories, destinations, day-by-day itinerary, inclusions, pricing."
+        breadcrumb={[{ label: "Tours", to: "/tours" }, { label: "Package master / builder" }]}
+      />
+      <TourModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
 
@@ -446,7 +446,7 @@ export default function TourPackagesPage() {
             <button
               type="submit"
               className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white"
-              style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+              style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
             >
               Save package product
             </button>
@@ -531,7 +531,6 @@ export default function TourPackagesPage() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </PageShell>
   );
 }

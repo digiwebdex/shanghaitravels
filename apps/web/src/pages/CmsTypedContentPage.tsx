@@ -1,14 +1,18 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
-import { Newspaper } from "lucide-react";
+import { Newspaper, RefreshCw } from "lucide-react";
 import { cmsApi, type CmsContent } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
+import { SuccessBanner } from "@/components/Feedback";
 import { CmsModuleNav } from "@/components/cms/CmsModuleNav";
-import { PageHeader, PageShell, Surface, SurfaceHeader } from "@/components/enterprise/Page";
-import { Pill, statusTone } from "@/components/enterprise/DataTable";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  ListPageShell,
+  StatStrip,
+  btnGhost,
+} from "@/components/enterprise/Page";
 
 const LABELS: Record<string, string> = {
   blog: "Blog",
@@ -43,64 +47,72 @@ export default function CmsTypedContentPage() {
     void load();
   }, [load]);
 
+  const stats = useMemo(() => {
+    const published = rows.filter((r) => r.status === "published").length;
+    return { published, draft: rows.length - published };
+  }, [rows]);
+
+  const columns: Column<CmsContent>[] = [
+    { key: "title", header: "Title", render: (r) => <span className="font-semibold text-[var(--primary)]">{r.title}</span> },
+    { key: "status", header: "Status", render: (r) => <Pill value={r.status} tone={statusTone(r.status)} /> },
+    {
+      key: "actions",
+      header: "Actions",
+      className: "text-right",
+      render: (r) => (
+        <Can perm="cms:publish">
+          {r.status !== "published" && (
+            <button
+              type="button"
+              className="font-semibold text-emerald-700 hover:underline"
+              onClick={() =>
+                void cmsApi
+                  .publishContent(r.id)
+                  .then(() => {
+                    setOk("Published");
+                    return load();
+                  })
+                  .catch((err) => setError(err instanceof ApiError ? err.message : "Publish failed"))
+              }
+            >
+              Publish
+            </button>
+          )}
+        </Can>
+      ),
+    },
+  ];
+
   return (
-    <PageShell>
-      <PageHeader
-        icon={Newspaper}
-        title={LABELS[type] || type}
-        subtitle={`CMS content filtered to type=${type}.`}
-        breadcrumb={[{ label: "Website & CMS" }, { label: LABELS[type] || type }]}
-      />
-      <CmsModuleNav />
-      <ErrorBanner message={error} />
+    <ListPageShell
+      wide
+      icon={Newspaper}
+      title={LABELS[type] || type}
+      subtitle={`CMS content filtered to type=${type}.`}
+      breadcrumb={[{ label: "Website & CMS" }, { label: LABELS[type] || type }]}
+      moduleNav={<CmsModuleNav />}
+      actions={
+        <button type="button" className={btnGhost} onClick={() => void load()}>
+          <RefreshCw size={12} /> Refresh
+        </button>
+      }
+      stats={
+        <StatStrip>
+          <KpiCard label="Items" value={rows.length} />
+          <KpiCard label="Draft / other" value={stats.draft} tone="warning" />
+          <KpiCard label="Published" value={stats.published} tone="success" />
+        </StatStrip>
+      }
+      error={error}
+    >
       <SuccessBanner message={ok} />
-      <Surface>
-        <SurfaceHeader title={`${rows.length} item${rows.length === 1 ? "" : "s"}`} />
-        {loading ? (
-          <div className="flex justify-center py-16"><InlineSpinner /></div>
-        ) : rows.length === 0 ? (
-          <p className="px-4 py-12 text-center text-[11.5px] text-slate-400">No {type} content yet</p>
-        ) : (
-          <table className="w-full text-[11.5px]">
-            <thead className="bg-slate-50 text-[9.5px] uppercase tracking-wider text-slate-500">
-              <tr>
-                <th className="px-4 py-2 text-left">Title</th>
-                <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} className="border-t border-slate-100">
-                  <td className="px-4 py-2.5 font-semibold text-slate-800">{r.title}</td>
-                  <td className="px-4 py-2.5"><Pill value={r.status} tone={statusTone(r.status)} /></td>
-                  <td className="px-4 py-2.5 text-right">
-                    <Can perm="cms:publish">
-                      {r.status !== "published" && (
-                        <button
-                          type="button"
-                          className="font-semibold text-emerald-700 hover:underline"
-                          onClick={() =>
-                            void cmsApi
-                              .publishContent(r.id)
-                              .then(() => {
-                                setOk("Published");
-                                return load();
-                              })
-                              .catch((err) => setError(err instanceof ApiError ? err.message : "Publish failed"))
-                          }
-                        >
-                          Publish
-                        </button>
-                      )}
-                    </Can>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </Surface>
-    </PageShell>
+      <DataTable
+        rows={rows}
+        columns={columns}
+        rowKey={(r) => r.id}
+        loading={loading}
+        emptyTitle={`No ${type} content yet`}
+      />
+    </ListPageShell>
   );
 }

@@ -83,7 +83,7 @@ export default function ChangePasswordPage() {
             type="submit"
             disabled={loading}
             className="w-full py-2.5 rounded-lg text-[12px] font-bold text-white disabled:opacity-50"
-            style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+            style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
           >
             {loading ? "Saving…" : "Save password"}
           </button>

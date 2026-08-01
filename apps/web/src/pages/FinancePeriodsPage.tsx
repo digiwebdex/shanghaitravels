@@ -1,13 +1,17 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { CalendarRange } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { glApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { FiscalYear } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 
 export default function FinancePeriodsPage() {
@@ -76,18 +80,14 @@ export default function FinancePeriodsPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="finance" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <CalendarRange size={16} className="text-amber-600" /> Fiscal years & periods
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Closing validation blocks posts and unposted journals. Branch-ready periods.
-          </p>
-        </div>
-        <FinanceModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={CalendarRange}
+        title="Fiscal years & periods"
+        subtitle="Closing validation blocks posts and unposted journals. Branch-ready periods."
+        breadcrumb={[{ label: "Finance ERP", to: "/finance" }, { label: "Fiscal years & periods" }]}
+      />
+      <FinanceModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         <Can perm="gl:manage">
@@ -109,7 +109,7 @@ export default function FinancePeriodsPage() {
               <input type="date" className={inputCls} value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
             </div>
             <div className="sm:col-span-4">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                 Create FY + monthly periods
               </button>
             </div>
@@ -153,7 +153,6 @@ export default function FinancePeriodsPage() {
             </section>
           ))
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

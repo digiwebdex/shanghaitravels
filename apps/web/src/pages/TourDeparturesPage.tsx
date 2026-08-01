@@ -1,13 +1,17 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { CalendarDays } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { tourDeparturesApi, tourPackagesApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import type { TourDeparture, TourPackageProduct } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { TourModuleNav } from "@/components/tours/TourModuleNav";
 import { fromDateInput, toDateInput } from "@/lib/tour";
 
@@ -76,18 +80,14 @@ export default function TourDeparturesPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="tours" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <CalendarDays size={16} className="text-amber-600" /> Departure calendar
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Scheduled departures linked to package products (group / fixed-date tours).
-          </p>
-        </div>
-        <TourModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={CalendarDays}
+        title="Departure calendar"
+        subtitle="Scheduled departures linked to package products (group / fixed-date tours)."
+        breadcrumb={[{ label: "Tours", to: "/tours" }, { label: "Departure calendar" }]}
+      />
+      <TourModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
 
@@ -178,7 +178,7 @@ export default function TourDeparturesPage() {
               <button
                 type="submit"
                 className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white"
-                style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+                style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
               >
                 Add departure
               </button>
@@ -224,7 +224,6 @@ export default function TourDeparturesPage() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </PageShell>
   );
 }

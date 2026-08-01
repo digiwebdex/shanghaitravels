@@ -1,12 +1,16 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { PanelsTopLeft } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { cmsApi, type CmsBanner } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CmsModuleNav } from "@/components/cms/CmsModuleNav";
 
 export default function CmsBannersPage() {
@@ -60,16 +64,14 @@ export default function CmsBannersPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="cms" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <PanelsTopLeft size={16} className="text-amber-600" /> Banners & sliders
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">Hero and placement-based banners for the public site.</p>
-        </div>
-        <CmsModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={PanelsTopLeft}
+        title="Banners & sliders"
+        subtitle="Hero and placement-based banners for the public site."
+        breadcrumb={[{ label: "CMS", to: "/cms" }, { label: "Banners & sliders" }]}
+      />
+      <CmsModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         <Can perm="cms:manage">
@@ -117,7 +119,6 @@ export default function CmsBannersPage() {
             ))}
           </ul>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

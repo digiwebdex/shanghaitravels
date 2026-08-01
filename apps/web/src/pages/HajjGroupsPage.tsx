@@ -1,13 +1,17 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { UsersRound } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { hajjGroupsApi, hajjPackagesApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import type { HajjGroup, HajjUmrahPackageProduct } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { HajjModuleNav } from "@/components/hajj/HajjModuleNav";
 import { GROUP_STATUSES, HAJJ_KINDS, fromDateInput, toDateInput } from "@/lib/hajj";
 
@@ -101,18 +105,14 @@ export default function HajjGroupsPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="hajj" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <UsersRound size={16} className="text-amber-600" /> Group operations
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Leader assignment, flights, hotels, ground transport, rooming, departure / return schedules.
-          </p>
-        </div>
-        <HajjModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={UsersRound}
+        title="Group operations"
+        subtitle="Leader assignment, flights, hotels, ground transport, rooming, departure / return schedules."
+        breadcrumb={[{ label: "Hajj & Umrah", to: "/hajj" }, { label: "Group operations" }]}
+      />
+      <HajjModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
 
@@ -217,7 +217,7 @@ export default function HajjGroupsPage() {
               <input className={inputCls} value={notes} onChange={(e) => setNotes(e.target.value)} />
             </div>
             <div className="sm:col-span-3">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                 Save group
               </button>
             </div>
@@ -275,7 +275,6 @@ export default function HajjGroupsPage() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </PageShell>
   );
 }

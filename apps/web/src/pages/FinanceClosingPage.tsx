@@ -1,13 +1,17 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Lock } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { fsApi, glApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { FiscalYear } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 
 type ReopenReq = {
@@ -98,18 +102,14 @@ export default function FinanceClosingPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="finance" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Lock size={16} className="text-amber-600" /> Period closing & year-end
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Lock closed periods, approve reopenals, year-end close, and OB roll-forward.
-          </p>
-        </div>
-        <FinanceModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={Lock}
+        title="Period closing & year-end"
+        subtitle="Lock closed periods, approve reopenals, year-end close, and OB roll-forward."
+        breadcrumb={[{ label: "Finance ERP", to: "/finance" }, { label: "Period closing & year-end" }]}
+      />
+      <FinanceModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
 
@@ -192,7 +192,7 @@ export default function FinanceClosingPage() {
                   <input className={inputCls} value={reason} onChange={(e) => setReason(e.target.value)} required />
                 </div>
                 <div className="sm:col-span-3">
-                  <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+                  <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                     Submit reopen request
                   </button>
                 </div>
@@ -253,7 +253,6 @@ export default function FinanceClosingPage() {
             </section>
           </>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

@@ -1,13 +1,17 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { ScrollText } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { bankingApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { BankAccountRow, ChequeRow } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import { toPoishaBdt } from "@/lib/banking";
 import { formatBdt } from "@/lib/gl";
@@ -76,18 +80,14 @@ export default function FinanceChequesPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="finance" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <ScrollText size={16} className="text-amber-600" /> Cheque register
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Incoming/outgoing cheques with status tracking and configurable print layout.
-          </p>
-        </div>
-        <FinanceModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={ScrollText}
+        title="Cheque register"
+        subtitle="Incoming/outgoing cheques with status tracking and configurable print layout."
+        breadcrumb={[{ label: "Finance ERP", to: "/finance" }, { label: "Cheque register" }]}
+      />
+      <FinanceModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
 
@@ -123,7 +123,7 @@ export default function FinanceChequesPage() {
               <input className={inputCls} value={amountBdt} onChange={(e) => setAmountBdt(e.target.value)} required />
             </div>
             <div className="flex items-end">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                 Register
               </button>
             </div>
@@ -174,7 +174,6 @@ export default function FinanceChequesPage() {
             </table>
           </div>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

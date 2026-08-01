@@ -1,14 +1,11 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { BookOpen } from "lucide-react";
+import { BookOpen, RefreshCw } from "lucide-react";
 import { glApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { CostCenter, GlAccount, JournalEntry } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
-import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
+import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import {
   JOURNAL_TYPES,
@@ -18,6 +15,20 @@ import {
   validateJournalLines,
   type JournalLineForm,
 } from "@/lib/gl";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 
 export default function FinanceJournalsPage() {
   const [rows, setRows] = useState<JournalEntry[]>([]);
@@ -83,26 +94,70 @@ export default function FinanceJournalsPage() {
     }
   }
 
-  return (
-    <div>
-      <DemoBadge moduleKey="finance" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <BookOpen size={16} className="text-amber-600" /> Journal entries
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Double-entry engine — drafts must balance before submit / approve / post.
-          </p>
-        </div>
-        <FinanceModuleNav />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
+  const stats = useMemo(() => {
+    const drafts = rows.filter((j) => j.status === "draft").length;
+    const posted = rows.filter((j) => j.status === "posted").length;
+    return { drafts, posted };
+  }, [rows]);
 
-        <Can perm="journal:create">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
-            <p className="text-[10px] font-bold text-slate-500 uppercase">New journal</p>
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+  const columns: Column<JournalEntry>[] = [
+    {
+      key: "no",
+      header: "No",
+      render: (j) => (
+        <Link to={`/finance/journals/${j.id}`} className="font-bold text-[var(--accent)] hover:underline">
+          {j.journalNo}
+        </Link>
+      ),
+    },
+    {
+      key: "date",
+      header: "Date",
+      render: (j) => new Date(j.entryDate).toLocaleDateString("en-BD"),
+    },
+    { key: "type", header: "Type", render: (j) => j.type },
+    { key: "status", header: "Status", render: (j) => <Pill value={j.status} tone={statusTone(j.status)} /> },
+    {
+      key: "debit",
+      header: "Debit",
+      className: "text-right tabular-nums",
+      render: (j) => formatBdt(j.totalDebitPoisha),
+    },
+    {
+      key: "credit",
+      header: "Credit",
+      className: "text-right tabular-nums",
+      render: (j) => formatBdt(j.totalCreditPoisha),
+    },
+  ];
+
+  return (
+    <PageShell wide>
+      <PageHeader
+        icon={BookOpen}
+        title="Journal entries"
+        subtitle="Double-entry engine — drafts must balance before submit / approve / post."
+        breadcrumb={[{ label: "Finance ERP" }, { label: "Journals" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <FinanceModuleNav />
+      <StatStrip>
+        <KpiCard label="Journals" value={rows.length} />
+        <KpiCard label="Drafts" value={stats.drafts} tone="warning" />
+        <KpiCard label="Posted" value={stats.posted} tone="success" />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
+
+      <Can perm="journal:create">
+        <Surface>
+          <SurfaceHeader title="New journal" />
+          <form onSubmit={(e) => void create(e)} className="space-y-3 p-4 sm:p-5">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
               <div>
                 <label className={labelCls}>Entry date</label>
                 <input type="date" className={inputCls} value={entryDate} onChange={(e) => setEntryDate(e.target.value)} required />
@@ -128,7 +183,7 @@ export default function FinanceJournalsPage() {
             </div>
             <div className="space-y-2">
               {lines.map((l, i) => (
-                <div key={i} className="grid grid-cols-1 sm:grid-cols-6 gap-2 border border-slate-100 rounded-lg p-2">
+                <div key={i} className="grid grid-cols-1 gap-2 rounded-lg p-2 ring-1 ring-[var(--ring-card)] sm:grid-cols-6">
                   <div className="sm:col-span-2">
                     <label className={labelCls}>Account</label>
                     <select
@@ -203,57 +258,30 @@ export default function FinanceJournalsPage() {
               ))}
               <button
                 type="button"
-                className="text-[10px] font-semibold text-amber-700"
+                className="text-[11px] font-semibold text-[var(--accent)]"
                 onClick={() => setLines((prev) => [...prev, emptyLine()])}
               >
                 + Add line
               </button>
             </div>
-            <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+            <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
               Save draft journal
             </button>
           </form>
-        </Can>
+        </Surface>
+      </Can>
 
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <InlineSpinner />
-            </div>
-          ) : rows.length === 0 ? (
-            <EmptyState title="No journals" hint="Create a balanced draft journal above." />
-          ) : (
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
-                  <th className="px-4 py-2 font-bold">No</th>
-                  <th className="px-4 py-2 font-bold">Date</th>
-                  <th className="px-4 py-2 font-bold">Type</th>
-                  <th className="px-4 py-2 font-bold">Status</th>
-                  <th className="px-4 py-2 font-bold">Debit</th>
-                  <th className="px-4 py-2 font-bold">Credit</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((j) => (
-                  <tr key={j.id} className="border-b border-slate-50 text-[11px]">
-                    <td className="px-4 py-2.5">
-                      <Link to={`/finance/journals/${j.id}`} className="font-bold text-amber-700 hover:underline">
-                        {j.journalNo}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-2.5">{new Date(j.entryDate).toLocaleDateString("en-BD")}</td>
-                    <td className="px-4 py-2.5">{j.type}</td>
-                    <td className="px-4 py-2.5">{j.status}</td>
-                    <td className="px-4 py-2.5">{formatBdt(j.totalDebitPoisha)}</td>
-                    <td className="px-4 py-2.5">{formatBdt(j.totalCreditPoisha)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    </div>
+      <Surface>
+        <SurfaceHeader title={`${rows.length} journal${rows.length === 1 ? "" : "s"}`} />
+        <DataTable
+          rows={rows}
+          columns={columns}
+          rowKey={(r) => r.id}
+          loading={loading}
+          emptyTitle="No journals"
+          emptyHint="Create a balanced draft journal above."
+        />
+      </Surface>
+    </PageShell>
   );
 }

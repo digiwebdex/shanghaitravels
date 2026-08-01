@@ -1,14 +1,27 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { ListTodo } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { ListTodo, RefreshCw } from "lucide-react";
 import { crmApi, salesApi, type CrmOpportunity, type SalesTask } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { SalesModuleNav } from "@/components/sales/SalesModuleNav";
 import { SALES_TASK_TYPES } from "@/lib/sales";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  ListToolbar,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+  selectClassName,
+} from "@/components/enterprise/Page";
 
 export default function SalesTasksPage() {
   const [rows, setRows] = useState<SalesTask[]>([]);
@@ -61,33 +74,100 @@ export default function SalesTasksPage() {
     }
   }
 
+  const stats = useMemo(() => {
+    const open = rows.filter((t) => t.status === "open").length;
+    const escalated = rows.filter((t) => t.status === "escalated").length;
+    const done = rows.filter((t) => t.status === "done").length;
+    return { open, escalated, done };
+  }, [rows]);
+
+  const columns: Column<SalesTask>[] = [
+    { key: "title", header: "Title", render: (t) => <span className="font-bold">{t.title}</span> },
+    { key: "type", header: "Type", render: (t) => t.type },
+    { key: "status", header: "Status", render: (t) => <Pill value={t.status} tone={statusTone(t.status)} /> },
+    {
+      key: "due",
+      header: "Due",
+      render: (t) => (t.dueAt ? new Date(t.dueAt).toLocaleString("en-BD") : "—"),
+    },
+    {
+      key: "sla",
+      header: "SLA",
+      render: (t) =>
+        t.slaDueAt ? (
+          <span className="text-rose-700">{new Date(t.slaDueAt).toLocaleString("en-BD")}</span>
+        ) : (
+          "—"
+        ),
+    },
+    { key: "opp", header: "Opportunity", render: (t) => t.opportunity?.opportunityNo || "—" },
+    {
+      key: "actions",
+      header: "",
+      render: (t) =>
+        t.status === "open" ? (
+          <Can perm="sales:task">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="text-[10px] font-semibold text-emerald-700"
+                onClick={() =>
+                  void salesApi
+                    .completeTask(t.id)
+                    .then(() => load())
+                    .catch((e) => setError(e instanceof ApiError ? e.message : "Complete failed"))
+                }
+              >
+                Complete
+              </button>
+              <button
+                type="button"
+                className="text-[10px] font-semibold text-[var(--accent)]"
+                onClick={() =>
+                  void salesApi
+                    .escalateTask(t.id)
+                    .then(() => {
+                      setOk("Escalated");
+                      return load();
+                    })
+                    .catch((e) => setError(e instanceof ApiError ? e.message : "Escalate failed"))
+                }
+              >
+                Escalate
+              </button>
+            </div>
+          </Can>
+        ) : null,
+    },
+  ];
+
   return (
-    <div>
-      <DemoBadge moduleKey="sales" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <ListTodo size={16} className="text-amber-600" /> Sales tasks
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">Follow-ups, reminders, assignment, SLA tracking, and escalations.</p>
-        </div>
-        <SalesModuleNav />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
-        <div className="flex flex-wrap gap-1.5">
-          {["", "open", "done", "escalated", "overdue"].map((f) => (
-            <button
-              key={f || "all"}
-              type="button"
-              className={`px-2.5 py-1 rounded-lg text-[10.5px] font-semibold border ${filter === f ? "bg-amber-50 border-amber-300" : "border-slate-200 bg-white"}`}
-              onClick={() => setFilter(f)}
-            >
-              {f || "all"}
-            </button>
-          ))}
-        </div>
-        <Can perm="sales:task">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+    <PageShell wide>
+      <PageHeader
+        icon={ListTodo}
+        title="Sales tasks"
+        subtitle="Follow-ups, reminders, assignment, SLA tracking, and escalations."
+        breadcrumb={[{ label: "Sales" }, { label: "Tasks" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <SalesModuleNav />
+      <StatStrip>
+        <KpiCard label="Shown" value={rows.length} />
+        <KpiCard label="Open" value={stats.open} tone="accent" />
+        <KpiCard label="Escalated" value={stats.escalated} tone="warning" />
+        <KpiCard label="Done" value={stats.done} tone="success" />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
+
+      <Can perm="sales:task">
+        <Surface>
+          <SurfaceHeader title="Schedule task" />
+          <form onSubmit={(e) => void create(e)} className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-4 sm:p-5">
             <div className="sm:col-span-2">
               <label className={labelCls}>Title *</label>
               <input className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -122,63 +202,26 @@ export default function SalesTasksPage() {
               <input className={inputCls} value={slaHours} onChange={(e) => setSlaHours(e.target.value)} />
             </div>
             <div className="sm:col-span-4">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
                 Schedule task
               </button>
             </div>
           </form>
-        </Can>
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <InlineSpinner />
-          </div>
-        ) : (
-          <ul className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
-            {rows.map((t) => (
-              <li key={t.id} className="text-[11px] flex flex-wrap gap-2 items-center border-b border-slate-50 pb-2">
-                <span className="font-bold">{t.title}</span>
-                <span className="text-slate-500">{t.type}</span>
-                <span>{t.status}</span>
-                {t.dueAt && <span>due {new Date(t.dueAt).toLocaleString("en-BD")}</span>}
-                {t.slaDueAt && <span className="text-rose-700">SLA {new Date(t.slaDueAt).toLocaleString("en-BD")}</span>}
-                {t.opportunity && <span>{t.opportunity.opportunityNo}</span>}
-                {t.status === "open" && (
-                  <Can perm="sales:task">
-                    <button
-                      type="button"
-                      className="text-[10px] font-semibold text-emerald-700"
-                      onClick={() =>
-                        void salesApi
-                          .completeTask(t.id)
-                          .then(() => load())
-                          .catch((e) => setError(e instanceof ApiError ? e.message : "Complete failed"))
-                      }
-                    >
-                      Complete
-                    </button>
-                    <button
-                      type="button"
-                      className="text-[10px] font-semibold text-amber-800"
-                      onClick={() =>
-                        void salesApi
-                          .escalateTask(t.id)
-                          .then(() => {
-                            setOk("Escalated");
-                            return load();
-                          })
-                          .catch((e) => setError(e instanceof ApiError ? e.message : "Escalate failed"))
-                      }
-                    >
-                      Escalate
-                    </button>
-                  </Can>
-                )}
-              </li>
-            ))}
-            {rows.length === 0 && <p className="text-[11px] text-slate-400">No tasks.</p>}
-          </ul>
-        )}
-      </div>
-    </div>
+        </Surface>
+      </Can>
+
+      <Surface>
+        <ListToolbar>
+          <select value={filter} onChange={(e) => setFilter(e.target.value)} className={selectClassName}>
+            <option value="">All</option>
+            <option value="open">Open</option>
+            <option value="done">Done</option>
+            <option value="escalated">Escalated</option>
+            <option value="overdue">Overdue</option>
+          </select>
+        </ListToolbar>
+        <DataTable rows={rows} columns={columns} rowKey={(r) => r.id} loading={loading} emptyTitle="No tasks" />
+      </Surface>
+    </PageShell>
   );
 }

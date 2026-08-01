@@ -1,14 +1,25 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Briefcase } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { Briefcase, RefreshCw } from "lucide-react";
 import { crmApi, type CrmLead, type CrmOpportunity } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CrmModuleNav } from "@/components/crm/CrmModuleNav";
 import { formatBdt, OPP_STAGES, probabilityLabel, QUOTE_SERVICES, toPoisha } from "@/lib/crm";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 
 export default function CrmOpportunitiesPage() {
   const [rows, setRows] = useState<CrmOpportunity[]>([]);
@@ -55,21 +66,95 @@ export default function CrmOpportunitiesPage() {
     }
   }
 
-  return (
-    <div>
-      <DemoBadge moduleKey="crm" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Briefcase size={16} className="text-amber-600" /> Opportunities
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">Pipeline stages, probability, and expected revenue.</p>
-        </div>
-        <CrmModuleNav />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
+  const stats = useMemo(() => {
+    const open = rows.filter((o) => o.status === "open").length;
+    const revenue = rows.reduce((s, o) => s + (o.expectedRevenuePoisha || 0), 0);
+    return { open, revenue };
+  }, [rows]);
+
+  const columns: Column<CrmOpportunity>[] = [
+    { key: "no", header: "No", render: (o) => <span className="font-bold text-[var(--primary)]">{o.opportunityNo}</span> },
+    { key: "title", header: "Title", render: (o) => o.title },
+    { key: "stage", header: "Stage", render: (o) => <Pill value={o.stage} tone={statusTone(o.stage)} /> },
+    { key: "prob", header: "Probability", render: (o) => probabilityLabel(o.probabilityBps) },
+    {
+      key: "revenue",
+      header: "Expected",
+      className: "text-right tabular-nums",
+      render: (o) => formatBdt(o.expectedRevenuePoisha),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (o) => (
         <Can perm="opportunity:manage">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+          <div className="flex flex-wrap gap-1">
+            {OPP_STAGES.filter((s) => s !== o.stage)
+              .slice(0, 4)
+              .map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  className="rounded border border-[var(--border)] px-2 py-0.5 text-[10px]"
+                  onClick={() =>
+                    void crmApi
+                      .setOpportunityStage(o.id, s)
+                      .then(() => load())
+                      .catch((e) => setError(e instanceof ApiError ? e.message : "Stage failed"))
+                  }
+                >
+                  → {s}
+                </button>
+              ))}
+            {o.status === "open" && (
+              <button
+                type="button"
+                className="rounded border border-[var(--border)] px-2 py-0.5 text-[10px] font-semibold text-[var(--accent)]"
+                onClick={() =>
+                  void crmApi
+                    .convert({ opportunityId: o.id, serviceType: o.serviceType || "visa" })
+                    .then((r) => {
+                      setOk(`Converted → ${r.application.referenceNo}`);
+                      return load();
+                    })
+                    .catch((e) => setError(e instanceof ApiError ? e.message : "Convert failed"))
+                }
+              >
+                Convert
+              </button>
+            )}
+          </div>
+        </Can>
+      ),
+    },
+  ];
+
+  return (
+    <PageShell wide>
+      <PageHeader
+        icon={Briefcase}
+        title="Opportunities"
+        subtitle="Pipeline stages, probability, and expected revenue."
+        breadcrumb={[{ label: "CRM" }, { label: "Opportunities" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <CrmModuleNav />
+      <StatStrip>
+        <KpiCard label="Total" value={rows.length} />
+        <KpiCard label="Open" value={stats.open} tone="accent" />
+        <KpiCard label="Pipeline value" value={formatBdt(stats.revenue)} tone="success" />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
+
+      <Can perm="opportunity:manage">
+        <Surface>
+          <SurfaceHeader title="Create opportunity" />
+          <form onSubmit={(e) => void create(e)} className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-4 sm:p-5">
             <div className="sm:col-span-2">
               <label className={labelCls}>Title *</label>
               <input className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -100,69 +185,24 @@ export default function CrmOpportunitiesPage() {
               <input className={inputCls} value={revenueBdt} onChange={(e) => setRevenueBdt(e.target.value)} />
             </div>
             <div className="sm:col-span-4">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
                 Create opportunity
               </button>
             </div>
           </form>
-        </Can>
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <InlineSpinner />
-          </div>
-        ) : (
-          <section className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
-            {rows.map((o) => (
-              <div key={o.id} className="border-b border-slate-50 pb-3 text-[11px]">
-                <div className="flex flex-wrap gap-2 items-center">
-                  <span className="font-bold text-slate-800">{o.opportunityNo}</span>
-                  <span>{o.title}</span>
-                  <span className="text-slate-500">{o.stage}</span>
-                  <span>{probabilityLabel(o.probabilityBps)}</span>
-                  <span className="font-semibold">{formatBdt(o.expectedRevenuePoisha)}</span>
-                </div>
-                <Can perm="opportunity:manage">
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {OPP_STAGES.filter((s) => s !== o.stage).slice(0, 5).map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        className="px-2 py-0.5 rounded border border-slate-200 text-[10px]"
-                        onClick={() =>
-                          void crmApi
-                            .setOpportunityStage(o.id, s)
-                            .then(() => load())
-                            .catch((e) => setError(e instanceof ApiError ? e.message : "Stage failed"))
-                        }
-                      >
-                        → {s}
-                      </button>
-                    ))}
-                    {o.status === "open" && (
-                      <button
-                        type="button"
-                        className="px-2 py-0.5 rounded border border-amber-200 text-[10px] text-amber-800 font-semibold"
-                        onClick={() =>
-                          void crmApi
-                            .convert({ opportunityId: o.id, serviceType: o.serviceType || "visa" })
-                            .then((r) => {
-                              setOk(`Converted → ${r.application.referenceNo}`);
-                              return load();
-                            })
-                            .catch((e) => setError(e instanceof ApiError ? e.message : "Convert failed"))
-                        }
-                      >
-                        Convert to case
-                      </button>
-                    )}
-                  </div>
-                </Can>
-              </div>
-            ))}
-            {rows.length === 0 && <p className="text-[11px] text-slate-400">No opportunities.</p>}
-          </section>
-        )}
-      </div>
-    </div>
+        </Surface>
+      </Can>
+
+      <Surface>
+        <SurfaceHeader title={`${rows.length} opportunit${rows.length === 1 ? "y" : "ies"}`} />
+        <DataTable
+          rows={rows}
+          columns={columns}
+          rowKey={(r) => r.id}
+          loading={loading}
+          emptyTitle="No opportunities"
+        />
+      </Surface>
+    </PageShell>
   );
 }

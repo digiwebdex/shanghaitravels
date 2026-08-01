@@ -1,13 +1,24 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Menu } from "lucide-react";
+import { Menu, RefreshCw } from "lucide-react";
 import { cmsApi, type CmsMenu } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CmsModuleNav } from "@/components/cms/CmsModuleNav";
+import { Column, DataTable } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 
 export default function CmsMenusPage() {
   const [rows, setRows] = useState<CmsMenu[]>([]);
@@ -47,22 +58,63 @@ export default function CmsMenusPage() {
     }
   }
 
+  const columns: Column<CmsMenu>[] = [
+    {
+      key: "name",
+      header: "Menu",
+      render: (m) => (
+        <span className="font-bold">
+          {m.name} <span className="font-normal text-[var(--muted-foreground)]">({m.code})</span>
+        </span>
+      ),
+    },
+    {
+      key: "items",
+      header: "Items",
+      render: (m) => (
+        <ul className="space-y-0.5 text-[var(--muted-foreground)]">
+          {(m.items || []).map((i) => (
+            <li key={i.id}>
+              {i.sortOrder}. {i.label} → {i.href}
+            </li>
+          ))}
+        </ul>
+      ),
+    },
+    {
+      key: "count",
+      header: "Count",
+      className: "tabular-nums",
+      render: (m) => (m.items || []).length,
+    },
+  ];
+
   return (
-    <div>
-      <DemoBadge moduleKey="cms" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Menu size={16} className="text-amber-600" /> Menu manager
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">Named menus with ordered items for the public site.</p>
-        </div>
-        <CmsModuleNav />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
-        <Can perm="cms:manage">
-          <form onSubmit={save} className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <PageShell wide>
+      <PageHeader
+        icon={Menu}
+        title="Menu manager"
+        subtitle="Named menus with ordered items for the public site."
+        breadcrumb={[{ label: "Website & CMS" }, { label: "Menus" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <CmsModuleNav />
+      <StatStrip>
+        <KpiCard label="Menus" value={rows.length} />
+        <KpiCard label="Total items" value={rows.reduce((s, m) => s + (m.items?.length || 0), 0)} tone="accent" />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
+
+      <Can perm="cms:manage">
+        <Surface>
+          <SurfaceHeader title="Save menu" />
+          <form onSubmit={save} className="space-y-3 p-4 sm:p-5">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>
                 <label className={labelCls}>Code</label>
                 <input className={inputCls} value={code} onChange={(e) => setCode(e.target.value)} />
@@ -76,34 +128,17 @@ export default function CmsMenusPage() {
               <label className={labelCls}>Items JSON</label>
               <textarea className={inputCls} rows={4} value={itemsJson} onChange={(e) => setItemsJson(e.target.value)} />
             </div>
-            <button type="submit" className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-[11px] font-semibold">
+            <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
               Save menu
             </button>
           </form>
-        </Can>
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <InlineSpinner />
-          </div>
-        ) : (
-          <ul className="space-y-2">
-            {rows.map((m) => (
-              <li key={m.id} className="bg-white border border-slate-200 rounded-xl p-3 text-[11px]">
-                <div className="font-bold">
-                  {m.name} <span className="text-slate-400">({m.code})</span>
-                </div>
-                <ul className="mt-1 text-slate-600">
-                  {(m.items || []).map((i) => (
-                    <li key={i.id}>
-                      {i.sortOrder}. {i.label} → {i.href}
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
+        </Surface>
+      </Can>
+
+      <Surface>
+        <SurfaceHeader title={`${rows.length} menu${rows.length === 1 ? "" : "s"}`} />
+        <DataTable rows={rows} columns={columns} rowKey={(r) => r.id} loading={loading} emptyTitle="No menus" />
+      </Surface>
+    </PageShell>
   );
 }

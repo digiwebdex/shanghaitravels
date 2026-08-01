@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { ArrowLeft } from "lucide-react";
 import { siteApi, sitePackagesApi, siteDestinationsApi, type CmsBanner, type CmsContent, type CmsMenu, type CmsTravelOffer } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import { HeroServicesGrid } from "@/components/cms/HeroServicesGrid";
@@ -115,117 +116,150 @@ export default function SiteHomePage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <header className="border-b border-white/10 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-        <Link to="/site" className="font-bold tracking-wide text-[15px]">
-          Shanghai Travels
-        </Link>
-        <nav className="flex flex-wrap gap-3 text-[12px] text-white/80">
-          {(menu?.items || []).map((i) => (
-            <a key={i.id} href={i.href} className="hover:text-white">
-              {i.label}
-            </a>
-          ))}
-          <Link to="/site/enquire" className="text-amber-300 font-semibold">
-            Enquire
+    <div
+      className="min-h-screen bg-[var(--background)] text-[var(--foreground)]"
+      style={{ fontFamily: "var(--font-sans)" }}
+    >
+      {/* CMS preview workspace chrome */}
+      <div className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--navy-700)] text-white">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-2.5">
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--orange-300)]">
+              Website Preview
+            </span>
+            <span className="hidden text-[11px] text-white/55 sm:inline">
+              Public site as visitors see it
+            </span>
+          </div>
+          <Link
+            to="/cms"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:bg-white/15"
+          >
+            <ArrowLeft size={13} aria-hidden />
+            Back to CMS
           </Link>
-        </nav>
+        </div>
+      </div>
+
+      <header className="border-b border-[var(--border)] bg-[var(--card)] px-4 py-3 shadow-[var(--shadow-card)]">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
+          <Link to="/site" className="text-[15px] font-bold tracking-wide text-[var(--navy-700)]">
+            Shanghai Travels
+          </Link>
+          <nav className="flex flex-wrap gap-3 text-[12px] text-[var(--muted-foreground)]">
+            {(menu?.items || []).map((i) => (
+              <a key={i.id} href={i.href} className="hover:text-[var(--navy-700)]">
+                {i.label}
+              </a>
+            ))}
+            <Link to="/site/enquire" className="font-semibold text-[var(--accent)]">
+              Enquire
+            </Link>
+          </nav>
+        </div>
       </header>
 
-      <section className="relative px-4 py-14 md:py-20 overflow-hidden">
+      <section className="relative overflow-hidden px-4 py-14 md:py-20">
         <div
-          className="absolute inset-0 opacity-45"
+          className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse at 20% 20%, #b45309 0%, transparent 50%), radial-gradient(ellipse at 80% 0%, #0ea5e9 0%, transparent 45%)",
+              "radial-gradient(ellipse at 15% 0%, rgba(249,115,22,0.12) 0%, transparent 45%), radial-gradient(ellipse at 85% 10%, rgba(20,33,61,0.08) 0%, transparent 40%), linear-gradient(180deg, #EEF1F7 0%, var(--background) 70%)",
           }}
         />
-        <div className="relative max-w-6xl mx-auto">
-          <p className="text-amber-300 text-[12px] font-semibold tracking-[0.2em] uppercase mb-3">Shanghai Travels</p>
-          <h1 className="text-3xl md:text-5xl font-bold max-w-3xl leading-tight">
+        <div className="relative mx-auto max-w-6xl">
+          <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
+            Shanghai Travels
+          </p>
+          <h1 className="max-w-3xl text-3xl font-bold leading-tight text-[var(--navy-700)] md:text-5xl">
             {hero?.title || "Travel with confidence across China and the world"}
           </h1>
-          <p className="mt-4 text-white/70 max-w-2xl text-[14px] md:text-[15px] leading-relaxed">
+          <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-[var(--muted-foreground)] md:text-[15px]">
             {hero?.subtitle || "Visa · Air tickets · Tours · Hajj & Umrah — handled by specialists in Dhaka."}
           </p>
 
           <div className="mt-8 md:mt-10">
-            <HeroServicesGrid items={services} variant="dark" />
+            <HeroServicesGrid items={services} variant="light" />
           </div>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               to="/site/enquire"
-              className="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-amber-500 text-slate-950 text-[13px] font-bold hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/20"
+              className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-[13px] font-bold text-white shadow-lg shadow-orange-500/20 transition-colors hover:brightness-105"
+              style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
             >
               Request a Free Consultation
             </Link>
-            <form onSubmit={search} className="flex gap-2 flex-1 min-w-[220px] max-w-md">
+            <form onSubmit={search} className="flex min-w-[220px] max-w-md flex-1 gap-2">
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search packages & services…"
-                className="flex-1 rounded-xl bg-white/10 border border-white/20 px-3 py-2.5 text-[12px] outline-none focus:border-amber-400"
+                className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 py-2.5 text-[12px] text-[var(--foreground)] outline-none ring-1 ring-[var(--ring-card)] focus:border-[var(--accent)]"
                 aria-label="Search packages and services"
               />
-              <button type="submit" className="px-3 py-2.5 rounded-xl bg-white text-slate-900 text-[12px] font-semibold">
+              <button
+                type="submit"
+                className="rounded-xl bg-[var(--navy-700)] px-3 py-2.5 text-[12px] font-semibold text-white"
+              >
                 Search
               </button>
             </form>
           </div>
-          {error && <p className="mt-3 text-red-300 text-[11px]">{error}</p>}
+          {error && <p className="mt-3 text-[11px] text-[var(--error)]">{error}</p>}
         </div>
       </section>
 
-      <section className="px-4 pb-10 max-w-6xl mx-auto">
-        {destinationsError && <p className="text-red-300 text-[11px] mb-3">{destinationsError}</p>}
+      <section className="mx-auto max-w-6xl px-4 pb-10">
+        {destinationsError && <p className="mb-3 text-[11px] text-[var(--error)]">{destinationsError}</p>}
         <DestinationShowcaseGrid
           destinations={destinations}
           settings={destSettings}
           loading={destinationsLoading}
-          variant="site"
+          variant="light"
           title="Popular Destinations"
           subtitle="Where we can take you — live from Destination Master"
           browseHref="/site/destinations"
         />
       </section>
 
-      <section className="px-4 pb-16 max-w-6xl mx-auto">
-        <div className="flex items-end justify-between mb-4">
-          <h2 className="text-[14px] font-bold">Featured packages</h2>
-          <Link to="/site/search" className="text-[11px] text-amber-300 font-semibold">
+      <section className="mx-auto max-w-6xl px-4 pb-16">
+        <div className="mb-4 flex items-end justify-between">
+          <h2 className="text-[14px] font-bold text-[var(--navy-700)]">Featured packages</h2>
+          <Link to="/site/search" className="text-[11px] font-semibold text-[var(--accent)]">
             View all
           </Link>
         </div>
-        {packagesError && <p className="text-red-300 text-[11px] mb-3">{packagesError}</p>}
+        {packagesError && <p className="mb-3 text-[11px] text-[var(--error)]">{packagesError}</p>}
         {packages.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {packages.map((p) => (
               <PackageCard
                 key={p.id}
                 pkg={p}
+                variant="admin"
                 onQuickView={setQuickView}
                 bookPath={`/site/packages/${p.slug}/book`}
               />
             ))}
           </div>
         ) : !packagesError ? (
-          <p className="text-[12px] text-white/50">No published packages yet — check back soon.</p>
+          <p className="text-[12px] text-[var(--muted-foreground)]">No published packages yet — check back soon.</p>
         ) : null}
 
         {travel.length > 0 && (
           <>
-            <h2 className="text-[14px] font-bold mb-3 mt-10">Featured travel</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <h2 className="mb-3 mt-10 text-[14px] font-bold text-[var(--navy-700)]">Featured travel</h2>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               {travel.map((t) => (
                 <Link
                   key={t.id}
                   to={`/site/travel/${t.serviceType}/${t.slug}`}
-                  className="rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 transition-colors"
+                  className="rounded-xl bg-[var(--card)] p-4 shadow-[var(--shadow-card)] ring-1 ring-[var(--ring-card)] transition-colors hover:ring-[var(--orange-300)]"
                 >
-                  <div className="text-[10px] uppercase tracking-wide text-amber-300">{t.serviceType}</div>
-                  <div className="font-semibold text-[13px] mt-1">{t.title}</div>
-                  <div className="text-[11px] text-white/60 mt-1">{t.destination || t.summary || ""}</div>
+                  <div className="text-[10px] uppercase tracking-wide text-[var(--accent)]">{t.serviceType}</div>
+                  <div className="mt-1 text-[13px] font-semibold text-[var(--navy-700)]">{t.title}</div>
+                  <div className="mt-1 text-[11px] text-[var(--muted-foreground)]">{t.destination || t.summary || ""}</div>
                 </Link>
               ))}
             </div>

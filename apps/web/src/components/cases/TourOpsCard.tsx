@@ -133,7 +133,7 @@ export function TourOpsCard({
               type="button"
               disabled={busy || closed || !confirmGate.ok}
               className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white disabled:opacity-50"
-              style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+              style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
               onClick={() =>
                 run(async () => {
                   const gate = canConfirmTour(detail, stages);

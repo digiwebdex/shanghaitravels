@@ -303,7 +303,7 @@ export default function AdminLayout() {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "#F4F6F8" }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: "var(--background)" }}>
       {/* Desktop sidebar */}
       <aside
         className="relative z-20 hidden flex-shrink-0 flex-col transition-[width] duration-200 lg:flex"

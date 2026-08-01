@@ -1,17 +1,28 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { Receipt } from "lucide-react";
+import { Receipt, RefreshCw } from "lucide-react";
 import { arApi, customersApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { ArDocument, Customer } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
-import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
+import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import { AR_TYPES, docLinesPayload, validateDocLines } from "@/lib/arap";
 import { formatBdt } from "@/lib/gl";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 
 export default function FinanceArPage() {
   const [rows, setRows] = useState<ArDocument[]>([]);
@@ -71,26 +82,67 @@ export default function FinanceArPage() {
     }
   }
 
-  return (
-    <div>
-      <DemoBadge moduleKey="finance" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Receipt size={16} className="text-amber-600" /> Accounts Receivable
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Customer invoices, receipts, advances, credit/debit notes — posts through Phase C1 GL.
-          </p>
-        </div>
-        <FinanceModuleNav />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
+  const stats = useMemo(() => {
+    const openBal = rows.reduce((s, r) => s + (r.balancePoisha || 0), 0);
+    const drafts = rows.filter((r) => r.status === "draft").length;
+    return { openBal, drafts };
+  }, [rows]);
 
-        <Can perm="ar:manage">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
-            <p className="text-[10px] font-bold text-slate-500 uppercase">New AR document</p>
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+  const columns: Column<ArDocument>[] = [
+    {
+      key: "doc",
+      header: "Doc",
+      render: (r) => (
+        <Link to={`/finance/ar/${r.id}`} className="font-semibold text-[var(--accent)] hover:underline">
+          {r.docNo}
+        </Link>
+      ),
+    },
+    { key: "customer", header: "Customer", render: (r) => r.customer?.fullName || r.customerId },
+    { key: "type", header: "Type", render: (r) => r.type },
+    { key: "status", header: "Status", render: (r) => <Pill value={r.status} tone={statusTone(r.status)} /> },
+    {
+      key: "total",
+      header: "Total",
+      className: "text-right tabular-nums",
+      render: (r) => formatBdt(r.totalPoisha),
+    },
+    {
+      key: "balance",
+      header: "Balance",
+      className: "text-right tabular-nums font-semibold",
+      render: (r) => formatBdt(r.balancePoisha),
+    },
+    { key: "case", header: "Case", render: (r) => r.application?.referenceNo || "—" },
+  ];
+
+  return (
+    <PageShell wide>
+      <PageHeader
+        icon={Receipt}
+        title="Accounts Receivable"
+        subtitle="Customer invoices, receipts, advances, credit/debit notes — posts through Phase C1 GL."
+        breadcrumb={[{ label: "Finance ERP" }, { label: "Accounts Receivable" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <FinanceModuleNav />
+      <StatStrip>
+        <KpiCard label="Documents" value={rows.length} />
+        <KpiCard label="Drafts" value={stats.drafts} tone="warning" />
+        <KpiCard label="Open balance" value={formatBdt(stats.openBal)} tone="danger" />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
+
+      <Can perm="ar:manage">
+        <Surface>
+          <SurfaceHeader title="New AR document" />
+          <form onSubmit={(e) => void create(e)} className="space-y-3 p-4 sm:p-5">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
               <div>
                 <label className={labelCls}>Type</label>
                 <select className={inputCls} value={type} onChange={(e) => setType(e.target.value)}>
@@ -126,56 +178,32 @@ export default function FinanceArPage() {
               </div>
               <div>
                 <label className={labelCls}>Case ID (optional)</label>
-                <input className={inputCls} value={applicationId} onChange={(e) => setApplicationId(e.target.value)} placeholder="Application UUID" />
+                <input
+                  className={inputCls}
+                  value={applicationId}
+                  onChange={(e) => setApplicationId(e.target.value)}
+                  placeholder="Application UUID"
+                />
               </div>
             </div>
-            <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+            <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
               Create draft
             </button>
           </form>
-        </Can>
+        </Surface>
+      </Can>
 
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <InlineSpinner />
-          </div>
-        ) : rows.length === 0 ? (
-          <EmptyState title="No AR documents" hint="Create an invoice or bridge from a case operational invoice." />
-        ) : (
-          <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-[10px] uppercase text-slate-500 border-b border-slate-100">
-                  <th className="px-3 py-2">Doc</th>
-                  <th className="px-3 py-2">Customer</th>
-                  <th className="px-3 py-2">Type</th>
-                  <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2">Total</th>
-                  <th className="px-3 py-2">Balance</th>
-                  <th className="px-3 py-2">Case</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.id} className="border-b border-slate-50 text-[11px]">
-                    <td className="px-3 py-2">
-                      <Link to={`/finance/ar/${r.id}`} className="font-semibold text-amber-700 hover:underline">
-                        {r.docNo}
-                      </Link>
-                    </td>
-                    <td className="px-3 py-2">{r.customer?.fullName || r.customerId}</td>
-                    <td className="px-3 py-2">{r.type}</td>
-                    <td className="px-3 py-2">{r.status}</td>
-                    <td className="px-3 py-2">{formatBdt(r.totalPoisha)}</td>
-                    <td className="px-3 py-2">{formatBdt(r.balancePoisha)}</td>
-                    <td className="px-3 py-2">{r.application?.referenceNo || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
+      <Surface>
+        <SurfaceHeader title={`${rows.length} document${rows.length === 1 ? "" : "s"}`} />
+        <DataTable
+          rows={rows}
+          columns={columns}
+          rowKey={(r) => r.id}
+          loading={loading}
+          emptyTitle="No AR documents"
+          emptyHint="Create an invoice or bridge from a case operational invoice."
+        />
+      </Surface>
+    </PageShell>
   );
 }

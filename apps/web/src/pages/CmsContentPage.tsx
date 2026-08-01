@@ -1,12 +1,16 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Newspaper } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { cmsApi, type CmsContent } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CmsModuleNav } from "@/components/cms/CmsModuleNav";
 import { CONTENT_TYPES, validateContentInput } from "@/lib/cms";
 
@@ -54,18 +58,14 @@ export default function CmsContentPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="cms" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Newspaper size={16} className="text-amber-600" /> Content library
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Blog, announcements, FAQs, testimonials, galleries, downloads.
-          </p>
-        </div>
-        <CmsModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={Newspaper}
+        title="Content library"
+        subtitle="Blog, announcements, FAQs, testimonials, galleries, downloads."
+        breadcrumb={[{ label: "CMS", to: "/cms" }, { label: "Content library" }]}
+      />
+      <CmsModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         <Can perm="cms:manage">
@@ -145,7 +145,6 @@ export default function CmsContentPage() {
             </tbody>
           </table>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

@@ -1,13 +1,24 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Image } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { Image, RefreshCw } from "lucide-react";
 import { cmsApi, type CmsMedia } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CmsModuleNav } from "@/components/cms/CmsModuleNav";
+import { Column, DataTable } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 
 export default function CmsMediaPage() {
   const [rows, setRows] = useState<CmsMedia[]>([]);
@@ -56,21 +67,48 @@ export default function CmsMediaPage() {
     }
   }
 
+  const stats = useMemo(() => {
+    const images = rows.filter((m) => (m.mimeType || "").startsWith("image/")).length;
+    return { images };
+  }, [rows]);
+
+  const columns: Column<CmsMedia>[] = [
+    { key: "file", header: "File", render: (m) => <span className="font-semibold">{m.fileName}</span> },
+    {
+      key: "key",
+      header: "Storage key / URL",
+      className: "max-w-[320px] break-all",
+      render: (m) => <span className="text-[var(--muted-foreground)]">{m.storageKey}</span>,
+    },
+    { key: "mime", header: "MIME", render: (m) => m.mimeType || "—" },
+    { key: "alt", header: "Alt", render: (m) => m.altText || "—" },
+  ];
+
   return (
-    <div>
-      <DemoBadge moduleKey="cms" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Image size={16} className="text-amber-600" /> Media library
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">Register media storage keys / URLs for pages, banners, and content.</p>
-        </div>
-        <CmsModuleNav />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
-        <Can perm="cms:manage">
-          <form onSubmit={save} className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+    <PageShell wide>
+      <PageHeader
+        icon={Image}
+        title="Media library"
+        subtitle="Register media storage keys / URLs for pages, banners, and content."
+        breadcrumb={[{ label: "Website & CMS" }, { label: "Media" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <CmsModuleNav />
+      <StatStrip>
+        <KpiCard label="Assets" value={rows.length} />
+        <KpiCard label="Images" value={stats.images} tone="accent" />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
+
+      <Can perm="cms:manage">
+        <Surface>
+          <SurfaceHeader title="Add media" />
+          <form onSubmit={save} className="grid grid-cols-1 gap-3 p-4 md:grid-cols-2 sm:p-5">
             <div>
               <label className={labelCls}>File name</label>
               <input className={inputCls} value={fileName} onChange={(e) => setFileName(e.target.value)} />
@@ -88,28 +126,18 @@ export default function CmsMediaPage() {
               <input className={inputCls} value={altText} onChange={(e) => setAltText(e.target.value)} />
             </div>
             <div>
-              <button type="submit" className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-[11px] font-semibold">
+              <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
                 Add media
               </button>
             </div>
           </form>
-        </Can>
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <InlineSpinner />
-          </div>
-        ) : (
-          <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {rows.map((m) => (
-              <li key={m.id} className="bg-white border border-slate-200 rounded-xl p-3 text-[11px]">
-                <div className="font-semibold">{m.fileName}</div>
-                <div className="text-slate-500 break-all">{m.storageKey}</div>
-                <div className="text-slate-400">{m.mimeType}</div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
+        </Surface>
+      </Can>
+
+      <Surface>
+        <SurfaceHeader title={`${rows.length} asset${rows.length === 1 ? "" : "s"}`} />
+        <DataTable rows={rows} columns={columns} rowKey={(r) => r.id} loading={loading} emptyTitle="No media" />
+      </Surface>
+    </PageShell>
   );
 }

@@ -1,16 +1,27 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { Users } from "lucide-react";
+import { RefreshCw, Users } from "lucide-react";
 import { crmApi, type CrmLead } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CrmModuleNav } from "@/components/crm/CrmModuleNav";
 import { PackagePicker } from "@/components/packages/PackagePicker";
 import { LEAD_SOURCES, QUOTE_SERVICES, validateLead } from "@/lib/crm";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 
 export default function CrmLeadsPage() {
   const [rows, setRows] = useState<CrmLead[]>([]);
@@ -81,24 +92,46 @@ export default function CrmLeadsPage() {
     }
   }
 
-  return (
-    <div>
-      <DemoBadge moduleKey="crm" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Users size={16} className="text-amber-600" /> CRM leads
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Web, walk-in, phone, WhatsApp, Facebook, and referral leads.
-          </p>
-        </div>
-        <CrmModuleNav />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
+  const stats = useMemo(() => {
+    const open = rows.filter((l) => l.status !== "converted" && l.status !== "lost").length;
+    const converted = rows.filter((l) => l.status === "converted").length;
+    return { open, converted };
+  }, [rows]);
 
-        <Can perm="lead:manage">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+  const columns: Column<CrmLead>[] = [
+    { key: "no", header: "No", render: (l) => <span className="font-semibold">{l.leadNo || "—"}</span> },
+    { key: "name", header: "Name", render: (l) => l.name },
+    { key: "source", header: "Source", render: (l) => l.source || "—" },
+    { key: "interest", header: "Interest", render: (l) => l.serviceInterest || "—" },
+    { key: "status", header: "Status", render: (l) => <Pill value={l.status} tone={statusTone(l.status)} /> },
+  ];
+
+  return (
+    <PageShell wide>
+      <PageHeader
+        icon={Users}
+        title="CRM leads"
+        subtitle="Web, walk-in, phone, WhatsApp, Facebook, and referral leads."
+        breadcrumb={[{ label: "CRM" }, { label: "Leads" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <CrmModuleNav />
+      <StatStrip>
+        <KpiCard label="Total leads" value={rows.length} />
+        <KpiCard label="Open" value={stats.open} tone="accent" />
+        <KpiCard label="Converted" value={stats.converted} tone="success" />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
+
+      <Can perm="lead:manage">
+        <Surface>
+          <SurfaceHeader title="Create lead" />
+          <form onSubmit={(e) => void create(e)} className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-4 sm:p-5">
             <div>
               <label className={labelCls}>Name *</label>
               <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} required />
@@ -131,77 +164,56 @@ export default function CrmLeadsPage() {
               <PackagePicker value={packageId} onChange={(id) => setPackageId(id)} label="Package (optional)" />
             </div>
             <div className="sm:col-span-4">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
                 Create lead
               </button>
             </div>
           </form>
-        </Can>
+        </Surface>
+      </Can>
 
-        <Can perm="crm:convert">
-          <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap gap-2 items-end">
-            <div className="min-w-[180px]">
-              <label className={labelCls}>Convert lead</label>
-              <select className={inputCls} value={convertLeadId} onChange={(e) => setConvertLeadId(e.target.value)}>
-                <option value="">Select…</option>
-                {rows.filter((l) => l.status !== "converted").map((l) => (
+      <Can perm="crm:convert">
+        <Surface padded className="flex flex-wrap items-end gap-2">
+          <div className="min-w-[180px]">
+            <label className={labelCls}>Convert lead</label>
+            <select className={inputCls} value={convertLeadId} onChange={(e) => setConvertLeadId(e.target.value)}>
+              <option value="">Select…</option>
+              {rows
+                .filter((l) => l.status !== "converted")
+                .map((l) => (
                   <option key={l.id} value={l.id}>
                     {l.leadNo || l.name}
                   </option>
                 ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelCls}>Case type</label>
-              <select className={inputCls} value={convertService} onChange={(e) => setConvertService(e.target.value)}>
-                {QUOTE_SERVICES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button type="button" onClick={() => void convert()} className="px-3 py-1.5 rounded-lg border border-amber-200 text-[10.5px] font-semibold text-amber-800">
-              Convert to case
-            </button>
+            </select>
           </div>
-        </Can>
+          <div>
+            <label className={labelCls}>Case type</label>
+            <select className={inputCls} value={convertService} onChange={(e) => setConvertService(e.target.value)}>
+              {QUOTE_SERVICES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button type="button" onClick={() => void convert()} className={btnGhost}>
+            Convert to case
+          </button>
+        </Surface>
+      </Can>
 
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <InlineSpinner />
-          </div>
-        ) : (
-          <section className="bg-white rounded-xl border border-slate-200 p-4">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
-                  <th className="px-2 py-2 font-bold">No</th>
-                  <th className="px-2 py-2 font-bold">Name</th>
-                  <th className="px-2 py-2 font-bold">Source</th>
-                  <th className="px-2 py-2 font-bold">Interest</th>
-                  <th className="px-2 py-2 font-bold">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((l) => (
-                  <tr key={l.id} className="border-b border-slate-50 text-[11px]">
-                    <td className="px-2 py-1.5 font-semibold">{l.leadNo || "—"}</td>
-                    <td className="px-2 py-1.5">{l.name}</td>
-                    <td className="px-2 py-1.5">{l.source || "—"}</td>
-                    <td className="px-2 py-1.5">{l.serviceInterest || "—"}</td>
-                    <td className="px-2 py-1.5">{l.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {rows.length === 0 && <p className="text-[11px] text-slate-400">No leads yet.</p>}
-            <p className="text-[10px] text-slate-400 mt-3">
-              Pipeline: <Link className="text-amber-700 font-semibold" to="/crm/opportunities">Opportunities</Link>
-            </p>
-          </section>
-        )}
-      </div>
-    </div>
+      <Surface>
+        <SurfaceHeader
+          title={`${rows.length} lead${rows.length === 1 ? "" : "s"}`}
+          action={
+            <Link className="text-[11px] font-semibold text-[var(--accent)] hover:underline" to="/crm/opportunities">
+              Opportunities →
+            </Link>
+          }
+        />
+        <DataTable rows={rows} columns={columns} rowKey={(r) => r.id} loading={loading} emptyTitle="No leads yet" />
+      </Surface>
+    </PageShell>
   );
 }

@@ -1,14 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, RefreshCw } from "lucide-react";
 import { analyticsApi, type AnalyticsFilters } from "@/lib/services";
 import { ApiError } from "@/lib/api";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { AnalyticsModuleNav } from "@/components/analytics/AnalyticsModuleNav";
 import { AnalyticsFiltersBar } from "@/components/analytics/AnalyticsFiltersBar";
 import { formatBdt } from "@/lib/crm";
 import { pct, validateAnalyticsFilters } from "@/lib/analytics";
+import {
+  KpiCard,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+} from "@/components/enterprise/Page";
 
 export default function AnalyticsExecutivePage() {
   const [filters, setFilters] = useState<AnalyticsFilters>({});
@@ -43,84 +51,97 @@ export default function AnalyticsExecutivePage() {
   const forecast = data?.revenueForecast;
 
   return (
-    <div>
-      <DemoBadge moduleKey="analytics" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <LayoutDashboard size={16} className="text-amber-600" /> Executive analytics
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Pipeline, forecast, monthly trend, branch/team performance, booking conversion, lead sources.
-          </p>
-        </div>
-        <AnalyticsModuleNav />
-        <AnalyticsFiltersBar value={filters} onChange={setFilters} onApply={() => setApplied({ ...filters })} />
-        <ErrorBanner message={error} />
-        {loading ? (
+    <PageShell wide>
+      <PageHeader
+        icon={LayoutDashboard}
+        title="Executive analytics"
+        subtitle="Pipeline, forecast, monthly trend, branch/team performance, booking conversion, lead sources."
+        breadcrumb={[{ label: "Analytics" }, { label: "Executive" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <AnalyticsModuleNav />
+      <AnalyticsFiltersBar value={filters} onChange={setFilters} onApply={() => setApplied({ ...filters })} />
+      {data && (
+        <StatStrip>
+          <KpiCard label="Open pipeline" value={forecast?.openCount ?? 0} tone="accent" />
+          <KpiCard label="Weighted forecast" value={formatBdt(forecast?.weightedRevenuePoisha)} />
+          <KpiCard label="Lead conversion" value={pct(conv?.leadConversionRate)} tone="success" />
+          <KpiCard label="Booking completion" value={pct(conv?.bookingCompletionRate)} />
+        </StatStrip>
+      )}
+      <ErrorBanner message={error} />
+      {loading ? (
+        <Surface padded>
           <div className="flex justify-center py-16">
             <InlineSpinner />
           </div>
-        ) : data ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold mb-2">Sales pipeline</h2>
-              <ul className="text-[11px] space-y-1">
-                {(data.pipeline?.rows || []).map((r: any) => (
-                  <li key={r.stage} className="flex justify-between border-b border-slate-50 pb-1">
-                    <span>
-                      {r.stage} · {r.count}
-                    </span>
-                    <span className="font-semibold">{formatBdt(r.expectedRevenuePoisha)}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold mb-2">Revenue forecast</h2>
-              <p className="text-[11px]">
+        </Surface>
+      ) : data ? (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Surface>
+            <SurfaceHeader title="Sales pipeline" />
+            <ul className="space-y-1 p-4 text-[12px] sm:p-5">
+              {(data.pipeline?.rows || []).map((r: any) => (
+                <li key={r.stage} className="flex justify-between border-b border-[var(--border)] pb-1">
+                  <span>
+                    {r.stage} · {r.count}
+                  </span>
+                  <span className="font-semibold">{formatBdt(r.expectedRevenuePoisha)}</span>
+                </li>
+              ))}
+            </ul>
+          </Surface>
+          <Surface>
+            <SurfaceHeader title="Revenue & conversion" />
+            <div className="space-y-3 p-4 text-[12px] sm:p-5">
+              <p>
                 Open {forecast?.openCount ?? 0} · Weighted {formatBdt(forecast?.weightedRevenuePoisha)} · Unweighted{" "}
                 {formatBdt(forecast?.unweightedRevenuePoisha)}
               </p>
-              <h2 className="text-[12px] font-bold mb-2 mt-4">Booking conversion</h2>
-              <p className="text-[11px]">
+              <p>
                 Lead {pct(conv?.leadConversionRate)} · Booking completion {pct(conv?.bookingCompletionRate)}
               </p>
-            </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold mb-2">Monthly sales trend</h2>
-              <ul className="text-[11px] space-y-1">
-                {(data.monthlySalesTrend?.bookings || []).map((r: any) => (
-                  <li key={r.month} className="flex justify-between border-b border-slate-50 pb-1">
-                    <span>{r.month}</span>
-                    <span className="font-semibold">{r.count} bookings</span>
-                  </li>
-                ))}
-              </ul>
-              <p className="text-[11px] mt-2">Invoiced (period) {formatBdt(data.monthlySalesTrend?.invoicedPoisha)}</p>
-            </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold mb-2">Lead source effectiveness</h2>
-              <ul className="text-[11px] space-y-1">
-                {(data.leadSourceEffectiveness || []).map((r: any) => (
-                  <li key={r.source} className="flex justify-between border-b border-slate-50 pb-1">
-                    <span>{r.source}</span>
-                    <span className="font-semibold">{r.count}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold mb-2">Branch performance</h2>
-              <pre className="text-[10px] bg-slate-50 p-2 rounded-lg overflow-auto max-h-48">{JSON.stringify(data.branchPerformance, null, 2)}</pre>
-            </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold mb-2">Team performance</h2>
-              <pre className="text-[10px] bg-slate-50 p-2 rounded-lg overflow-auto max-h-48">{JSON.stringify(data.teamPerformance, null, 2)}</pre>
-            </section>
-          </div>
-        ) : null}
-      </div>
-    </div>
+            </div>
+          </Surface>
+          <Surface>
+            <SurfaceHeader title="Monthly sales trend" />
+            <ul className="space-y-1 p-4 text-[12px] sm:p-5">
+              {(data.monthlySalesTrend?.bookings || []).map((r: any) => (
+                <li key={r.month} className="flex justify-between border-b border-[var(--border)] pb-1">
+                  <span>{r.month}</span>
+                  <span className="font-semibold">{r.count} bookings</span>
+                </li>
+              ))}
+            </ul>
+            <p className="px-4 pb-4 text-[12px] sm:px-5">
+              Invoiced (period) {formatBdt(data.monthlySalesTrend?.invoicedPoisha)}
+            </p>
+          </Surface>
+          <Surface>
+            <SurfaceHeader title="Lead source effectiveness" />
+            <ul className="space-y-1 p-4 text-[12px] sm:p-5">
+              {(data.leadSourceEffectiveness || []).map((r: any) => (
+                <li key={r.source} className="flex justify-between border-b border-[var(--border)] pb-1">
+                  <span>{r.source}</span>
+                  <span className="font-semibold">{r.count}</span>
+                </li>
+              ))}
+            </ul>
+          </Surface>
+          <Surface>
+            <SurfaceHeader title="Branch performance" />
+            <pre className="max-h-48 overflow-auto p-4 text-[10px] sm:p-5">{JSON.stringify(data.branchPerformance, null, 2)}</pre>
+          </Surface>
+          <Surface>
+            <SurfaceHeader title="Team performance" />
+            <pre className="max-h-48 overflow-auto p-4 text-[10px] sm:p-5">{JSON.stringify(data.teamPerformance, null, 2)}</pre>
+          </Surface>
+        </div>
+      ) : null}
+    </PageShell>
   );
 }

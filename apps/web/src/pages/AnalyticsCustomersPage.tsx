@@ -1,14 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
-import { Users } from "lucide-react";
+import { RefreshCw, Users } from "lucide-react";
 import { analyticsApi, type AnalyticsFilters } from "@/lib/services";
 import { ApiError } from "@/lib/api";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { AnalyticsModuleNav } from "@/components/analytics/AnalyticsModuleNav";
 import { AnalyticsFiltersBar } from "@/components/analytics/AnalyticsFiltersBar";
 import { formatBdt } from "@/lib/crm";
 import { pct, validateAnalyticsFilters } from "@/lib/analytics";
+import {
+  KpiCard,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+} from "@/components/enterprise/Page";
 
 export default function AnalyticsCustomersPage() {
   const [filters, setFilters] = useState<AnalyticsFilters>({});
@@ -38,65 +46,74 @@ export default function AnalyticsCustomersPage() {
   }, [load]);
 
   return (
-    <div>
-      <DemoBadge moduleKey="analytics" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Users size={16} className="text-amber-600" /> Customer analytics
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            CLV, booking frequency, repeat rate, segmentation, corporate vs B2C, geography.
-          </p>
-        </div>
-        <AnalyticsModuleNav />
-        <AnalyticsFiltersBar value={filters} onChange={setFilters} onApply={() => setApplied({ ...filters })} />
-        <ErrorBanner message={error} />
-        {loading ? (
+    <PageShell wide>
+      <PageHeader
+        icon={Users}
+        title="Customer analytics"
+        subtitle="CLV, booking frequency, repeat rate, segmentation, corporate vs B2C, geography."
+        breadcrumb={[{ label: "Analytics" }, { label: "Customers" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <AnalyticsModuleNav />
+      <AnalyticsFiltersBar value={filters} onChange={setFilters} onApply={() => setApplied({ ...filters })} />
+      {data && (
+        <StatStrip>
+          <KpiCard label="Avg CLV" value={formatBdt(data.lifetimeValue?.averageClvPoisha)} tone="accent" />
+          <KpiCard label="Bookings / customer" value={data.bookingFrequency?.averageBookingsPerCustomer ?? "—"} />
+          <KpiCard label="Repeat rate" value={pct(data.repeatCustomerRate?.ratePct)} tone="success" />
+        </StatStrip>
+      )}
+      <ErrorBanner message={error} />
+      {loading ? (
+        <Surface padded>
           <div className="flex justify-center py-16">
             <InlineSpinner />
           </div>
-        ) : data ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold mb-2">Lifetime value</h2>
-              <p className="text-[11px]">
+        </Surface>
+      ) : data ? (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Surface>
+            <SurfaceHeader title="Lifetime value" />
+            <div className="space-y-2 p-4 text-[12px] sm:p-5">
+              <p>
                 Avg CLV {formatBdt(data.lifetimeValue?.averageClvPoisha)} · sample {data.lifetimeValue?.sampleSize}
               </p>
-              <h2 className="text-[12px] font-bold mb-2 mt-3">Booking frequency</h2>
-              <p className="text-[11px]">{data.bookingFrequency?.averageBookingsPerCustomer} bookings / customer</p>
-              <h2 className="text-[12px] font-bold mb-2 mt-3">Repeat rate</h2>
-              <p className="text-[11px]">{pct(data.repeatCustomerRate?.ratePct)}</p>
-            </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold mb-2">Segmentation</h2>
-              <ul className="text-[11px] space-y-1">
-                {(data.segmentation || []).map((r: any) => (
-                  <li key={r.segment} className="flex justify-between border-b border-slate-50 pb-1">
-                    <span>{r.segment}</span>
-                    <span className="font-semibold">{r.count}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold mb-2">Corporate vs B2C</h2>
-              <pre className="text-[10px] bg-slate-50 p-2 rounded-lg overflow-auto">{JSON.stringify(data.corporateVsB2c, null, 2)}</pre>
-            </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold mb-2">Geographic distribution</h2>
-              <ul className="text-[11px] space-y-1 max-h-56 overflow-auto">
-                {(data.geographicDistribution || []).map((r: any) => (
-                  <li key={r.nationality} className="flex justify-between border-b border-slate-50 pb-1">
-                    <span>{r.nationality}</span>
-                    <span className="font-semibold">{r.count}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          </div>
-        ) : null}
-      </div>
-    </div>
+              <p>{data.bookingFrequency?.averageBookingsPerCustomer} bookings / customer</p>
+              <p>Repeat rate {pct(data.repeatCustomerRate?.ratePct)}</p>
+            </div>
+          </Surface>
+          <Surface>
+            <SurfaceHeader title="Segmentation" />
+            <ul className="space-y-1 p-4 text-[12px] sm:p-5">
+              {(data.segmentation || []).map((r: any) => (
+                <li key={r.segment} className="flex justify-between border-b border-[var(--border)] pb-1">
+                  <span>{r.segment}</span>
+                  <span className="font-semibold">{r.count}</span>
+                </li>
+              ))}
+            </ul>
+          </Surface>
+          <Surface>
+            <SurfaceHeader title="Corporate vs B2C" />
+            <pre className="overflow-auto p-4 text-[10px] sm:p-5">{JSON.stringify(data.corporateVsB2c, null, 2)}</pre>
+          </Surface>
+          <Surface>
+            <SurfaceHeader title="Geographic distribution" />
+            <ul className="max-h-56 space-y-1 overflow-auto p-4 text-[12px] sm:p-5">
+              {(data.geographicDistribution || []).map((r: any) => (
+                <li key={r.nationality} className="flex justify-between border-b border-[var(--border)] pb-1">
+                  <span>{r.nationality}</span>
+                  <span className="font-semibold">{r.count}</span>
+                </li>
+              ))}
+            </ul>
+          </Surface>
+        </div>
+      ) : null}
+    </PageShell>
   );
 }

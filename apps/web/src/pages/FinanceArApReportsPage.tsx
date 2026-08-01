@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { BarChart2 } from "lucide-react";
+import { PageHeader, PageShell } from "@/components/enterprise/Page";
 import { apApi, arApi } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { AgingRow } from "@/lib/types";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
@@ -40,18 +40,14 @@ export default function FinanceArApReportsPage() {
   }, [load]);
 
   return (
-    <div>
-      <DemoBadge moduleKey="finance" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <BarChart2 size={16} className="text-amber-600" /> AR / AP reports
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Aging, outstanding summary — customer & supplier ledgers available via API.
-          </p>
-        </div>
-        <FinanceModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={BarChart2}
+        title="AR / AP reports"
+        subtitle="Aging, outstanding summary — customer & supplier ledgers available via API."
+        breadcrumb={[{ label: "Finance ERP", to: "/finance" }, { label: "AR / AP reports" }]}
+      />
+      <FinanceModuleNav />
         <ErrorBanner message={error} />
 
         {loading ? (
@@ -85,8 +81,7 @@ export default function FinanceArApReportsPage() {
             <AgingTable title="AP Aging" rows={apAging} />
           </>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }
 

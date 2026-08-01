@@ -39,7 +39,7 @@ export default function FinanceInvoicesPage() {
       key: "no",
       header: "Invoice",
       render: (r) => (
-        <Link to={`/finance/ar`} className="font-mono font-bold text-amber-700 hover:underline">
+        <Link to={`/finance/ar`} className="font-mono font-bold text-[var(--accent)] hover:underline">
           {r.invoiceNo}
         </Link>
       ),

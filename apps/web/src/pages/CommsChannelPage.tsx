@@ -3,11 +3,10 @@ import { Mail, MessageCircle, Smartphone } from "lucide-react";
 import { commsApi, crmApi, type CommMessage, type CommTemplate, type CommThread, type CrmLead } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CommsModuleNav } from "@/components/comms/CommsModuleNav";
+import { PageHeader, PageShell, inputCls, labelCls } from "@/components/enterprise/Page";
 import { applyMergeFields, TEMPLATE_CATEGORIES, validateSend, validateTemplate } from "@/lib/comms";
 
 type Channel = "email" | "whatsapp" | "sms";
@@ -157,16 +156,14 @@ function CommsChannelPage({ channel }: { channel: Channel }) {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="comms" />
-      <div className="p-5 max-w-[1200px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Icon size={16} className="text-amber-600" /> {meta.title}
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">{meta.hint}</p>
-        </div>
-        <CommsModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={Icon}
+        title={meta.title}
+        subtitle={meta.hint}
+        breadcrumb={[{ label: "Communications", to: "/comms" }, { label: meta.title }]}
+      />
+      <CommsModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         {loading ? (
@@ -229,7 +226,7 @@ function CommsChannelPage({ channel }: { channel: Channel }) {
                   <textarea className={inputCls} rows={3} value={preview} onChange={(e) => setPreview(e.target.value)} />
                 </div>
                 <div className="sm:col-span-4">
-                  <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+                  <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                     Send {channel}
                   </button>
                 </div>
@@ -308,8 +305,7 @@ function CommsChannelPage({ channel }: { channel: Channel }) {
             </div>
           </>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }
 

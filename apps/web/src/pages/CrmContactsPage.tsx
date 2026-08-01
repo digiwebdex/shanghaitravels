@@ -1,14 +1,25 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Contact } from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { Contact, RefreshCw } from "lucide-react";
 import { crmApi, type CrmContact } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { CrmModuleNav } from "@/components/crm/CrmModuleNav";
 import { CONTACT_KINDS } from "@/lib/crm";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import {
+  KpiCard,
+  PageHeader,
+  PageShell,
+  StatStrip,
+  Surface,
+  SurfaceHeader,
+  btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 
 export default function CrmContactsPage() {
   const [rows, setRows] = useState<CrmContact[]>([]);
@@ -47,21 +58,49 @@ export default function CrmContactsPage() {
     }
   }
 
+  const stats = useMemo(() => {
+    const families = rows.filter((c) => !!c.familyGroup).length;
+    const corporate = rows.filter((c) => c.kind === "corporate").length;
+    return { families, corporate };
+  }, [rows]);
+
+  const columns: Column<CrmContact>[] = [
+    { key: "name", header: "Name", render: (c) => <span className="font-bold text-[var(--primary)]">{c.fullName}</span> },
+    { key: "kind", header: "Kind", render: (c) => <Pill value={c.kind} tone={statusTone(c.kind)} /> },
+    { key: "phone", header: "Phone", render: (c) => c.phone || "—" },
+    {
+      key: "family",
+      header: "Family group",
+      render: (c) => (c.familyGroup ? <span className="font-semibold text-[var(--accent)]">{c.familyGroup}</span> : "—"),
+    },
+  ];
+
   return (
-    <div>
-      <DemoBadge moduleKey="crm" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Contact size={16} className="text-amber-600" /> Contacts
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">Individuals, families, and corporate contacts.</p>
-        </div>
-        <CrmModuleNav />
-        <ErrorBanner message={error} />
-        <SuccessBanner message={ok} />
-        <Can perm="lead:manage">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+    <PageShell wide>
+      <PageHeader
+        icon={Contact}
+        title="Contacts"
+        subtitle="Individuals, families, and corporate contacts."
+        breadcrumb={[{ label: "CRM" }, { label: "Contacts" }]}
+        actions={
+          <button type="button" className={btnGhost} onClick={() => void load()}>
+            <RefreshCw size={12} /> Refresh
+          </button>
+        }
+      />
+      <CrmModuleNav />
+      <StatStrip>
+        <KpiCard label="Total" value={rows.length} />
+        <KpiCard label="In families" value={stats.families} tone="accent" />
+        <KpiCard label="Corporate" value={stats.corporate} />
+      </StatStrip>
+      <ErrorBanner message={error} />
+      <SuccessBanner message={ok} />
+
+      <Can perm="lead:manage">
+        <Surface>
+          <SurfaceHeader title="Create contact" />
+          <form onSubmit={(e) => void create(e)} className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-4 sm:p-5">
             <div>
               <label className={labelCls}>Full name *</label>
               <input className={inputCls} value={fullName} onChange={(e) => setFullName(e.target.value)} required />
@@ -85,30 +124,18 @@ export default function CrmContactsPage() {
               <input className={inputCls} value={familyGroup} onChange={(e) => setFamilyGroup(e.target.value)} />
             </div>
             <div className="sm:col-span-4">
-              <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}>
+              <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
                 Create contact
               </button>
             </div>
           </form>
-        </Can>
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <InlineSpinner />
-          </div>
-        ) : (
-          <ul className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
-            {rows.map((c) => (
-              <li key={c.id} className="text-[11px] flex flex-wrap gap-x-3 border-b border-slate-50 pb-2">
-                <span className="font-bold text-slate-800">{c.fullName}</span>
-                <span className="text-slate-500">{c.kind}</span>
-                <span className="text-slate-500">{c.phone || "—"}</span>
-                {c.familyGroup && <span className="text-amber-700">{c.familyGroup}</span>}
-              </li>
-            ))}
-            {rows.length === 0 && <p className="text-[11px] text-slate-400">No contacts.</p>}
-          </ul>
-        )}
-      </div>
-    </div>
+        </Surface>
+      </Can>
+
+      <Surface>
+        <SurfaceHeader title={`${rows.length} contact${rows.length === 1 ? "" : "s"}`} />
+        <DataTable rows={rows} columns={columns} rowKey={(r) => r.id} loading={loading} emptyTitle="No contacts" />
+      </Surface>
+    </PageShell>
   );
 }

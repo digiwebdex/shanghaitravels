@@ -1,13 +1,17 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Building2 } from "lucide-react";
+import {
+  PageHeader,
+  PageShell,
+  inputCls,
+  labelCls,
+} from "@/components/enterprise/Page";
 import { hotelsApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import type { HotelProperty } from "@/lib/types";
 import { Can } from "@/auth/Can";
-import { DemoBadge } from "@/components/DemoBadge";
 import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
-import { inputCls, labelCls } from "@/components/cases/formStyles";
 import { HotelModuleNav } from "@/components/hotels/HotelModuleNav";
 import { ROOM_TYPES } from "@/lib/hotel";
 
@@ -82,18 +86,14 @@ export default function HotelCatalogPage() {
   }
 
   return (
-    <div>
-      <DemoBadge moduleKey="hotels" />
-      <div className="p-5 max-w-[1100px] space-y-4">
-        <div>
-          <h1 className="text-[16px] font-bold text-slate-800 flex items-center gap-2">
-            <Building2 size={16} className="text-amber-600" /> Hotel master
-          </h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Staff-maintained property catalog for booking pickers. Room types: {ROOM_TYPES.join(", ")}.
-          </p>
-        </div>
-        <HotelModuleNav />
+    <PageShell wide>
+      <PageHeader
+        icon={Building2}
+        title="Hotel master"
+        subtitle={`Staff-maintained property catalog for booking pickers. Room types: ${ROOM_TYPES.join(", ")}.`}
+        breadcrumb={[{ label: "Hotels", to: "/hotels" }, { label: "Hotel master" }]}
+      />
+      <HotelModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
 
@@ -153,7 +153,7 @@ export default function HotelCatalogPage() {
               <button
                 type="submit"
                 className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white"
-                style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+                style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
               >
                 Add hotel
               </button>
@@ -224,7 +224,6 @@ export default function HotelCatalogPage() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </PageShell>
   );
 }

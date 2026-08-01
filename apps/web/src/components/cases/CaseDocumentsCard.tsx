@@ -83,7 +83,7 @@ export function CaseDocumentsCard({
             type="button"
             onClick={() => void upload()}
             className="flex items-center gap-1 px-3 py-2 rounded-lg text-[10.5px] font-bold text-white"
-            style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+            style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
           >
             <Upload size={12} /> Upload
           </button>
