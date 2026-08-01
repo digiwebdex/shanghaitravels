@@ -119,6 +119,26 @@ const PackageCategoriesPage = lazy(() => import("@/pages/PackageCategoriesPage")
 const PackageAvailabilityPage = lazy(() => import("@/pages/PackageAvailabilityPage"));
 const PackageGalleryPage = lazy(() => import("@/pages/PackageGalleryPage"));
 const PackageReportsPage = lazy(() => import("@/pages/PackageReportsPage"));
+const SuppliersPage = lazy(() => import("@/pages/SuppliersPage"));
+const AgentsPage = lazy(() => import("@/pages/AgentsPage"));
+const CorporateClientsPage = lazy(() => import("@/pages/CorporateClientsPage"));
+const PartnersOverviewPage = lazy(() => import("@/pages/PartnersOverviewPage"));
+const FinanceDashboardPage = lazy(() => import("@/pages/FinanceDashboardPage"));
+const FinanceInvoicesPage = lazy(() => import("@/pages/FinanceInvoicesPage"));
+const FinancePaymentsPage = lazy(() => import("@/pages/FinancePaymentsPage"));
+const FinanceExpensesPage = lazy(() => import("@/pages/FinanceExpensesPage"));
+const FinanceCashPage = lazy(() => import("@/pages/FinanceCashPage"));
+const FinanceCustomerLedgerPage = lazy(() => import("@/pages/FinanceCustomerLedgerPage"));
+const FinanceSupplierLedgerPage = lazy(() => import("@/pages/FinanceSupplierLedgerPage"));
+const OperationsOverviewPage = lazy(() => import("@/pages/OperationsOverviewPage"));
+const OperationsDocumentsPage = lazy(() => import("@/pages/OperationsDocumentsPage"));
+const OperationsWorkflowPage = lazy(() => import("@/pages/OperationsWorkflowPage"));
+const OperationsCalendarPage = lazy(() => import("@/pages/OperationsCalendarPage"));
+const OperationsNotificationsPage = lazy(() => import("@/pages/OperationsNotificationsPage"));
+const AdminUsersPage = lazy(() => import("@/pages/AdminUsersPage"));
+const AdminSettingsPage = lazy(() => import("@/pages/AdminSettingsPage"));
+const CmsTypedContentPage = lazy(() => import("@/pages/CmsTypedContentPage"));
+const SoonPage = lazy(() => import("@/pages/SoonPage"));
 const SiteHomePage = lazy(() => import("@/pages/SiteHomePage"));
 const SiteDestinationsBrowsePage = lazy(() => import("@/pages/SiteDestinationsBrowsePage"));
 const SiteDestinationDetailPage = lazy(() => import("@/pages/SiteDestinationDetailPage"));
@@ -1498,6 +1518,246 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <CaseJourneyPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "partners",
+            element: (
+              <Lazy>
+                <PartnersOverviewPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "partners/agents",
+            element: (
+              <Lazy>
+                <AgentsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "partners/corporate",
+            element: (
+              <Lazy>
+                <CorporateClientsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "partners/suppliers",
+            element: (
+              <Lazy>
+                <SuppliersPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "partners/suppliers/:type",
+            element: (
+              <Lazy>
+                <SuppliersPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "partners/settings",
+            element: (
+              <Lazy>
+                <SoonPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/dashboard",
+            element: (
+              <Lazy>
+                <FinanceDashboardPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/invoices",
+            element: (
+              <Lazy>
+                <FinanceInvoicesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/payments",
+            element: (
+              <Lazy>
+                <FinancePaymentsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/expenses",
+            element: (
+              <Lazy>
+                <FinanceExpensesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/cash",
+            element: (
+              <Lazy>
+                <FinanceCashPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/customer-ledger",
+            element: (
+              <Lazy>
+                <FinanceCustomerLedgerPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/supplier-ledger",
+            element: (
+              <Lazy>
+                <FinanceSupplierLedgerPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "operations",
+            element: (
+              <Lazy>
+                <OperationsOverviewPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "operations/documents",
+            element: (
+              <Lazy>
+                <OperationsDocumentsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "operations/workflow",
+            element: (
+              <Lazy>
+                <OperationsWorkflowPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "operations/calendar",
+            element: (
+              <Lazy>
+                <OperationsCalendarPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "operations/notifications",
+            element: (
+              <Lazy>
+                <OperationsNotificationsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "admin/users",
+            element: (
+              <Lazy>
+                <AdminUsersPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "admin/settings",
+            element: (
+              <Lazy>
+                <AdminSettingsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "admin/roles",
+            element: (
+              <Lazy>
+                <SoonPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "admin/permissions",
+            element: (
+              <Lazy>
+                <SoonPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "admin/audit",
+            element: (
+              <Lazy>
+                <SoonPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "admin/api-keys",
+            element: (
+              <Lazy>
+                <SoonPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "admin/integrations",
+            element: (
+              <Lazy>
+                <SoonPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "cms/content/:type",
+            element: (
+              <Lazy>
+                <CmsTypedContentPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "crm/settings",
+            element: (
+              <Lazy>
+                <SoonPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "comms/settings",
+            element: (
+              <Lazy>
+                <SoonPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "ai",
+            element: (
+              <Lazy>
+                <SoonPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "ai/*",
+            element: (
+              <Lazy>
+                <SoonPage />
               </Lazy>
             ),
           },

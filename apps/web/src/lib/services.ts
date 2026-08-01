@@ -1510,3 +1510,214 @@ export const siteDestinationsApi = {
       quietAuth: true,
     }),
 };
+
+/* ---------- Enterprise UI (v4) — business partners, operations, admin ---------- */
+
+export type Agent = {
+  id: string;
+  code: string;
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  /** Basis points — 250 = 2.5%. */
+  commissionRateBps?: number;
+  /** Minor units (poisha). */
+  walletBalance?: number;
+  status?: string;
+};
+
+export type CorporateClient = {
+  id: string;
+  companyName: string;
+  contactPerson?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  billingAddress?: string | null;
+  preferredServices?: string | null;
+  /** Minor units (poisha). */
+  creditLimit?: number;
+  paymentTermsDays?: number;
+  isActive?: boolean;
+  notes?: string | null;
+};
+
+export const agentsApi = {
+  list: (q?: { q?: string; page?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.q) p.set("q", q.q);
+    if (q?.page) p.set("page", String(q.page));
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<Paginated<Agent>>(`/agents${qs ? `?${qs}` : ""}`);
+  },
+  get: (id: string) => apiFetch<Agent>(`/agents/${id}`),
+  create: (body: Partial<Agent> & { name: string }) => apiFetch<Agent>("/agents", { method: "POST", body }),
+  update: (id: string, body: Partial<Agent>) => apiFetch<Agent>(`/agents/${id}`, { method: "PATCH", body }),
+};
+
+export const corporateClientsApi = {
+  list: (q?: { q?: string; page?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.q) p.set("q", q.q);
+    if (q?.page) p.set("page", String(q.page));
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<Paginated<CorporateClient>>(`/corporate-clients${qs ? `?${qs}` : ""}`);
+  },
+  get: (id: string) => apiFetch<CorporateClient>(`/corporate-clients/${id}`),
+  create: (body: Partial<CorporateClient> & { companyName: string }) =>
+    apiFetch<CorporateClient>("/corporate-clients", { method: "POST", body }),
+  update: (id: string, body: Partial<CorporateClient>) =>
+    apiFetch<CorporateClient>(`/corporate-clients/${id}`, { method: "PATCH", body }),
+};
+
+/** Outbox row. Delivery adapters are not configured, so rows stay `pending`. */
+export type NotificationRow = {
+  id: string;
+  channel: string;
+  recipient: string;
+  subject?: string | null;
+  body: string;
+  status: string;
+  relatedType?: string | null;
+  relatedId?: string | null;
+  error?: string | null;
+  createdAt: string;
+  sentAt?: string | null;
+};
+
+export const notificationsApi = {
+  list: (q?: { status?: string; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.status) p.set("status", q.status);
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<NotificationRow[]>(`/notifications${qs ? `?${qs}` : ""}`);
+  },
+  process: () =>
+    apiFetch<{ pending: number; delivered: number; note: string }>("/notifications/process", {
+      method: "POST",
+      body: {},
+    }),
+};
+
+export type OpsTask = {
+  id: string;
+  title: string;
+  description?: string | null;
+  applicationId?: string | null;
+  assignedTo?: string | null;
+  createdBy: string;
+  priority: string;
+  status: string;
+  dueAt?: string | null;
+  completedAt?: string | null;
+  createdAt: string;
+};
+
+export const tasksApi = {
+  list: (q?: { status?: string; mine?: boolean; applicationId?: string; page?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.status) p.set("status", q.status);
+    if (q?.mine) p.set("mine", "true");
+    if (q?.applicationId) p.set("applicationId", q.applicationId);
+    if (q?.page) p.set("page", String(q.page));
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<Paginated<OpsTask>>(`/tasks${qs ? `?${qs}` : ""}`);
+  },
+  update: (id: string, body: Record<string, unknown>) => apiFetch(`/tasks/${id}`, { method: "PATCH", body }),
+};
+
+export type WorkflowTemplateStage = {
+  id: string;
+  templateId: string;
+  stageNo: number;
+  name: string;
+  slaHours?: number | null;
+};
+
+export type WorkflowTemplate = {
+  id: string;
+  serviceType: string;
+  name: string;
+  version: number;
+  isActive: boolean;
+  createdBy?: string | null;
+  createdAt: string;
+  stages: WorkflowTemplateStage[];
+};
+
+export const workflowApi = {
+  list: (serviceType?: string) =>
+    apiFetch<WorkflowTemplate[]>(
+      `/workflow/templates${serviceType ? `?serviceType=${encodeURIComponent(serviceType)}` : ""}`,
+    ),
+  get: (id: string) => apiFetch<WorkflowTemplate>(`/workflow/templates/${id}`),
+  activate: (id: string) =>
+    apiFetch<WorkflowTemplate>(`/workflow/templates/${id}/activate`, { method: "POST", body: {} }),
+};
+
+export type ExpenseRow = {
+  id: string;
+  category: string;
+  description?: string | null;
+  amount: number;
+  vendorName?: string | null;
+  supplierId?: string | null;
+  accountId: string;
+  method: string;
+  reference?: string | null;
+  paidAt: string;
+  recordedBy: string;
+};
+
+export const expensesApi = {
+  list: (q?: { category?: string; page?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.category) p.set("category", q.category);
+    if (q?.page) p.set("page", String(q.page));
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<Paginated<ExpenseRow>>(`/expenses${qs ? `?${qs}` : ""}`);
+  },
+  create: (body: Record<string, unknown>) => apiFetch<ExpenseRow>("/expenses", { method: "POST", body }),
+};
+
+export type FinanceSummary = {
+  currency: string;
+  note: string;
+  invoiced: number;
+  collected: number;
+  receivable: number;
+  refunds: number;
+  expenses: number;
+  netCash: number;
+  cashPosition: number;
+  accounts: { name: string; type: string; currentBalance: number }[];
+};
+
+export type OperationalReport = {
+  casesByStatus: Record<string, number>;
+  casesByService: Record<string, number>;
+  leadsByStatus: Record<string, number>;
+  openTasks: number;
+  unassignedWebEnquiries: number;
+};
+
+export const reportsApi = {
+  financeSummary: () => apiFetch<FinanceSummary>("/finance/summary"),
+  operational: () => apiFetch<OperationalReport>("/reports/operational"),
+};
+
+export const adminApi = {
+  listSettings: () => apiFetch<{ key: string; value: unknown }[]>("/settings"),
+  setSetting: (key: string, value: unknown) =>
+    apiFetch(`/settings/${encodeURIComponent(key)}`, { method: "PUT", body: { value } }),
+  listUsers: () => apiFetch<StaffUser[] | Paginated<StaffUser>>("/users"),
+  createUser: (body: Record<string, unknown>) => apiFetch<StaffUser>("/users", { method: "POST", body }),
+  updateUser: (id: string, body: Record<string, unknown>) =>
+    apiFetch<StaffUser>(`/users/${id}`, { method: "PATCH", body }),
+};

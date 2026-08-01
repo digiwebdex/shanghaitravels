@@ -1,131 +1,246 @@
-import { useEffect, useRef, useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import {
-  Command,
+  Bell,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Search,
-  Bell,
-  Plus,
-  ChevronDown,
+  Command,
   LogOut,
+  Menu,
+  Plus,
+  Search,
   User,
-  LayoutDashboard,
-  FileCheck,
-  BookOpen,
-  Users,
-  GitBranch,
-  Plane,
-  Building2,
-  Car,
-  Map,
-  Moon,
-  Package,
-  Landmark,
-  Handshake,
-  TrendingUp,
-  MessagesSquare,
-  PieChart,
-  Globe,
-  type LucideIcon,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
 import { ORG_NAME } from "@/config/env";
-import { LIVE_MODULES } from "@/config/env";
+import { NAV, sectionForPath, type NavLeaf, type NavSection } from "@/config/nav";
+import { QUICK_ACTIONS } from "@/config/quickActions";
+import { CommandPalette } from "@/components/shell/CommandPalette";
 
-type NavItem = { id: string; label: string; to: string; icon: LucideIcon; perm?: string };
+const EXPANDED_KEY = "travelos:nav:expanded";
+const COLLAPSED_KEY = "travelos:nav:collapsed";
 
-const NAV: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", to: "/", icon: LayoutDashboard },
-  { id: "customers", label: "Customer Management", to: "/customers", icon: User, perm: "customer:read" },
-  { id: "visa", label: "Visa Management", to: "/visa", icon: FileCheck, perm: "application:read" },
-  { id: "ticketing", label: "Air Ticketing", to: "/ticketing", icon: Plane, perm: "application:read" },
-  { id: "hotels", label: "Hotels", to: "/hotels", icon: Building2, perm: "application:read" },
-  { id: "transport", label: "Transport", to: "/transport", icon: Car, perm: "application:read" },
-  { id: "tours", label: "Tour Packages", to: "/tours", icon: Map, perm: "application:read" },
-  { id: "products", label: "Products & Packages", to: "/products/packages", icon: Package, perm: "application:read" },
-  { id: "hajj", label: "Hajj & Umrah", to: "/hajj", icon: Moon, perm: "application:read" },
-  { id: "finance", label: "Finance ERP", to: "/finance", icon: Landmark, perm: "gl:read" },
-  { id: "crm", label: "CRM", to: "/crm", icon: Handshake, perm: "crm:read" },
-  { id: "sales", label: "Sales", to: "/sales", icon: TrendingUp, perm: "opportunity:read" },
-  { id: "comms", label: "Communications", to: "/comms", icon: MessagesSquare, perm: "comms:read" },
-  { id: "analytics", label: "Analytics", to: "/analytics", icon: PieChart, perm: "analytics:read" },
-  { id: "cms", label: "Website & CMS", to: "/cms", icon: Globe, perm: "cms:read" },
-  { id: "passports", label: "Passport Management", to: "/passports", icon: BookOpen, perm: "customer:read" },
-  { id: "case-journey", label: "Case Journey Map", to: "/case-journey", icon: GitBranch, perm: "application:read" },
-];
+function readExpanded(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(EXPANDED_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
+  } catch {
+    return {};
+  }
+}
 
-function SidebarItem({
+const SidebarLeaf = memo(function SidebarLeaf({
   item,
-  collapsed,
+  onNavigate,
 }: {
-  item: NavItem;
-  collapsed: boolean;
+  item: NavLeaf;
+  onNavigate: () => void;
 }) {
   const Icon = item.icon;
-  const live = LIVE_MODULES.has(item.id) || item.id === "dashboard";
   return (
     <NavLink
       to={item.to}
-      end={item.to === "/"}
-      title={collapsed ? item.label : undefined}
+      end={item.end}
+      onClick={onNavigate}
       className={({ isActive }) =>
-        `relative flex items-center gap-1.5 rounded-md transition-all duration-100
-        ${collapsed ? "justify-center p-2" : "px-2 py-[5px]"}
-        ${isActive ? "bg-amber-500/10 text-amber-300" : "text-white/40 hover:bg-white/[0.06] hover:text-white/65"}`
+        `group relative flex items-center gap-2.5 rounded-lg pl-8 pr-2.5 py-[7px] text-[11.5px] font-medium transition-colors duration-100 ${
+          isActive
+            ? "bg-amber-500/[0.12] text-amber-200"
+            : "text-white/45 hover:bg-white/[0.05] hover:text-white/80"
+        }`
       }
     >
       {({ isActive }) => (
         <>
-          {isActive && !collapsed && (
-            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-amber-400" />
+          {isActive && (
+            <span className="absolute left-[13px] top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-amber-400" />
           )}
-          {!collapsed && (
-            <span
-              className="size-[5px] rounded-full flex-shrink-0 ml-1"
-              style={{ backgroundColor: isActive ? "#F59E0B" : live ? "#10B981" : "#64748B" }}
-            />
-          )}
-          <Icon size={11} className={`flex-shrink-0 ${isActive ? "text-amber-400" : ""}`} />
-          {!collapsed && (
-            <span className="text-[10px] font-semibold leading-none flex-1 truncate">{item.label}</span>
+          <Icon size={13} className={`flex-shrink-0 ${isActive ? "text-amber-400" : "text-white/35"}`} />
+          <span className="flex-1 truncate">{item.label}</span>
+          {item.soon && (
+            <span className="flex-shrink-0 rounded bg-white/[0.07] px-1.5 py-[1px] text-[8.5px] font-bold uppercase tracking-wide text-white/40">
+              Soon
+            </span>
           )}
         </>
       )}
     </NavLink>
+  );
+});
+
+function SidebarSection({
+  section,
+  items,
+  collapsed,
+  expanded,
+  onToggle,
+  onNavigate,
+}: {
+  section: NavSection;
+  items: NavLeaf[];
+  collapsed: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+  onNavigate: () => void;
+}) {
+  const Icon = section.icon;
+
+  if (section.to) {
+    return (
+      <NavLink
+        to={section.to}
+        end={section.end}
+        onClick={onNavigate}
+        title={collapsed ? section.label : undefined}
+        className={({ isActive }) =>
+          `flex items-center gap-2.5 rounded-lg py-2 text-[12px] font-semibold transition-colors ${
+            collapsed ? "justify-center px-2" : "px-2.5"
+          } ${isActive ? "bg-amber-500/[0.14] text-amber-200" : "text-white/60 hover:bg-white/[0.05] hover:text-white"}`
+        }
+      >
+        {({ isActive }) => (
+          <>
+            <Icon size={15} className={`flex-shrink-0 ${isActive ? "text-amber-400" : "text-white/45"}`} />
+            {!collapsed && <span className="truncate">{section.label}</span>}
+          </>
+        )}
+      </NavLink>
+    );
+  }
+
+  if (collapsed) {
+    return (
+      <button
+        type="button"
+        onClick={onToggle}
+        title={section.label}
+        aria-label={section.label}
+        className="flex w-full items-center justify-center rounded-lg px-2 py-2 text-white/45 transition-colors hover:bg-white/[0.05] hover:text-white"
+      >
+        <Icon size={15} />
+      </button>
+    );
+  }
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[12px] font-semibold text-white/60 transition-colors hover:bg-white/[0.05] hover:text-white"
+      >
+        <Icon size={15} className="flex-shrink-0 text-white/45" />
+        <span className="flex-1 truncate text-left">{section.label}</span>
+        <ChevronDown
+          size={12}
+          className={`flex-shrink-0 text-white/25 transition-transform duration-200 ${
+            expanded ? "" : "-rotate-90"
+          }`}
+        />
+      </button>
+      {expanded && (
+        <div className="mt-[2px] space-y-[1px] pb-1">
+          {items.map((item) => (
+            <SidebarLeaf key={item.id} item={item} onNavigate={onNavigate} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
 export default function AdminLayout() {
   const { user, logout, can } = useAuth();
   const navigate = useNavigate();
-  const [collapsed, setCollapsed] = useState(
-    () => typeof window !== "undefined" && window.innerWidth < 1024,
-  );
+  const { pathname } = useLocation();
+
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(COLLAPSED_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>(readExpanded);
+
   const profileRef = useRef<HTMLDivElement>(null);
+  const createRef = useRef<HTMLDivElement>(null);
+
+  /** Sections the user can actually reach, with forbidden links removed. */
+  const sections = useMemo(
+    () =>
+      NAV.map((s) => ({ section: s, items: (s.items ?? []).filter((i) => !i.perm || can(i.perm)) })).filter(
+        ({ section, items }) => section.to || items.length > 0,
+      ),
+    [can],
+  );
+
+  const activeSection = useMemo(() => sectionForPath(pathname), [pathname]);
+
+  // Keep the section containing the current route open, without collapsing
+  // whatever the user opened by hand.
+  useEffect(() => {
+    if (!activeSection) return;
+    setExpanded((prev) => (prev[activeSection] ? prev : { ...prev, [activeSection]: true }));
+  }, [activeSection]);
 
   useEffect(() => {
-    const onResize = () => {
-      if (window.innerWidth < 1024) setCollapsed(true);
+    try {
+      localStorage.setItem(EXPANDED_KEY, JSON.stringify(expanded));
+    } catch {
+      /* storage unavailable — expansion is not worth failing over */
+    }
+  }, [expanded]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COLLAPSED_KEY, collapsed ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [collapsed]);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((o) => !o);
+      }
     };
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   useEffect(() => {
-    if (!profileOpen) return;
+    if (!profileOpen && !createOpen) return;
     const handler = (e: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
-        setProfileOpen(false);
-      }
+      const t = e.target as Node;
+      if (profileRef.current && !profileRef.current.contains(t)) setProfileOpen(false);
+      if (createRef.current && !createRef.current.contains(t)) setCreateOpen(false);
     };
-    const t = setTimeout(() => document.addEventListener("mousedown", handler), 0);
+    const id = setTimeout(() => document.addEventListener("mousedown", handler), 0);
     return () => {
-      clearTimeout(t);
+      clearTimeout(id);
       document.removeEventListener("mousedown", handler);
     };
-  }, [profileOpen]);
+  }, [profileOpen, createOpen]);
+
+  const toggleSection = useCallback((id: string) => {
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+  }, []);
+
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
 
   const initials = (user?.fullName || user?.email || "?")
     .split(/\s+/)
@@ -134,125 +249,202 @@ export default function AdminLayout() {
     .slice(0, 2)
     .toUpperCase();
 
-  const nav = NAV.filter((n) => !n.perm || can(n.perm));
+  const quickActions = QUICK_ACTIONS.filter((a) => a.primary && (!a.perm || can(a.perm)));
 
-  return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "#F0F2F5" }}>
-      <aside
-        className="flex flex-col flex-shrink-0 transition-[width] duration-200 relative z-20"
-        style={{ background: "#0D1117", width: collapsed ? 44 : 220 }}
+  const sidebar = (
+    <>
+      <div
+        className={`flex flex-shrink-0 items-center gap-2.5 border-b border-white/[0.06] ${
+          collapsed ? "justify-center px-2 py-3.5" : "px-4 py-3.5"
+        }`}
       >
         <div
-          className={`flex items-center gap-2.5 border-b border-white/[0.06] flex-shrink-0 ${
-            collapsed ? "px-2 py-3 justify-center" : "px-3.5 py-3"
-          }`}
+          className="flex size-7 flex-shrink-0 items-center justify-center rounded-lg"
+          style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
         >
-          <div
-            className="size-[26px] rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
-          >
-            <Command size={13} className="text-white" />
-          </div>
-          {!collapsed && (
-            <div className="min-w-0">
-              <p className="text-white text-[10px] font-black tracking-[0.08em] leading-none">ADMIN ERP</p>
-              <p className="text-white/25 text-[8px] mt-0.5 leading-none">{ORG_NAME}</p>
-            </div>
-          )}
+          <Command size={14} className="text-white" />
         </div>
-
-        <nav className={`flex-1 overflow-y-auto py-2 scrollbar-hide ${collapsed ? "px-1" : "px-2"}`}>
-          {!collapsed && (
-            <p className="text-[7.5px] font-black text-white/20 uppercase tracking-[0.16em] px-2 pb-1.5">
-              Phase A — Visa vertical
-            </p>
-          )}
-          <div className="space-y-[1px]">
-            {nav.map((m) => (
-              <SidebarItem key={m.id} item={m} collapsed={collapsed} />
-            ))}
+        {!collapsed && (
+          <div className="min-w-0">
+            <p className="text-[11px] font-black leading-none tracking-[0.08em] text-white">ADMIN ERP</p>
+            <p className="mt-1 truncate text-[9px] leading-none text-white/30">{ORG_NAME}</p>
           </div>
-        </nav>
+        )}
+      </div>
 
+      <nav
+        className={`scrollbar-hide flex-1 space-y-[3px] overflow-y-auto py-3 ${collapsed ? "px-1.5" : "px-2.5"}`}
+        aria-label="Main navigation"
+      >
+        {sections.map(({ section, items }) => (
+          <SidebarSection
+            key={section.id}
+            section={section}
+            items={items}
+            collapsed={collapsed}
+            expanded={!!expanded[section.id]}
+            onToggle={() => {
+              if (collapsed) setCollapsed(false);
+              toggleSection(section.id);
+            }}
+            onNavigate={closeMobile}
+          />
+        ))}
+      </nav>
+
+      {!collapsed && (
+        <div className="flex-shrink-0 border-t border-white/[0.06] px-4 py-2.5">
+          <p className="font-mono text-[8.5px] text-white/20">v0.1.0 · Enterprise UI · Dhaka</p>
+        </div>
+      )}
+    </>
+  );
+
+  return (
+    <div className="flex h-screen overflow-hidden" style={{ background: "#F4F6F8" }}>
+      {/* Desktop sidebar */}
+      <aside
+        className="relative z-20 hidden flex-shrink-0 flex-col transition-[width] duration-200 lg:flex"
+        style={{ background: "#0D1117", width: collapsed ? 56 : 248 }}
+      >
+        {sidebar}
         <button
           type="button"
           onClick={() => setCollapsed((c) => !c)}
-          className="absolute -right-3 top-[62px] z-30 size-6 rounded-full border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 shadow-md flex items-center justify-center transition-colors"
+          className="absolute -right-3 top-[68px] z-30 flex size-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-md transition-colors hover:bg-slate-50"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {collapsed ? <ChevronRight size={9} /> : <ChevronLeft size={9} />}
+          {collapsed ? <ChevronRight size={11} /> : <ChevronLeft size={11} />}
         </button>
-
-        {!collapsed && (
-          <div className="px-3 py-2 border-t border-white/[0.06] flex-shrink-0">
-            <p className="text-[7.5px] font-mono text-white/15">v0.1.0 · Phase A · Dhaka</p>
-          </div>
-        )}
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            aria-label="Close navigation"
+            onClick={closeMobile}
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px]"
+          />
+          <aside
+            className="absolute inset-y-0 left-0 flex w-[268px] flex-col shadow-2xl"
+            style={{ background: "#0D1117" }}
+          >
+            <button
+              type="button"
+              onClick={closeMobile}
+              aria-label="Close navigation"
+              className="absolute right-2 top-3.5 z-10 rounded-lg p-1.5 text-white/50 hover:bg-white/10 hover:text-white"
+            >
+              <X size={15} />
+            </button>
+            {sidebar}
+          </aside>
+        </div>
+      )}
+
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <header
-          className="flex items-center gap-3 px-4 bg-white border-b border-slate-200 flex-shrink-0"
-          style={{ height: 52 }}
+          className="flex flex-shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-3 sm:px-4"
+          style={{ height: 56 }}
         >
-          <div className="flex items-center gap-2 flex-1 max-w-sm px-3 py-2 rounded-lg border border-slate-200 bg-slate-50">
-            <Search size={12} className="text-slate-400 flex-shrink-0" />
-            <span className="text-[10.5px] text-slate-400 flex-1 select-none">
-              Search applications, customers…
-            </span>
-            <Users size={11} className="text-slate-300" />
-          </div>
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 lg:hidden"
+            aria-label="Open navigation"
+          >
+            <Menu size={17} />
+          </button>
 
-          <div className="flex items-center gap-1.5 ml-auto flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            className="flex flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left transition-colors hover:border-slate-300 hover:bg-white sm:max-w-md"
+          >
+            <Search size={13} className="flex-shrink-0 text-slate-400" />
+            <span className="flex-1 truncate text-[11.5px] text-slate-400">Search modules and actions…</span>
+            <kbd className="hidden flex-shrink-0 rounded border border-slate-200 bg-white px-1.5 py-[1px] font-mono text-[9px] font-semibold text-slate-400 sm:block">
+              ⌘K
+            </kbd>
+          </button>
+
+          <div className="ml-auto flex flex-shrink-0 items-center gap-1.5">
             <button
               type="button"
-              className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+              onClick={() => navigate("/operations/notifications")}
+              className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100"
               aria-label="Notifications"
-              title="Notifications (Phase D)"
+              title="Notifications"
             >
-              <Bell size={15} className="text-slate-500" />
+              <Bell size={16} />
             </button>
 
-            <button
-              type="button"
-              onClick={() => navigate("/visa/new")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white hover:opacity-90 transition-opacity"
-              style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
-            >
-              <Plus size={12} /> New Visa Case
-            </button>
+            {quickActions.length > 0 && (
+              <div className="relative" ref={createRef}>
+                <button
+                  type="button"
+                  onClick={() => setCreateOpen((o) => !o)}
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-[11.5px] font-bold text-white transition-opacity hover:opacity-90"
+                  style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
+                >
+                  <Plus size={13} />
+                  <span className="hidden sm:inline">Create</span>
+                  <ChevronDown size={11} className={createOpen ? "rotate-180" : ""} />
+                </button>
+                {createOpen && (
+                  <div className="absolute right-0 top-full z-50 mt-1.5 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
+                    {quickActions.map((a) => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        onClick={() => {
+                          setCreateOpen(false);
+                          navigate(a.to);
+                        }}
+                        className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[11.5px] text-slate-600 transition-colors hover:bg-slate-50"
+                      >
+                        <a.icon size={13} className="flex-shrink-0 text-amber-600" />
+                        {a.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="relative" ref={profileRef}>
               <button
                 type="button"
                 onClick={() => setProfileOpen((o) => !o)}
-                className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors ${
+                className={`flex items-center gap-2 rounded-lg px-1.5 py-1.5 transition-colors ${
                   profileOpen ? "bg-slate-100" : "hover:bg-slate-100"
                 }`}
               >
                 <div
-                  className="size-7 rounded-full flex items-center justify-center text-[10px] font-black text-white"
+                  className="flex size-7 items-center justify-center rounded-full text-[10px] font-black text-white"
                   style={{ background: "linear-gradient(135deg,#F59E0B,#B45309)" }}
                 >
                   {initials}
                 </div>
-                <div className="text-left hidden xl:block">
-                  <p className="text-[10.5px] font-bold text-slate-800 leading-none">
+                <div className="hidden text-left xl:block">
+                  <p className="text-[11px] font-bold leading-none text-slate-800">
                     {user?.fullName || user?.email}
                   </p>
-                  <p className="text-[8.5px] text-slate-400 mt-0.5">{user?.role}</p>
+                  <p className="mt-1 text-[9px] leading-none text-slate-400">{user?.role}</p>
                 </div>
                 <ChevronDown
-                  size={9}
+                  size={10}
                   className={`text-slate-400 transition-transform ${profileOpen ? "rotate-180" : ""}`}
                 />
               </button>
               {profileOpen && (
-                <div className="absolute right-0 top-full mt-1.5 w-56 bg-white rounded-xl border border-slate-200 shadow-xl z-50 overflow-hidden">
-                  <div className="px-4 py-3.5 border-b border-slate-100">
+                <div className="absolute right-0 top-full z-50 mt-1.5 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+                  <div className="border-b border-slate-100 px-4 py-3.5">
                     <p className="text-[12px] font-bold text-slate-800">{user?.fullName || "—"}</p>
-                    <p className="text-[9.5px] text-slate-400 mt-0.5">{user?.email}</p>
-                    <span className="inline-block mt-1.5 text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+                    <p className="mt-0.5 text-[9.5px] text-slate-400">{user?.email}</p>
+                    <span className="mt-1.5 inline-block rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-700">
                       {user?.role}
                     </span>
                   </div>
@@ -263,18 +455,18 @@ export default function AdminLayout() {
                         setProfileOpen(false);
                         navigate("/change-password");
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[11px] text-slate-600 hover:bg-slate-50 transition-colors"
+                      className="flex w-full items-center gap-2.5 px-3 py-2 text-[11px] text-slate-600 transition-colors hover:bg-slate-50"
                     >
                       <User size={12} className="text-slate-400" /> Change password
                     </button>
-                    <div className="border-t border-slate-100 mt-1 pt-1">
+                    <div className="mt-1 border-t border-slate-100 pt-1">
                       <button
                         type="button"
                         onClick={async () => {
                           await logout();
                           navigate("/login", { replace: true });
                         }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 text-[11px] text-red-500 hover:bg-red-50 transition-colors"
+                        className="flex w-full items-center gap-2.5 px-3 py-2 text-[11px] text-red-500 transition-colors hover:bg-red-50"
                       >
                         <LogOut size={12} /> Sign out
                       </button>
@@ -286,10 +478,12 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto relative">
+        <main className="relative flex-1 overflow-y-auto">
           <Outlet />
         </main>
       </div>
+
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
 }

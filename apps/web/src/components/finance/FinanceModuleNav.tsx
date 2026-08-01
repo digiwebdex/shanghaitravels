@@ -1,14 +1,21 @@
 import { NavLink } from "react-router";
 
 const LINKS: { to: string; label: string; end?: boolean }[] = [
+  { to: "/finance/dashboard", label: "Dashboard" },
   { to: "/finance", label: "Chart of Accounts", end: true },
   { to: "/finance/groups", label: "Groups" },
   { to: "/finance/periods", label: "Periods" },
   { to: "/finance/cost-centers", label: "Cost Centers" },
   { to: "/finance/currencies", label: "Currencies" },
   { to: "/finance/journals", label: "Journals" },
+  { to: "/finance/cash", label: "Cash" },
+  { to: "/finance/invoices", label: "Invoices" },
+  { to: "/finance/payments", label: "Payments" },
+  { to: "/finance/expenses", label: "Expenses" },
   { to: "/finance/ar", label: "AR" },
   { to: "/finance/ap", label: "AP" },
+  { to: "/finance/customer-ledger", label: "Customer Ledger" },
+  { to: "/finance/supplier-ledger", label: "Supplier Ledger" },
   { to: "/finance/ar-ap-reports", label: "AR/AP Reports" },
   { to: "/finance/banking", label: "Banking" },
   { to: "/finance/banking/movements", label: "Movements" },
