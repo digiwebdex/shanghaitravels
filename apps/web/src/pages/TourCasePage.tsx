@@ -25,6 +25,7 @@ import CaseTimeline from "@/admin/shared/CaseTimeline";
 import { PageHeader, PageShell, Surface } from "@/components/enterprise/Page";
 import { ScanDocumentPanel, ocrFullName } from "@/components/ocr/ScanDocumentPanel";
 
+import { Booking360Banner } from "@/components/workflow/CrmJourneyBanner";
 export default function TourCasePage() {
   const { id } = useParams();
   const { can } = useAuth();
@@ -163,6 +164,7 @@ export default function TourCasePage() {
           </span>
         }
       />
+            <Booking360Banner appId={app.id} customerId={app.customerId} />
       <ErrorBanner message={error} />
       <SuccessBanner message={ok} />
 <section className="bg-white rounded-xl border border-slate-200 p-4">

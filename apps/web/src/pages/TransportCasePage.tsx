@@ -24,6 +24,7 @@ import { TransportOpsCard } from "@/components/cases/TransportOpsCard";
 import CaseTimeline from "@/admin/shared/CaseTimeline";
 import { PageHeader, PageShell } from "@/components/enterprise/Page";
 
+import { Booking360Banner } from "@/components/workflow/CrmJourneyBanner";
 export default function TransportCasePage() {
   const { id } = useParams();
   const { can } = useAuth();
@@ -162,6 +163,7 @@ export default function TransportCasePage() {
           </span>
         }
       />
+            <Booking360Banner appId={app.id} customerId={app.customerId} />
       <ErrorBanner message={error} />
       <SuccessBanner message={ok} />
 

@@ -34,6 +34,7 @@ import { CaseAssignCard } from "@/components/cases/CaseAssignCard";
 import { CaseDocumentsCard } from "@/components/cases/CaseDocumentsCard";
 import { CaseFinanceCard } from "@/components/cases/CaseFinanceCard";
 import { inputCls, labelCls, STATUS_PILL } from "@/components/cases/formStyles";
+import { Booking360Banner } from "@/components/workflow/CrmJourneyBanner";
 
 export default function VisaCasePage() {
   const { id = "" } = useParams();
@@ -222,7 +223,10 @@ export default function VisaCasePage() {
             </span>
             <p>
               Customer:{" "}
-              <Link to="/customers" className="font-semibold text-[var(--accent)] hover:underline">
+              <Link
+                to={`/customers/${app.customerId}`}
+                className="font-semibold text-[var(--accent)] hover:underline"
+              >
                 {app.customer?.code}
               </Link>
             </p>
@@ -230,6 +234,7 @@ export default function VisaCasePage() {
           </div>
         }
       />
+      <Booking360Banner appId={app.id} customerId={app.customerId} />
       <ErrorBanner message={error} />
       <SuccessBanner message={ok} />
 

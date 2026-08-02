@@ -103,6 +103,10 @@ export default function CorporatePortalLayout() {
         </div>
       </aside>
       <main className="flex-1 overflow-auto">
+        <div className="border-b border-teal-100 bg-teal-50/60 px-4 py-2 text-[11px] text-slate-600">
+          <span className="font-bold text-teal-800">Corporate flow:</span> Company → Employee → Travel request → Manager
+          approval → Quotation → Booking → Invoice → Payment → Reports
+        </div>
         <Outlet />
       </main>
     </div>

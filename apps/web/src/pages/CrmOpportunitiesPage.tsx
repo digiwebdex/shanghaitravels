@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { CrmModuleNav } from "@/components/crm/CrmModuleNav";
+import { CrmJourneyBanner } from "@/components/workflow/CrmJourneyBanner";
 import { formatBdt, OPP_STAGES, probabilityLabel, QUOTE_SERVICES, toPoisha } from "@/lib/crm";
 import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
 import {
@@ -143,6 +144,7 @@ export default function CrmOpportunitiesPage() {
         }
       />
       <CrmModuleNav />
+      <CrmJourneyBanner stage="opportunity" />
       <StatStrip>
         <KpiCard label="Total" value={rows.length} />
         <KpiCard label="Open" value={stats.open} tone="accent" />

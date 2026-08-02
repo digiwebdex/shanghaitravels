@@ -10,6 +10,9 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const CustomersPage = lazy(() => import("@/pages/CustomersPage"));
+const CustomerWorkspacePage = lazy(() => import("@/pages/CustomerWorkspacePage"));
+const BookingWorkspacePage = lazy(() => import("@/pages/BookingWorkspacePage"));
+const UnifiedBookingWizardPage = lazy(() => import("@/pages/UnifiedBookingWizardPage"));
 const VisaListPage = lazy(() => import("@/pages/VisaListPage"));
 const VisaCasePage = lazy(() => import("@/pages/VisaCasePage"));
 const PassportsPage = lazy(() => import("@/pages/PassportsPage"));
@@ -721,6 +724,30 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <CustomersPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "customers/:id",
+            element: (
+              <Lazy>
+                <CustomerWorkspacePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "bookings/new",
+            element: (
+              <Lazy>
+                <UnifiedBookingWizardPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "bookings/:id",
+            element: (
+              <Lazy>
+                <BookingWorkspacePage />
               </Lazy>
             ),
           },

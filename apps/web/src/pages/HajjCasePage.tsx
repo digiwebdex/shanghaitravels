@@ -24,6 +24,7 @@ import { HajjOpsCard } from "@/components/cases/HajjOpsCard";
 import CaseTimeline from "@/admin/shared/CaseTimeline";
 import { PageHeader, PageShell } from "@/components/enterprise/Page";
 
+import { Booking360Banner } from "@/components/workflow/CrmJourneyBanner";
 export default function HajjCasePage() {
   const { id } = useParams();
   const { can } = useAuth();
@@ -162,6 +163,7 @@ export default function HajjCasePage() {
           </span>
         }
       />
+            <Booking360Banner appId={app.id} customerId={app.customerId} />
       <ErrorBanner message={error} />
       <SuccessBanner message={ok} />
 <section className="bg-white rounded-xl border border-slate-200 p-4">

@@ -22,6 +22,7 @@ import {
   inputCls,
   labelCls,
 } from "@/components/enterprise/Page";
+import { CrmJourneyBanner } from "@/components/workflow/CrmJourneyBanner";
 
 export default function CrmLeadsPage() {
   const [rows, setRows] = useState<CrmLead[]>([]);
@@ -120,6 +121,7 @@ export default function CrmLeadsPage() {
         }
       />
       <CrmModuleNav />
+      <CrmJourneyBanner stage="lead" />
       <StatStrip>
         <KpiCard label="Total leads" value={rows.length} />
         <KpiCard label="Open" value={stats.open} tone="accent" />

@@ -102,6 +102,15 @@ export const NAV: NavSection[] = [
     label: "Bookings & Services",
     icon: Briefcase,
     items: [
+      {
+        id: "booking-wizard",
+        label: "New Booking Wizard",
+        to: "/bookings/new",
+        icon: Sparkles,
+        perm: "application:create",
+        keywords: "unified wizard create booking",
+      },
+      { id: "ops-queue", label: "Operations Queue", to: "/operations", icon: Workflow, perm: "application:read" },
       { id: "visa", label: "Visa Services", to: "/visa", icon: FileCheck, perm: "application:read" },
       { id: "ticketing", label: "Air Ticketing", to: "/ticketing", icon: Plane, perm: "application:read" },
       { id: "hotels", label: "Hotels", to: "/hotels", icon: Hotel, perm: "application:read" },

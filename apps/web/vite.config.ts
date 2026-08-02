@@ -26,4 +26,14 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    port: 4173,
+    proxy: {
+      "/api2": {
+        target: "http://127.0.0.1:4200",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api2/, "/api"),
+      },
+    },
+  },
 });

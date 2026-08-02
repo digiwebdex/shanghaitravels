@@ -101,6 +101,10 @@ export default function AgentPortalLayout() {
         </div>
       </aside>
       <main className="flex-1 overflow-auto">
+        <div className="border-b border-amber-100 bg-amber-50/70 px-4 py-2 text-[11px] text-slate-600">
+          <span className="font-bold text-amber-800">Agent flow:</span> Packages → Commission → Customer → OCR → Booking
+          request → Admin approval → Commission payment. You cannot issue tickets, approve visas, or pay suppliers.
+        </div>
         <Outlet />
       </main>
     </div>

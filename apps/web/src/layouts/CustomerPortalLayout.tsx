@@ -136,6 +136,10 @@ export default function CustomerPortalLayout() {
         </div>
       </aside>
       <main className="flex-1 overflow-auto">
+        <div className="border-b border-slate-100 bg-orange-50/60 px-4 py-2 text-[11px] text-slate-600">
+          <span className="font-bold text-orange-700">Your journey:</span> Profile → Passport/OCR → Packages → Book →
+          Pay → Track → Documents → Support
+        </div>
         <Outlet />
       </main>
     </div>

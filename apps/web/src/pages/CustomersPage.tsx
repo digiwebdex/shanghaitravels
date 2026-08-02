@@ -1,14 +1,12 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
-import { ChevronLeft, Plus, RefreshCw, Search, Users } from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import { Plus, RefreshCw, Search, Users } from "lucide-react";
 import { customersApi } from "@/lib/services";
 import { listOf, ApiError } from "@/lib/api";
 import type { Customer } from "@/lib/types";
-import { passportExpiry } from "@/lib/types";
 import { Can } from "@/auth/Can";
 import { useAuth } from "@/auth/AuthProvider";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
 import { Column, DataTable } from "@/components/enterprise/DataTable";
 import {
   KpiCard,
@@ -26,9 +24,9 @@ import {
   searchInputClassName,
 } from "@/components/enterprise/Page";
 import { ScanDocumentPanel, ocrFullName, ocrGenderToForm } from "@/components/ocr/ScanDocumentPanel";
-import { CustomerDocumentTimeline } from "@/components/ocr/OcrOpsWidget";
 
 export default function CustomersPage() {
+  const navigate = useNavigate();
   const { can } = useAuth();
   const [rows, setRows] = useState<Customer[]>([]);
   const [total, setTotal] = useState(0);
@@ -36,7 +34,6 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
-  const [selected, setSelected] = useState<Customer | null>(null);
   const [showCreate, setShowCreate] = useState(false);
 
   const load = useCallback(async (search?: string) => {
@@ -69,40 +66,27 @@ export default function CustomersPage() {
       key: "code",
       header: "Code",
       render: (c) => (
-        <button
-          type="button"
+        <Link
+          to={`/customers/${c.id}`}
           className="font-mono text-[11.5px] font-bold text-[var(--accent)] hover:underline"
-          onClick={() => setSelected(c)}
         >
           {c.code}
-        </button>
+        </Link>
       ),
     },
     {
       key: "name",
       header: "Name",
       render: (c) => (
-        <button type="button" className="font-semibold text-[var(--primary)] hover:underline" onClick={() => setSelected(c)}>
+        <Link to={`/customers/${c.id}`} className="font-semibold text-[var(--primary)] hover:underline">
           {c.fullName}
-        </button>
+        </Link>
       ),
     },
     { key: "phone", header: "Phone", render: (c) => c.phone || "—" },
     { key: "email", header: "Email", render: (c) => c.email || "—" },
     { key: "nationality", header: "Nationality", render: (c) => c.nationality || "—" },
   ];
-
-  if (selected) {
-    return (
-      <CustomerDetail
-        id={selected.id}
-        onBack={() => {
-          setSelected(null);
-          void load(q);
-        }}
-      />
-    );
-  }
 
   return (
     <PageShell wide>
@@ -139,7 +123,7 @@ export default function CustomersPage() {
           onCreated={(c) => {
             setShowCreate(false);
             setOk(`Customer created: ${c.code}`);
-            setSelected(c);
+            navigate(`/customers/${c.id}`);
           }}
         />
       )}
@@ -159,6 +143,9 @@ export default function CustomersPage() {
           <button type="button" className={btnGhost} onClick={() => void load(q)}>
             Search
           </button>
+          <Link to="/bookings/new" className={`${btnGhost} text-[11px] font-bold`}>
+            New booking wizard
+          </Link>
         </ListToolbar>
         <DataTable
           rows={rows}
@@ -166,7 +153,7 @@ export default function CustomersPage() {
           rowKey={(r) => r.id}
           loading={loading}
           emptyTitle="No customers yet"
-          emptyHint="Create a customer to start a visa case."
+          emptyHint="Create a customer, then open Customer 360."
         />
       </Surface>
     </PageShell>
@@ -279,230 +266,3 @@ function CreateCustomerForm({
   );
 }
 
-function CustomerDetail({ id, onBack }: { id: string; onBack: () => void }) {
-  const { can } = useAuth();
-  const [c, setC] = useState<Customer | null>(null);
-  const [error, setError] = useState("");
-  const [ok, setOk] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({
-    fullName: "",
-    phone: "",
-    email: "",
-    whatsapp: "",
-    nationality: "",
-    gender: "",
-    address: "",
-    notes: "",
-  });
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      try {
-        const cust = await customersApi.get(id);
-        if (cancelled) return;
-        setC(cust);
-        setForm({
-          fullName: cust.fullName || "",
-          phone: cust.phone || "",
-          email: cust.email || "",
-          whatsapp: cust.whatsapp || "",
-          nationality: cust.nationality || "",
-          gender: cust.gender || "",
-          address: cust.address || "",
-          notes: cust.notes || "",
-        });
-      } catch (e) {
-        if (!cancelled) setError(e instanceof ApiError ? e.message : "Failed to load");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
-
-  async function save(e: FormEvent) {
-    e.preventDefault();
-    setError("");
-    try {
-      const updated = await customersApi.update(id, {
-        fullName: form.fullName.trim(),
-        phone: form.phone.trim(),
-        email: form.email.trim() || null,
-        whatsapp: form.whatsapp.trim() || null,
-        nationality: form.nationality.trim() || null,
-        gender: form.gender || null,
-        address: form.address.trim() || null,
-        notes: form.notes.trim() || null,
-      });
-      setC(updated);
-      setOk("Customer updated.");
-      setEditing(false);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Update failed");
-    }
-  }
-
-  if (loading) {
-    return (
-      <PageShell>
-        <div className="flex justify-center py-20">
-          <InlineSpinner />
-        </div>
-      </PageShell>
-    );
-  }
-  if (!c) {
-    return (
-      <PageShell>
-        <ErrorBanner message={error || "Customer not found"} />
-        <button type="button" onClick={onBack} className="text-[12px] font-semibold text-[var(--accent)]">
-          ← Back
-        </button>
-      </PageShell>
-    );
-  }
-
-  return (
-    <PageShell>
-      <PageHeader
-        icon={Users}
-        title={c.fullName}
-        subtitle={`${c.code}${c.phone ? ` · ${c.phone}` : ""}${c.email ? ` · ${c.email}` : ""}`}
-        breadcrumb={[
-          { label: "Customers", to: "/customers" },
-          { label: "Directory", to: "/customers" },
-          { label: c.code },
-        ]}
-        actions={
-          <>
-            <button type="button" className={btnGhost} onClick={onBack}>
-              <ChevronLeft size={12} /> Back
-            </button>
-            <Can perm="customer:update">
-              <button type="button" className={btnGhost} onClick={() => setEditing((v) => !v)}>
-                {editing ? "Close" : "Edit"}
-              </button>
-            </Can>
-            <Link to={`/visa/new?customerId=${c.id}`} className={btnPrimary} style={btnPrimaryStyle}>
-              New visa case
-            </Link>
-          </>
-        }
-      />
-      <ErrorBanner message={error} />
-      <SuccessBanner message={ok} />
-
-      <Surface padded>
-        {editing && can("customer:update") ? (
-          <form onSubmit={save} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {(
-              [
-                ["fullName", "Full name"],
-                ["phone", "Phone"],
-                ["email", "Email"],
-                ["whatsapp", "WhatsApp"],
-                ["nationality", "Nationality"],
-                ["address", "Address"],
-              ] as const
-            ).map(([k, label]) => (
-              <div key={k}>
-                <label className={labelCls}>{label}</label>
-                <input className={inputCls} value={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })} />
-              </div>
-            ))}
-            <div>
-              <label className={labelCls}>Gender</label>
-              <select className={inputCls} value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}>
-                <option value="">—</option>
-                <option value="male">male</option>
-                <option value="female">female</option>
-              </select>
-            </div>
-            <div className="sm:col-span-2">
-              <label className={labelCls}>Notes</label>
-              <textarea className={inputCls} rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-            </div>
-            <div className="sm:col-span-2">
-              <button type="submit" className={btnPrimary} style={btnPrimaryStyle}>
-                Save changes
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 text-[12px] sm:grid-cols-4">
-            <div>
-              <p className={labelCls}>Nationality</p>
-              <p className="font-semibold text-[var(--primary)]">{c.nationality || "—"}</p>
-            </div>
-            <div>
-              <p className={labelCls}>Gender</p>
-              <p className="font-semibold text-[var(--primary)]">{c.gender || "—"}</p>
-            </div>
-            <div>
-              <p className={labelCls}>Address</p>
-              <p className="font-semibold text-[var(--primary)]">{c.address || "—"}</p>
-            </div>
-            <div>
-              <p className={labelCls}>Notes</p>
-              <p className="font-semibold text-[var(--primary)]">{c.notes || "—"}</p>
-            </div>
-          </div>
-        )}
-      </Surface>
-
-      <Surface>
-        <SurfaceHeader title="Passports" />
-        <div className="space-y-3 p-4 sm:p-5">
-          <ScanDocumentPanel
-            customerId={c.id}
-            defaultDocType="passport"
-            title="Scan passport"
-            onAutofill={(fields) => {
-              setForm((f) => ({
-                ...f,
-                fullName: ocrFullName(fields) || f.fullName,
-                nationality: fields.nationality || f.nationality,
-                gender: ocrGenderToForm(fields.gender) || f.gender,
-              }));
-              setOk("OCR fields applied — save customer if demographics changed.");
-              void customersApi.get(id).then(setC);
-            }}
-          />
-          {(c.passports || []).length === 0 ? (
-            <p className="text-[12px] text-[var(--muted-foreground)]">
-              No passports yet — scan above or open Passport Management.
-            </p>
-          ) : (
-            <ul className="space-y-2">
-              {c.passports!.map((p) => (
-                <li
-                  key={p.id}
-                  className="flex items-center justify-between rounded-lg px-3 py-2 text-[12px] ring-1 ring-[var(--ring-card)]"
-                >
-                  <span className="font-mono font-bold text-[var(--primary)]">{p.passportNo}</span>
-                  <span className="text-[var(--muted-foreground)]">
-                    {p.issuingCountry || "—"} · exp {passportExpiry(p)}
-                    {p.isPrimary ? " · primary" : ""}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-          <Link to={`/passports?customerId=${c.id}`} className="inline-block text-[11px] font-semibold text-[var(--accent)] hover:underline">
-            Manage passports →
-          </Link>
-        </div>
-      </Surface>
-
-      <Surface padded>
-        <CustomerDocumentTimeline customerId={c.id} passports={c.passports} />
-      </Surface>
-    </PageShell>
-  );
-}

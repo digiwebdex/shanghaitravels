@@ -41,6 +41,74 @@ import {
 } from "@/dashboard/DashboardDataProvider";
 import { fmtBDTCompact, fmtBDTPlain } from "@/lib/money";
 import { brand, chartColors } from "@/styles/tokens";
+import { MasterJourneyStrip, NextStepBanner } from "@/components/workflow/MasterJourney";
+
+function roleLens(role?: string): {
+  title: string;
+  body: string;
+  actions: { label: string; to: string; primary?: boolean }[];
+} {
+  const r = (role || "").toLowerCase();
+  if (r.includes("visa")) {
+    return {
+      title: "Visa officer lens",
+      body: "Work docs-required and embassy stages from the Operations queue, then Booking 360.",
+      actions: [
+        { label: "Visa queue", to: "/operations?tab=visa", primary: true },
+        { label: "Document Intelligence", to: "/operations/document-intelligence" },
+      ],
+    };
+  }
+  if (r.includes("ticket") || r.includes("air")) {
+    return {
+      title: "Ticketing lens",
+      body: "Issue tickets from the air-ticket desk; keep finance on Booking 360.",
+      actions: [
+        { label: "Ticket queue", to: "/operations?tab=ticket", primary: true },
+        { label: "Air ticketing", to: "/ticketing" },
+      ],
+    };
+  }
+  if (r.includes("account") || r.includes("finance")) {
+    return {
+      title: "Accounts lens",
+      body: "Invoices and payments always originate from bookings — no duplicate entry.",
+      actions: [
+        { label: "Invoices", to: "/finance/invoices", primary: true },
+        { label: "Payments", to: "/finance/payments" },
+      ],
+    };
+  }
+  if (r.includes("sales") || r.includes("crm")) {
+    return {
+      title: "Sales lens",
+      body: "Stay in CRM until a booking exists: Lead → Opportunity → Quotation → Booking.",
+      actions: [
+        { label: "Leads", to: "/crm", primary: true },
+        { label: "Booking wizard", to: "/bookings/new" },
+      ],
+    };
+  }
+  if (r.includes("ops") || r.includes("operation")) {
+    return {
+      title: "Operations lens",
+      body: "One queue for every service. Open Booking 360 — avoid module hopping.",
+      actions: [
+        { label: "Operations workspace", to: "/operations", primary: true },
+        { label: "Urgent", to: "/operations?tab=urgent" },
+      ],
+    };
+  }
+  return {
+    title: "Executive lens",
+    body: "Company-wide KPIs. Start bookings from the unified wizard; drill into Customer 360 and Booking 360.",
+    actions: [
+      { label: "New booking", to: "/bookings/new", primary: true },
+      { label: "Operations", to: "/operations" },
+      { label: "Customers", to: "/customers" },
+    ],
+  };
+}
 
 const MetricCard = memo(function MetricCard({ metric, money }: { metric: Metric; money?: boolean }) {
   if (metric.provenance === "unavailable" && metric.value == null) {
@@ -114,17 +182,22 @@ function DashboardBody() {
     [d.kpis],
   );
 
+  const lens = roleLens(user?.role);
+
   return (
     <PageShell wide>
       <PageHeader
         title="Company Dashboard"
-        subtitle={`Welcome, ${user?.fullName || user?.email}. Live company-wide view — not visa-only.`}
+        subtitle={`Welcome, ${user?.fullName || user?.email}. Role-aware KPIs with a single master journey.`}
         actions={
           <button type="button" className={btnGhost} onClick={() => d.refresh()}>
             <RefreshCw size={12} /> Refresh
           </button>
         }
       />
+
+      <MasterJourneyStrip active="booking" compact />
+      <NextStepBanner title={lens.title} body={lens.body} actions={lens.actions} />
 
       <ErrorBanner message={d.error} />
 

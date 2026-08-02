@@ -34,6 +34,14 @@ export type QuickAction = {
 
 export const QUICK_ACTIONS: QuickAction[] = [
   {
+    id: "qa-booking",
+    label: "New Booking",
+    to: "/bookings/new",
+    icon: Package,
+    perm: "application:create",
+    primary: true,
+  },
+  {
     id: "qa-scan",
     label: "Scan Document",
     to: "/operations/document-intelligence?tab=scan",
@@ -41,14 +49,13 @@ export const QUICK_ACTIONS: QuickAction[] = [
     perm: "ocr:use",
     primary: true,
   },
-  { id: "qa-visa", label: "New Visa Case", to: "/visa/new", icon: FileCheck, perm: "application:create", primary: true },
+  { id: "qa-visa", label: "New Visa Case", to: "/visa/new", icon: FileCheck, perm: "application:create" },
   {
     id: "qa-ticket",
     label: "New Air Ticket",
     to: "/ticketing/new",
     icon: Plane,
     perm: "application:create",
-    primary: true,
   },
   { id: "qa-hotel", label: "New Hotel Booking", to: "/hotels/new", icon: Hotel, perm: "application:create" },
   { id: "qa-tour", label: "New Tour Booking", to: "/tours/new", icon: Map, perm: "application:create" },

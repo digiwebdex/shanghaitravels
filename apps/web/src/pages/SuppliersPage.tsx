@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { Link, NavLink, useParams } from "react-router";
+import { Link, NavLink, useNavigate, useParams } from "react-router";
 import { Plus, RefreshCw, Truck } from "lucide-react";
 import { apApi, suppliersApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
@@ -12,6 +12,8 @@ import { Column, DataTable, Pill } from "@/components/enterprise/DataTable";
 import { PageHeader, PageShell, Surface, SurfaceHeader, btnGhost, btnPrimary, btnPrimaryStyle } from "@/components/enterprise/Page";
 import { SUPPLIER_TYPES, supplierTypeLabel } from "@/config/nav";
 import { fmtBDTPlain } from "@/lib/money";
+import { EntityTabs } from "@/components/workflow/EntityTabs";
+import { NextStepBanner } from "@/components/workflow/MasterJourney";
 
 type Row = Supplier & { outstandingPoisha?: number };
 
@@ -21,6 +23,7 @@ type Row = Supplier & { outstandingPoisha?: number };
  * commercial picture sits next to the contact record.
  */
 export default function SuppliersPage() {
+  const navigate = useNavigate();
   const { type } = useParams<{ type?: string }>();
   const [rows, setRows] = useState<Row[]>([]);
   const [q, setQ] = useState("");
@@ -175,6 +178,37 @@ export default function SuppliersPage() {
       />
 
       <PartnerModuleNav />
+
+      <NextStepBanner
+        title="Supplier Center"
+        body="Suppliers stay separate from customers, agents and corporate clients. Link them from Booking 360 — payables flow from booking → supplier invoice → payment."
+        actions={[
+          { label: "AP desk", to: "/finance/ap", primary: true },
+          { label: "Operations queue", to: "/operations" },
+          { label: "New booking", to: "/bookings/new" },
+        ]}
+      />
+      <div className="mb-3">
+        <EntityTabs
+          tabs={[
+            { id: "overview", label: "Overview" },
+            { id: "bookings", label: "Bookings" },
+            { id: "invoices", label: "Invoices" },
+            { id: "payments", label: "Payments" },
+            { id: "performance", label: "Performance" },
+            { id: "documents", label: "Documents" },
+            { id: "packages", label: "Packages" },
+            { id: "timeline", label: "Timeline" },
+          ]}
+          active="overview"
+          onChange={(id) => {
+            if (id === "invoices" || id === "payments") navigate("/finance/ap");
+            else if (id === "packages") navigate("/products/packages");
+            else if (id === "bookings") navigate("/operations");
+            else if (id === "documents") navigate("/operations/documents");
+          }}
+        />
+      </div>
 
       {!type && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5" aria-label="Supplier type summary">

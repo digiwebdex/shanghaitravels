@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/api";
 import { Can } from "@/auth/Can";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { SalesModuleNav } from "@/components/sales/SalesModuleNav";
+import { CrmJourneyBanner } from "@/components/workflow/CrmJourneyBanner";
 import { ERP } from "@/config/env";
 import { formatBdt, QUOTE_SERVICES, toPoisha } from "@/lib/crm";
 import { canApproveQuote, canConvertQuote, canSubmitQuote, validateSalesQuote } from "@/lib/sales";
@@ -232,6 +233,7 @@ export default function SalesQuotationsPage() {
         }
       />
       <SalesModuleNav />
+      <CrmJourneyBanner stage="quotation" />
       <StatStrip>
         <KpiCard label="Quotes" value={rows.length} />
         <KpiCard label="Draft" value={stats.draft} tone="warning" />
