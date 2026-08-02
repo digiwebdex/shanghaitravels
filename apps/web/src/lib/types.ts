@@ -38,6 +38,7 @@ export type Passport = {
   issueDate?: string | null;
   expiryDate?: string | null;
   isPrimary?: boolean;
+  createdAt?: string;
 };
 
 /** Normalize Nest passport date fields for display. */

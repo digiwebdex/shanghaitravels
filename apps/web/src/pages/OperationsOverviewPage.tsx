@@ -1,10 +1,12 @@
 import { Link } from "react-router";
-import { Bell, BookOpen, CalendarDays, Files, Route, Workflow } from "lucide-react";
+import { Bell, BookOpen, Brain, CalendarDays, Files, Route, Workflow } from "lucide-react";
 import { PageHeader, PageShell } from "@/components/enterprise/Page";
 import { WorkspaceTabsCompact } from "@/workspaces/WorkspaceTabs";
 import { workspaceById } from "@/workspaces/registry";
+import { OcrOpsWidget } from "@/components/ocr/OcrOpsWidget";
 
 const CARDS = [
+  { label: "Document Intelligence", to: "/operations/document-intelligence", icon: Brain },
   { label: "Passports", to: "/passports", icon: BookOpen },
   { label: "Documents", to: "/operations/documents", icon: Files },
   { label: "Case Journey", to: "/case-journey", icon: Route },
@@ -19,10 +21,13 @@ export default function OperationsOverviewPage() {
     <PageShell>
       <PageHeader
         title="Operations"
-        subtitle="Passports, documents, case journey, workflow templates and the notification outbox."
+        subtitle="Document Intelligence, passports, case journey, workflow and notifications."
         breadcrumb={[{ label: "Operations" }]}
       />
       <WorkspaceTabsCompact workspace={workspace} />
+      <div className="mb-4">
+        <OcrOpsWidget />
+      </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {CARDS.map((c) => (
           <Link

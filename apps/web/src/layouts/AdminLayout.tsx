@@ -9,6 +9,7 @@ import {
   LogOut,
   Menu,
   Plus,
+  ScanLine,
   Search,
   User,
   X,
@@ -22,6 +23,7 @@ import {
   searchPlaceholderForPath,
 } from "@/config/contextUi";
 import { CommandPalette } from "@/components/shell/CommandPalette";
+import { ScanDocumentModal } from "@/components/ocr/ScanDocumentPanel";
 import { brand, gradient } from "@/styles/tokens";
 
 const EXPANDED_KEY = "travelos:nav:expanded";
@@ -168,6 +170,7 @@ export default function AdminLayout() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>(readExpanded);
 
   const profileRef = useRef<HTMLDivElement>(null);
@@ -373,6 +376,17 @@ export default function AdminLayout() {
           </button>
 
           <div className="ml-auto flex flex-shrink-0 items-center gap-1.5">
+            {can("ocr:use") && (
+              <button
+                type="button"
+                onClick={() => setScanOpen(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-2.5 py-2 text-[11px] font-bold text-orange-700 transition-colors hover:bg-orange-100"
+                title="Scan Document"
+              >
+                <ScanLine size={14} />
+                <span className="hidden sm:inline">Scan Document</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => navigate("/operations/notifications")}
@@ -498,6 +512,7 @@ export default function AdminLayout() {
       </div>
 
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <ScanDocumentModal open={scanOpen} onClose={() => setScanOpen(false)} />
     </div>
   );
 }

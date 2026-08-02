@@ -24,6 +24,8 @@ import {
 } from "@/components/enterprise/Page";
 import { ErrorBanner } from "@/components/Feedback";
 
+import { ScanDocumentPanel, ocrFullName } from "@/components/ocr/ScanDocumentPanel";
+
 const STATUSES = [
   "draft",
   "in_progress",
@@ -250,6 +252,18 @@ export function NewTicketingCasePage() {
             <Link to="/customers" className="mt-1 inline-block text-[11px] font-semibold text-[var(--accent)]">
               Create customer first →
             </Link>
+            <div className="mt-2">
+              <ScanDocumentPanel
+                customerId={customerId || undefined}
+                defaultDocType="passport"
+                title="Scan passenger passport"
+                savePassportOnConfirm={!!customerId}
+                onAutofill={(fields) => {
+                  const name = ocrFullName(fields);
+                  if (name) setTitle((t) => t || `Air ticket — ${name}`);
+                }}
+              />
+            </div>
           </div>
           <div>
             <label className={labelCls} htmlFor="tk-priority">

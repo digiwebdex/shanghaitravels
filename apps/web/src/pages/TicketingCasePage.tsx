@@ -255,6 +255,7 @@ export default function TicketingCasePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <AirTicketDetailCard
             appId={app.id}
+            customerId={app.customerId}
             detail={app.airTicket}
             onSaved={reload}
             setError={setError}

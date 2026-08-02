@@ -1,7 +1,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { FileCheck, Plus, RefreshCw, Search } from "lucide-react";
-import { applicationsApi, customersApi } from "@/lib/services";
+import { applicationsApi, customersApi, destinationsApi } from "@/lib/services";
 import { listOf, ApiError } from "@/lib/api";
 import type { Application, Customer } from "@/lib/types";
 import { Can } from "@/auth/Can";
@@ -23,7 +23,13 @@ import {
   selectClassName,
 } from "@/components/enterprise/Page";
 import { ErrorBanner } from "@/components/Feedback";
-import { VISA_TYPE_OPTIONS } from "@/config/checklist";
+import {
+  DEFAULT_VISA_DESTINATIONS,
+  VISA_CATEGORY_OPTIONS,
+  VISA_LETTER_BY_CATEGORY,
+} from "@/config/checklist";
+import { destinationCountry, type DestinationMaster } from "@/lib/destinations";
+import { ScanDocumentPanel } from "@/components/ocr/ScanDocumentPanel";
 
 export default function VisaListPage() {
   const [rows, setRows] = useState<Application[]>([]);
@@ -172,21 +178,53 @@ export function NewVisaCasePage() {
   const [params] = useSearchParams();
   const presetCustomer = params.get("customerId") || "";
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [destinations, setDestinations] = useState<string[]>([...DEFAULT_VISA_DESTINATIONS]);
   const [customerId, setCustomerId] = useState(presetCustomer);
-  const [title, setTitle] = useState("");
-  const [visaType, setVisaType] = useState("tourist");
+  const [destination, setDestination] = useState("China");
+  const [visaCategory, setVisaCategory] = useState("tourist");
+  const [visaLetter, setVisaLetter] = useState("L");
+  const [priceBdt, setPriceBdt] = useState("");
+  const [discountBdt, setDiscountBdt] = useState("");
+  const [referredBy, setReferredBy] = useState("");
   const [priority, setPriority] = useState("medium");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const letterOptions = VISA_LETTER_BY_CATEGORY[visaCategory] || VISA_LETTER_BY_CATEGORY.tourist;
 
   useEffect(() => {
     void customersApi
       .list({ limit: 200 })
       .then((r) => setCustomers(listOf<Customer>(r)))
       .catch(() => setCustomers([]));
+    void destinationsApi
+      .list({ limit: 200, status: "published" })
+      .then((r) => {
+        const rows = listOf<DestinationMaster>(r);
+        const names = rows
+          .map((d) => destinationCountry(d) || d.name)
+          .map((n) => n.trim())
+          .filter(Boolean);
+        if (names.length) {
+          const merged = Array.from(new Set([...DEFAULT_VISA_DESTINATIONS, ...names]));
+          setDestinations(merged);
+        }
+      })
+      .catch(() => {
+        /* keep defaults */
+      });
   }, []);
 
+  useEffect(() => {
+    const opts = VISA_LETTER_BY_CATEGORY[visaCategory] || VISA_LETTER_BY_CATEGORY.tourist;
+    if (!opts.some((o) => o.value === visaLetter)) {
+      setVisaLetter(opts[0]?.value || "L");
+    }
+  }, [visaCategory, visaLetter]);
+
   const selected = useMemo(() => customers.find((c) => c.id === customerId), [customers, customerId]);
+  const categoryLabel =
+    VISA_CATEGORY_OPTIONS.find((c) => c.value === visaCategory)?.label || visaCategory;
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -194,25 +232,40 @@ export function NewVisaCasePage() {
       setError("Pick a customer");
       return;
     }
+    if (!destination.trim()) {
+      setError("Pick a destination");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
       const caseTitle =
-        title.trim() ||
-        `China ${VISA_TYPE_OPTIONS.find((v) => v.value === visaType)?.label || visaType} — ${selected?.fullName || ""}`.trim();
+        `${destination.trim()} ${categoryLabel} ${visaLetter} — ${selected?.fullName || ""}`.trim();
+      const noteLines = [
+        `Visa type: ${visaLetter}`,
+        priceBdt.trim() ? `Price: ৳${priceBdt.trim()}` : "",
+        discountBdt.trim() ? `Discount: ৳${discountBdt.trim()}` : "",
+        referredBy.trim() ? `Referred by: ${referredBy.trim()}` : "",
+      ].filter(Boolean);
+
       const app = await applicationsApi.create({
         serviceType: "visa",
         customerId,
         title: caseTitle,
         priority,
         direction: "outbound",
+        source: referredBy.trim() ? "referral" : "walkin",
       });
       await applicationsApi.putVisa(app.id, {
-        visaType,
-        destination: "China",
+        visaType: visaCategory,
+        destination: destination.trim(),
         entryType: "single",
-        embassy: "CVASC Dhaka",
+        embassy: destination.trim().toLowerCase() === "china" ? "CVASC Dhaka" : undefined,
+        notes: noteLines.join("\n") || undefined,
       });
+      if (noteLines.length > 1) {
+        void applicationsApi.note(app.id, noteLines.join(" · ")).catch(() => undefined);
+      }
       navigate(`/visa/${app.id}`, { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not create case");
@@ -249,17 +302,105 @@ export function NewVisaCasePage() {
             <Link to="/customers" className="mt-1 inline-block text-[11px] font-semibold text-[var(--accent)]">
               Create customer first →
             </Link>
+            <div className="mt-2">
+              <ScanDocumentPanel
+                customerId={customerId || undefined}
+                defaultDocType="passport"
+                title="Scan passport for applicant"
+                savePassportOnConfirm={!!customerId}
+                onAutofill={() => {
+                  /* Passport saved via panel when customer selected; case form has no traveler fields. */
+                }}
+              />
+              {!customerId && (
+                <p className="mt-1 text-[10px] text-[var(--muted-foreground)]">
+                  Select a customer first to save the scanned passport.
+                </p>
+              )}
+            </div>
           </div>
+
           <div>
-            <label className={labelCls}>Visa type</label>
-            <select className={inputCls} value={visaType} onChange={(e) => setVisaType(e.target.value)}>
-              {VISA_TYPE_OPTIONS.map((v) => (
-                <option key={v.value} value={v.value}>
-                  {v.label}
+            <label className={labelCls}>Destination *</label>
+            <select
+              className={inputCls}
+              required
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+            >
+              {destinations.map((d) => (
+                <option key={d} value={d}>
+                  {d}
                 </option>
               ))}
             </select>
           </div>
+
+          <div>
+            <label className={labelCls}>Visa category *</label>
+            <select
+              className={inputCls}
+              required
+              value={visaCategory}
+              onChange={(e) => setVisaCategory(e.target.value)}
+            >
+              {VISA_CATEGORY_OPTIONS.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className={labelCls}>Visa type *</label>
+            <select
+              className={inputCls}
+              required
+              value={visaLetter}
+              onChange={(e) => setVisaLetter(e.target.value)}
+            >
+              {letterOptions.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label className={labelCls}>Price (BDT)</label>
+              <input
+                className={inputCls}
+                inputMode="decimal"
+                placeholder="0"
+                value={priceBdt}
+                onChange={(e) => setPriceBdt(e.target.value.replace(/[^\d.]/g, ""))}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Discount (BDT)</label>
+              <input
+                className={inputCls}
+                inputMode="decimal"
+                placeholder="0"
+                value={discountBdt}
+                onChange={(e) => setDiscountBdt(e.target.value.replace(/[^\d.]/g, ""))}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelCls}>Referred by</label>
+            <input
+              className={inputCls}
+              placeholder="Agent / staff / partner name"
+              value={referredBy}
+              onChange={(e) => setReferredBy(e.target.value)}
+            />
+          </div>
+
           <div>
             <label className={labelCls}>Priority</label>
             <select className={inputCls} value={priority} onChange={(e) => setPriority(e.target.value)}>
@@ -270,10 +411,7 @@ export function NewVisaCasePage() {
               ))}
             </select>
           </div>
-          <div>
-            <label className={labelCls}>Title</label>
-            <input className={inputCls} placeholder="Auto if blank" value={title} onChange={(e) => setTitle(e.target.value)} />
-          </div>
+
           <div className="flex gap-2 pt-1">
             <button type="submit" disabled={loading} className={btnPrimary} style={btnPrimaryStyle}>
               {loading ? "Creating…" : "Create case"}

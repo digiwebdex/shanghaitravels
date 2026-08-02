@@ -48,6 +48,35 @@ export const DEFAULT_CHINA_CHECKLIST: ChinaChecklist = {
   },
 };
 
+/** Category drives checklist + API `visaType` (tourist | business | …). */
+export const VISA_CATEGORY_OPTIONS = [
+  { value: "tourist", label: "Tourist", checklistKey: "L (Tourist)" },
+  { value: "business", label: "Business", checklistKey: "M (Business)" },
+  { value: "student", label: "Student", checklistKey: "X1/X2 (Student)" },
+  { value: "work", label: "Work", checklistKey: "Z (Work)" },
+  { value: "family", label: "Family", checklistKey: "Q1/Q2 (Family — Chinese relative)" },
+  { value: "transit", label: "Transit", checklistKey: "G (Transit)" },
+] as const;
+
+/** Letter / subtype shown as “Visa type”; keyed by category. */
+export const VISA_LETTER_BY_CATEGORY: Record<string, { value: string; label: string }[]> = {
+  tourist: [{ value: "L", label: "L — Tourist" }],
+  business: [{ value: "M", label: "M — Business" }],
+  student: [
+    { value: "X1", label: "X1 — Long-term study" },
+    { value: "X2", label: "X2 — Short-term study" },
+  ],
+  work: [{ value: "Z", label: "Z — Work" }],
+  family: [
+    { value: "Q1", label: "Q1 — Family (Chinese relative)" },
+    { value: "Q2", label: "Q2 — Family visit (Chinese relative)" },
+    { value: "S1", label: "S1 — Family (foreigner in China)" },
+    { value: "S2", label: "S2 — Family visit (foreigner in China)" },
+  ],
+  transit: [{ value: "G", label: "G — Transit" }],
+};
+
+/** @deprecated Prefer VISA_CATEGORY_OPTIONS — kept for list/detail pages. */
 export const VISA_TYPE_OPTIONS = [
   { value: "tourist", label: "Tourist L", checklistKey: "L (Tourist)" },
   { value: "business", label: "Business M", checklistKey: "M (Business)" },
@@ -55,6 +84,24 @@ export const VISA_TYPE_OPTIONS = [
   { value: "work", label: "Work Z", checklistKey: "Z (Work)" },
   { value: "family", label: "Family Q/S", checklistKey: "Q1/Q2 (Family — Chinese relative)" },
   { value: "transit", label: "Transit G", checklistKey: "G (Transit)" },
+] as const;
+
+export const DEFAULT_VISA_DESTINATIONS = [
+  "China",
+  "Thailand",
+  "Malaysia",
+  "Singapore",
+  "United Arab Emirates",
+  "Saudi Arabia",
+  "Schengen",
+  "United Kingdom",
+  "United States",
+  "Canada",
+  "Australia",
+  "Japan",
+  "South Korea",
+  "India",
+  "Turkey",
 ] as const;
 
 export const DOC_CATEGORIES = [

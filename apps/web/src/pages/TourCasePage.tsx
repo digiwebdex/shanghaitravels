@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { CheckCircle2, Circle, Map } from "lucide-react";
-import { applicationsApi, financeApi, usersApi } from "@/lib/services";
+import { applicationsApi, customersApi, financeApi, usersApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import type {
   Account,
@@ -22,7 +22,8 @@ import { CaseFinanceCard } from "@/components/cases/CaseFinanceCard";
 import { TourDetailCard } from "@/components/cases/TourDetailCard";
 import { TourOpsCard } from "@/components/cases/TourOpsCard";
 import CaseTimeline from "@/admin/shared/CaseTimeline";
-import { PageHeader, PageShell } from "@/components/enterprise/Page";
+import { PageHeader, PageShell, Surface } from "@/components/enterprise/Page";
+import { ScanDocumentPanel, ocrFullName } from "@/components/ocr/ScanDocumentPanel";
 
 export default function TourCasePage() {
   const { id } = useParams();
@@ -261,6 +262,32 @@ export default function TourCasePage() {
           />
           <CaseAssignCard app={app} staff={staff} onSaved={reload} setError={setError} setOk={setOk} />
         </div>
+
+        <Surface padded className="space-y-2">
+          <h2 className="text-[12px] font-bold text-[var(--primary)]">Lead traveler documents</h2>
+          <p className="text-[11px] text-[var(--muted-foreground)]">
+            Scan passport to autofill customer identity and save to the customer profile.
+          </p>
+          <ScanDocumentPanel
+            customerId={app.customerId}
+            applicationId={app.id}
+            defaultDocType="passport"
+            title="Scan traveler passport"
+            onAutofill={(fields) => {
+              const name = ocrFullName(fields);
+              if (!app.customerId || !name) return;
+              void customersApi
+                .update(app.customerId, {
+                  fullName: name,
+                  nationality: fields.nationality || undefined,
+                  gender: fields.gender === "M" ? "male" : fields.gender === "F" ? "female" : undefined,
+                  dob: fields.dateOfBirth || undefined,
+                })
+                .then(() => setOk("Traveler identity updated from OCR"))
+                .catch((e) => setError(e instanceof ApiError ? e.message : "Customer update failed"));
+            }}
+          />
+        </Surface>
 
         <TourOpsCard
           app={app}

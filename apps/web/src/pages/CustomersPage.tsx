@@ -25,6 +25,8 @@ import {
   labelCls,
   searchInputClassName,
 } from "@/components/enterprise/Page";
+import { ScanDocumentPanel, ocrFullName, ocrGenderToForm } from "@/components/ocr/ScanDocumentPanel";
+import { CustomerDocumentTimeline } from "@/components/ocr/OcrOpsWidget";
 
 export default function CustomersPage() {
   const { can } = useAuth();
@@ -220,6 +222,20 @@ function CreateCustomerForm({
       <SurfaceHeader title="New customer" hint="Phone and full name are required." />
       <form onSubmit={submit} className="space-y-3 p-4 sm:p-5">
         <ErrorBanner message={error} />
+        <ScanDocumentPanel
+          defaultDocType="passport"
+          savePassportOnConfirm={false}
+          title="Scan ID / Passport"
+          onAutofill={(fields) => {
+            setForm((f) => ({
+              ...f,
+              fullName: ocrFullName(fields) || f.fullName,
+              nationality: fields.nationality || f.nationality,
+              gender: ocrGenderToForm(fields.gender) || f.gender,
+              dob: fields.dateOfBirth || f.dob,
+            }));
+          }}
+        />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div>
             <label className={labelCls}>Full name *</label>
@@ -442,10 +458,25 @@ function CustomerDetail({ id, onBack }: { id: string; onBack: () => void }) {
 
       <Surface>
         <SurfaceHeader title="Passports" />
-        <div className="p-4 sm:p-5">
+        <div className="space-y-3 p-4 sm:p-5">
+          <ScanDocumentPanel
+            customerId={c.id}
+            defaultDocType="passport"
+            title="Scan passport"
+            onAutofill={(fields) => {
+              setForm((f) => ({
+                ...f,
+                fullName: ocrFullName(fields) || f.fullName,
+                nationality: fields.nationality || f.nationality,
+                gender: ocrGenderToForm(fields.gender) || f.gender,
+              }));
+              setOk("OCR fields applied — save customer if demographics changed.");
+              void customersApi.get(id).then(setC);
+            }}
+          />
           {(c.passports || []).length === 0 ? (
             <p className="text-[12px] text-[var(--muted-foreground)]">
-              No passports yet — add via Passport Management or a visa case.
+              No passports yet — scan above or open Passport Management.
             </p>
           ) : (
             <ul className="space-y-2">
@@ -463,10 +494,14 @@ function CustomerDetail({ id, onBack }: { id: string; onBack: () => void }) {
               ))}
             </ul>
           )}
-          <Link to={`/passports?customerId=${c.id}`} className="mt-3 inline-block text-[11px] font-semibold text-[var(--accent)] hover:underline">
+          <Link to={`/passports?customerId=${c.id}`} className="inline-block text-[11px] font-semibold text-[var(--accent)] hover:underline">
             Manage passports →
           </Link>
         </div>
+      </Surface>
+
+      <Surface padded>
+        <CustomerDocumentTimeline customerId={c.id} passports={c.passports} />
       </Surface>
     </PageShell>
   );

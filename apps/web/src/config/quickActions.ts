@@ -16,6 +16,7 @@ import {
   Package,
   Plane,
   Receipt,
+  ScanLine,
   Truck,
   UserRoundPlus,
   type LucideIcon,
@@ -32,6 +33,14 @@ export type QuickAction = {
 };
 
 export const QUICK_ACTIONS: QuickAction[] = [
+  {
+    id: "qa-scan",
+    label: "Scan Document",
+    to: "/operations/document-intelligence?tab=scan",
+    icon: ScanLine,
+    perm: "ocr:use",
+    primary: true,
+  },
   { id: "qa-visa", label: "New Visa Case", to: "/visa/new", icon: FileCheck, perm: "application:create", primary: true },
   {
     id: "qa-ticket",

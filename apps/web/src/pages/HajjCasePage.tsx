@@ -254,6 +254,7 @@ export default function HajjCasePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <HajjDetailCard
             appId={app.id}
+            customerId={app.customerId}
             serviceType={app.serviceType === "umrah" ? "umrah" : "hajj"}
             detail={app.hajjUmrah}
             onSaved={reload}

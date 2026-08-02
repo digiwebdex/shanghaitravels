@@ -21,9 +21,11 @@ import {
   validateHajjForm,
   type HajjForm,
 } from "@/lib/hajj";
+import { ScanDocumentPanel, ocrFullName } from "@/components/ocr/ScanDocumentPanel";
 
 export function HajjDetailCard({
   appId,
+  customerId,
   serviceType,
   detail,
   onSaved,
@@ -31,6 +33,7 @@ export function HajjDetailCard({
   setOk,
 }: {
   appId: string;
+  customerId?: string;
   serviceType: "hajj" | "umrah";
   detail?: HajjDetail | null;
   onSaved: () => Promise<void>;
@@ -272,6 +275,25 @@ export function HajjDetailCard({
         </div>
 
         <p className="text-[10px] font-bold text-slate-500 uppercase pt-1">Pilgrim</p>
+        <div className="mb-2">
+          <ScanDocumentPanel
+            applicationId={appId}
+            customerId={customerId}
+            defaultDocType="passport"
+            title="Scan pilgrim passport"
+            onAutofill={(fields) => {
+              setForm((f) => ({
+                ...f,
+                pilgrimName: ocrFullName(fields) || f.pilgrimName,
+                passportNo: fields.passportNo || f.passportNo,
+                nationality: fields.nationality || f.nationality,
+                gender: fields.gender === "M" || fields.gender === "F" ? fields.gender : f.gender,
+                dob: fields.dateOfBirth || f.dob,
+                visaNo: fields.visaNumber || f.visaNo,
+              }));
+            }}
+          />
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div>
             <label className={labelCls}>Kind</label>

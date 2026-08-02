@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router";
 import { Brain, FileSearch, RefreshCw } from "lucide-react";
-import { applicationsApi, ocrApi, passportsApi } from "@/lib/services";
-import { ApiError, validateUploadFile } from "@/lib/api";
+import { applicationsApi, customersApi, ocrApi, passportsApi } from "@/lib/services";
+import { ApiError, listOf, validateUploadFile } from "@/lib/api";
+import type { Customer } from "@/lib/types";
+import { passportExpiry } from "@/lib/types";
 import { Can } from "@/auth/Can";
 import {
   KpiCard,
@@ -22,21 +24,36 @@ import { docTypeToUploadCategory, type OcrScanResult } from "@/lib/documentIntel
 
 type Tab = "dashboard" | "scan" | "queue" | "failed" | "search" | "settings";
 
+const TABS: Tab[] = ["dashboard", "scan", "queue", "failed", "search", "settings"];
+
 export default function DocumentIntelligencePage() {
-  const [tab, setTab] = useState<Tab>("dashboard");
+  const [params, setParams] = useSearchParams();
+  const tabParam = params.get("tab");
+  const tab: Tab = TABS.includes(tabParam as Tab) ? (tabParam as Tab) : "dashboard";
+
+  const setTab = (id: Tab) => {
+    const next = new URLSearchParams(params);
+    if (id === "dashboard") next.delete("tab");
+    else next.set("tab", id);
+    setParams(next, { replace: true });
+  };
+
   const [stats, setStats] = useState<Awaited<ReturnType<typeof ocrApi.stats>> | null>(null);
   const [recent, setRecent] = useState<Record<string, unknown>[]>([]);
   const [failed, setFailed] = useState<Record<string, unknown>[]>([]);
+  const [passportHits, setPassportHits] = useState<
+    { customerId: string; customerCode: string; customerName: string; passportNo: string; expiry: string }[]
+  >([]);
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
-  const [q, setQ] = useState("");
-  const [customerId, setCustomerId] = useState("");
-  const [applicationId, setApplicationId] = useState("");
+  const [q, setQ] = useState(params.get("q") || "");
+  const [customerId, setCustomerId] = useState(params.get("customerId") || "");
+  const [applicationId, setApplicationId] = useState(params.get("applicationId") || "");
 
   const load = useCallback(async () => {
     setError("");
     try {
-      const [s, r, f] = await Promise.all([ocrApi.stats(), ocrApi.recent(40), ocrApi.failed(40)]);
+      const [s, r, f] = await Promise.all([ocrApi.stats(), ocrApi.recent(200), ocrApi.failed(80)]);
       setStats(s);
       setRecent(Array.isArray(r) ? r : []);
       setFailed(Array.isArray(f) ? f : []);
@@ -49,11 +66,49 @@ export default function DocumentIntelligencePage() {
     void load();
   }, [load]);
 
-  const searchHits = recent.filter((row) => {
-    if (!q.trim()) return true;
-    const hay = JSON.stringify(row).toLowerCase();
-    return hay.includes(q.trim().toLowerCase());
-  });
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = listOf<Customer>(await customersApi.list({ limit: 200 }));
+        const hits: typeof passportHits = [];
+        for (const c of rows) {
+          for (const p of c.passports || []) {
+            hits.push({
+              customerId: c.id,
+              customerCode: c.code,
+              customerName: c.fullName,
+              passportNo: p.passportNo,
+              expiry: passportExpiry(p),
+            });
+          }
+        }
+        if (!cancelled) setPassportHits(hits);
+      } catch {
+        if (!cancelled) setPassportHits([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const needle = q.trim().toLowerCase();
+
+  const journalHits = useMemo(() => {
+    if (!needle) return recent;
+    return recent.filter((row) => JSON.stringify(row).toLowerCase().includes(needle));
+  }, [recent, needle]);
+
+  const savedPassportHits = useMemo(() => {
+    if (!needle) return passportHits.slice(0, 40);
+    return passportHits.filter(
+      (p) =>
+        p.passportNo.toLowerCase().includes(needle) ||
+        p.customerName.toLowerCase().includes(needle) ||
+        p.customerCode.toLowerCase().includes(needle),
+    );
+  }, [passportHits, needle]);
 
   return (
     <PageShell>
@@ -81,7 +136,7 @@ export default function DocumentIntelligencePage() {
             ["scan", "Scan"],
             ["queue", "OCR Queue"],
             ["failed", "Failed OCR"],
-            ["search", "Search"],
+            ["search", "Global Search"],
             ["settings", "Settings"],
           ] as const
         ).map(([id, label]) => (
@@ -196,12 +251,43 @@ export default function DocumentIntelligencePage() {
       )}
 
       {tab === "search" && (
-        <Surface padded className="space-y-3">
+        <Surface padded className="space-y-4">
           <div>
-            <label className={labelCls}>Search passport / NID / visa / MRZ</label>
-            <input className={inputCls} value={q} onChange={(e) => setQ(e.target.value)} placeholder="e.g. BX0123456" />
+            <label className={labelCls}>Global document search</label>
+            <input
+              className={inputCls}
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Passport / NID / visa number, customer name, or MRZ fragment"
+            />
+            <p className="mt-1 text-[10px] text-[var(--muted-foreground)]">
+              Searches OCR journal and saved customer passports (no schema change).
+            </p>
           </div>
-          <JournalTable rows={searchHits} />
+          <div>
+            <h3 className="mb-2 text-[11px] font-bold text-[var(--primary)]">Saved passports</h3>
+            {!savedPassportHits.length ? (
+              <p className="text-[11px] text-[var(--muted-foreground)]">No passport matches.</p>
+            ) : (
+              <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]">
+                {savedPassportHits.slice(0, 30).map((p) => (
+                  <li key={`${p.customerId}-${p.passportNo}`} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-[11px]">
+                    <div>
+                      <span className="font-mono font-semibold">{p.passportNo}</span>
+                      <span className="text-[var(--muted-foreground)]"> · exp {p.expiry}</span>
+                    </div>
+                    <Link className="font-bold text-[var(--accent)]" to={`/customers/${p.customerId}`}>
+                      {p.customerName} ({p.customerCode})
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div>
+            <h3 className="mb-2 text-[11px] font-bold text-[var(--primary)]">OCR journal</h3>
+            <JournalTable rows={journalHits} />
+          </div>
         </Surface>
       )}
 

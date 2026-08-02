@@ -14,6 +14,7 @@ import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
 import { HajjModuleNav } from "@/components/hajj/HajjModuleNav";
 import { PASSPORT_STATUSES, VISA_STATUSES } from "@/lib/hajj";
+import { ScanDocumentPanel, ocrFullName } from "@/components/ocr/ScanDocumentPanel";
 
 export default function HajjPilgrimsPage() {
   const [rows, setRows] = useState<HajjPilgrim[]>([]);
@@ -108,6 +109,20 @@ export default function HajjPilgrimsPage() {
           <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div className="sm:col-span-3">
               <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Add pilgrim</p>
+              <ScanDocumentPanel
+                defaultDocType="passport"
+                savePassportOnConfirm={false}
+                title="Scan pilgrim passport"
+                onAutofill={(fields) => {
+                  const name = ocrFullName(fields);
+                  if (name) setFullName(name);
+                  if (fields.passportNo) setPassportNo(fields.passportNo);
+                  if (fields.nationality) setNationality(fields.nationality);
+                  if (fields.gender === "M" || fields.gender === "F") setGender(fields.gender);
+                  if (fields.dateOfBirth) setDob(fields.dateOfBirth);
+                  if (fields.passportNo) setPassportStatus("received");
+                }}
+              />
             </div>
             <div>
               <label className={labelCls}>Code *</label>

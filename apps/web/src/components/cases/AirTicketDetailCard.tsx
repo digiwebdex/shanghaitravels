@@ -14,15 +14,18 @@ import {
   validateAirTicketForm,
   type AirTicketForm,
 } from "@/lib/airTicket";
+import { ScanDocumentPanel, ocrFullName } from "@/components/ocr/ScanDocumentPanel";
 
 export function AirTicketDetailCard({
   appId,
+  customerId,
   detail,
   onSaved,
   setError,
   setOk,
 }: {
   appId: string;
+  customerId?: string;
   detail?: AirTicketDetail | null;
   onSaved: () => Promise<void>;
   setError: (s: string) => void;
@@ -152,6 +155,23 @@ export function AirTicketDetailCard({
               Passenger name
             </label>
             <input id="at-pax" className={inputCls} value={form.passengerName} onChange={(e) => set("passengerName", e.target.value)} disabled={disabled} />
+            <div className="mt-2">
+              <ScanDocumentPanel
+                customerId={customerId}
+                applicationId={appId}
+                defaultDocType="passport"
+                title="Scan passenger passport"
+                onAutofill={(fields) => {
+                  setForm((f) => ({
+                    ...f,
+                    passengerName: ocrFullName(fields) || f.passengerName,
+                    notes: [f.notes, fields.passportNo ? `Passport: ${fields.passportNo}` : "", fields.dateOfBirth ? `DOB: ${fields.dateOfBirth}` : ""]
+                      .filter(Boolean)
+                      .join("\n"),
+                  }));
+                }}
+              />
+            </div>
           </div>
           <div className="sm:col-span-2">
             <label className={labelCls} htmlFor="at-notes">

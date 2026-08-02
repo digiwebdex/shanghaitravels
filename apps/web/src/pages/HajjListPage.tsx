@@ -24,6 +24,7 @@ import {
 } from "@/components/enterprise/Page";
 import { ErrorBanner } from "@/components/Feedback";
 import { HajjModuleNav } from "@/components/hajj/HajjModuleNav";
+import { ScanDocumentPanel, ocrFullName } from "@/components/ocr/ScanDocumentPanel";
 
 const STATUSES = [
   "draft",
@@ -290,6 +291,20 @@ export function NewHajjCasePage() {
             <Link to="/customers" className="mt-1 inline-block text-[11px] font-semibold text-[var(--accent)]">
               Create customer first →
             </Link>
+            <div className="mt-2">
+              <ScanDocumentPanel
+                customerId={customerId || undefined}
+                defaultDocType="passport"
+                title="Scan pilgrim passport"
+                savePassportOnConfirm={!!customerId}
+                onAutofill={(fields) => {
+                  const name = ocrFullName(fields);
+                  if (name) {
+                    setTitle((t) => t || `${serviceType === "hajj" ? "Hajj" : "Umrah"} — ${name}`);
+                  }
+                }}
+              />
+            </div>
           </div>
           <div>
             <label className={labelCls} htmlFor="hj-priority">

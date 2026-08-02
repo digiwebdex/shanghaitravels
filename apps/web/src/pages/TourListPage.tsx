@@ -24,6 +24,7 @@ import {
 } from "@/components/enterprise/Page";
 import { ErrorBanner } from "@/components/Feedback";
 import { TourModuleNav } from "@/components/tours/TourModuleNav";
+import { ScanDocumentPanel, ocrFullName } from "@/components/ocr/ScanDocumentPanel";
 
 const STATUSES = [
   "draft",
@@ -253,6 +254,18 @@ export function NewTourCasePage() {
             <Link to="/customers" className="mt-1 inline-block text-[11px] font-semibold text-[var(--accent)]">
               Create customer first →
             </Link>
+            <div className="mt-2">
+              <ScanDocumentPanel
+                customerId={customerId || undefined}
+                defaultDocType="passport"
+                title="Scan traveler passport"
+                savePassportOnConfirm={!!customerId}
+                onAutofill={(fields) => {
+                  const name = ocrFullName(fields);
+                  if (name) setTitle((t) => t || `Tour — ${name}`);
+                }}
+              />
+            </div>
           </div>
           <div>
             <label className={labelCls} htmlFor="tr-priority">

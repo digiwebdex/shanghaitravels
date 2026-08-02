@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { corporatePortalApi } from "@/lib/corporatePortalApi";
 import { ApiError } from "@/lib/api";
 import { validateEmployee } from "@/lib/corporatePortal";
+import { ScanDocumentPanel, ocrFullName } from "@/components/ocr/ScanDocumentPanel";
 
 export default function CorporateEmployeesPage() {
   const [rows, setRows] = useState<Record<string, any>[]>([]);
@@ -50,6 +51,18 @@ export default function CorporateEmployeesPage() {
       {error && <p className="text-red-600 text-[11px]">{error}</p>}
       {ok && <p className="text-emerald-700 text-[11px]">{ok}</p>}
       <form onSubmit={create} className="bg-white border rounded-xl p-4 grid md:grid-cols-3 gap-3">
+        <div className="md:col-span-3">
+          <ScanDocumentPanel
+            defaultDocType="passport"
+            savePassportOnConfirm={false}
+            title="Scan employee passport"
+            onAutofill={(fields) => {
+              const name = ocrFullName(fields);
+              if (name) setFullName(name);
+              if (fields.passportNo) setPassportNo(fields.passportNo);
+            }}
+          />
+        </div>
         <input className="border rounded-lg px-3 py-2 text-[12px]" placeholder="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
         <input className="border rounded-lg px-3 py-2 text-[12px]" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
         <input className="border rounded-lg px-3 py-2 text-[12px]" placeholder="Department" value={department} onChange={(e) => setDepartment(e.target.value)} />
