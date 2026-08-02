@@ -118,22 +118,29 @@ export function listOf<T>(r: unknown): T[] {
   return [];
 }
 
-/** Client-side upload guard mirroring Nest AppDocumentsController (15MB, JPG/PNG/WEBP/PDF). */
-export const UPLOAD_MAX_BYTES = 15 * 1024 * 1024;
-export const UPLOAD_ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+/** Client-side upload guard. OCR path allows up to 20MB + HEIC. */
+export const UPLOAD_MAX_BYTES = 20 * 1024 * 1024;
+export const UPLOAD_ALLOWED = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+  "application/pdf",
+]);
 
-export function validateUploadFile(file: File): string | null {
-  if (file.size > UPLOAD_MAX_BYTES) {
-    return `File too large (max ${UPLOAD_MAX_BYTES / (1024 * 1024)}MB)`;
+export function validateUploadFile(file: File, opts?: { maxMb?: number }): string | null {
+  const max = (opts?.maxMb ?? 20) * 1024 * 1024;
+  if (file.size > max) {
+    return `File too large (max ${opts?.maxMb ?? 20}MB)`;
   }
   if (file.type && !UPLOAD_ALLOWED.has(file.type)) {
-    return "Only JPG, PNG, WEBP, or PDF allowed";
+    return "Only JPG, PNG, WEBP, HEIC, or PDF allowed";
   }
-  // Some browsers omit type for PDF — allow by extension
   if (!file.type) {
     const lower = file.name.toLowerCase();
-    if (!/\.(jpe?g|png|webp|pdf)$/.test(lower)) {
-      return "Only JPG, PNG, WEBP, or PDF allowed";
+    if (!/\.(jpe?g|png|webp|heic|heif|pdf)$/.test(lower)) {
+      return "Only JPG, PNG, WEBP, HEIC, or PDF allowed";
     }
   }
   return null;

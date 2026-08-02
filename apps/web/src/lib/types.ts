@@ -473,9 +473,17 @@ export type StaffUser = {
 export type OcrScan = {
   id: string;
   status: string;
-  confidence?: number;
-  fields?: Record<string, unknown>;
+  confidence?: number | null;
+  fields?: Record<string, unknown> | null;
   provider?: string;
+  report?: {
+    extractionRate?: number;
+    averageConfidence?: number;
+    failedFields?: string[];
+    mismatches?: string[];
+    mrzValid?: boolean;
+    processingMs?: number;
+  };
 };
 
 export type Paginated<T> = {

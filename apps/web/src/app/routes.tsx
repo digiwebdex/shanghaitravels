@@ -132,6 +132,7 @@ const FinanceCustomerLedgerPage = lazy(() => import("@/pages/FinanceCustomerLedg
 const FinanceSupplierLedgerPage = lazy(() => import("@/pages/FinanceSupplierLedgerPage"));
 const OperationsOverviewPage = lazy(() => import("@/pages/OperationsOverviewPage"));
 const OperationsDocumentsPage = lazy(() => import("@/pages/OperationsDocumentsPage"));
+const DocumentIntelligencePage = lazy(() => import("@/pages/DocumentIntelligencePage"));
 const OperationsWorkflowPage = lazy(() => import("@/pages/OperationsWorkflowPage"));
 const OperationsCalendarPage = lazy(() => import("@/pages/OperationsCalendarPage"));
 const OperationsNotificationsPage = lazy(() => import("@/pages/OperationsNotificationsPage"));
@@ -1660,6 +1661,14 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <OperationsDocumentsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "operations/document-intelligence",
+            element: (
+              <Lazy>
+                <DocumentIntelligencePage />
               </Lazy>
             ),
           },

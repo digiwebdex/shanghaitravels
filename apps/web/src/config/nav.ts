@@ -9,6 +9,7 @@ import {
   BarChart3,
   Bell,
   BookOpen,
+  Brain,
   Briefcase,
   Building2,
   CalendarDays,
@@ -204,6 +205,13 @@ export const NAV: NavSection[] = [
     icon: ClipboardList,
     items: [
       { id: "passports", label: "Passports", to: "/passports", icon: BookOpen, perm: "customer:read" },
+      {
+        id: "doc-intel",
+        label: "Document Intelligence",
+        to: "/operations/document-intelligence",
+        icon: Brain,
+        perm: "ocr:use",
+      },
       {
         id: "ops-documents",
         label: "Documents",

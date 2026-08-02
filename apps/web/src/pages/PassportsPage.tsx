@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "react-router";
+import { useSearchParams, Link } from "react-router";
 import { BookOpen } from "lucide-react";
 import { customersApi, ocrApi, passportsApi } from "@/lib/services";
 import { ApiError, listOf, validateUploadFile } from "@/lib/api";
@@ -18,6 +18,8 @@ import {
 } from "@/components/enterprise/Page";
 import { EmptyState, ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { InlineSpinner } from "@/components/FullPageSpinner";
+import { DocumentUploadFlow } from "@/components/ocr/DocumentUploadFlow";
+import type { OcrScanResult } from "@/lib/documentIntelligence";
 
 export default function PassportsPage() {
   const { can } = useAuth();
@@ -32,7 +34,6 @@ export default function PassportsPage() {
   const [country, setCountry] = useState("Bangladesh");
   const [issue, setIssue] = useState("");
   const [expiry, setExpiry] = useState("");
-  const [ocrMsg, setOcrMsg] = useState("");
 
   const loadCustomers = useCallback(async () => {
     setLoading(true);
@@ -85,30 +86,6 @@ export default function PassportsPage() {
     }
   }
 
-  async function scan(file: File) {
-    setOcrMsg("");
-    const bad = validateUploadFile(file);
-    if (bad) {
-      setOcrMsg(bad);
-      return;
-    }
-    try {
-      const r = await ocrApi.scan(file, { customerId: customerId || undefined });
-      const f = (r.fields || {}) as Record<string, string>;
-      if (f.passportNo) setNo(f.passportNo);
-      if (f.issuingCountry) setCountry(f.issuingCountry);
-      if (f.dateOfExpiry) setExpiry(f.dateOfExpiry);
-      if (f.dateOfIssue) setIssue(f.dateOfIssue);
-      setOcrMsg(f.passportNo ? `OCR filled ${f.passportNo} — verify and Save.` : "Could not read passport — enter manually.");
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 503) {
-        setOcrMsg("Passport scanning is pending approval — enter details manually.");
-      } else {
-        setOcrMsg(err instanceof ApiError ? err.message : "Scan failed");
-      }
-    }
-  }
-
   const passports: Passport[] = detail?.passports || [];
 
   return (
@@ -116,8 +93,13 @@ export default function PassportsPage() {
       <PageHeader
         icon={BookOpen}
         title="Passport Management"
-        subtitle="Manual entry + OCR (when approved). Confirm before write."
+        subtitle="Document Intelligence OCR with MRZ validation — confirm before save."
         breadcrumb={[{ label: "CRM", to: "/customers" }, { label: "Passports" }]}
+        actions={
+          <Link to="/operations/document-intelligence" className="text-[11px] font-bold text-[var(--accent)]">
+            Document Intelligence →
+          </Link>
+        }
       />
       <ErrorBanner message={error} />
       <SuccessBanner message={ok} />
@@ -142,6 +124,46 @@ export default function PassportsPage() {
 
           {customerId && (
             <>
+              <Can perm="ocr:use">
+                <Surface padded className="mb-4">
+                  <DocumentUploadFlow
+                    customerId={customerId}
+                    defaultDocType="passport"
+                    onFields={(fields) => {
+                      if (fields.passportNo) setNo(fields.passportNo);
+                      if (fields.issuingCountry) setCountry(fields.issuingCountry);
+                      if (fields.dateOfIssue) setIssue(fields.dateOfIssue);
+                      if (fields.dateOfExpiry) setExpiry(fields.dateOfExpiry);
+                    }}
+                    scanFile={async (file, docType) => {
+                      const bad = validateUploadFile(file);
+                      if (bad) throw new Error(bad);
+                      return (await ocrApi.scan(file, { docType, customerId })) as OcrScanResult;
+                    }}
+                    checkDuplicate={async (fields) =>
+                      ocrApi.checkDuplicate({
+                        passportNo: fields.passportNo,
+                        customerId,
+                      })
+                    }
+                    onSave={async ({ fields }) => {
+                      if (!fields.passportNo) throw new Error("Passport number required");
+                      await passportsApi.create({
+                        customerId,
+                        passportNo: fields.passportNo,
+                        issuingCountry: fields.issuingCountry || undefined,
+                        dateOfIssue: fields.dateOfIssue || undefined,
+                        dateOfExpiry: fields.dateOfExpiry || undefined,
+                        isPrimary: true,
+                      });
+                      setOk("Passport saved from OCR");
+                      setDetail(await customersApi.get(customerId));
+                      return true;
+                    }}
+                  />
+                </Surface>
+              </Can>
+
               <Surface padded className="mb-4">
                 <form onSubmit={save} className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <div>
@@ -172,19 +194,6 @@ export default function PassportsPage() {
                   )}
                 </form>
               </Surface>
-
-              <Can perm="ocr:use">
-                <Surface padded className="mb-4">
-                  <p className="mb-2 text-[12px] font-bold text-[var(--primary)]">OCR scan</p>
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    onChange={(e) => e.target.files?.[0] && void scan(e.target.files[0])}
-                    className="text-[11px]"
-                  />
-                  {ocrMsg && <p className="mt-2 text-[11px] text-[var(--muted-foreground)]">{ocrMsg}</p>}
-                </Surface>
-              </Can>
 
               <Surface padded>
                 <h2 className="mb-3 text-[12px] font-bold text-[var(--primary)]">Saved passports</h2>

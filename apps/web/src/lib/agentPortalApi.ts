@@ -98,6 +98,12 @@ export const agentPortalApi = {
   documentVersions: (id: string) => agentFetch<Record<string, any>[]>(`/portal/agent/documents/${id}/versions`),
   uploadDocument: (form: FormData) => agentFetch("/portal/agent/documents", { method: "POST", form }),
   downloadUrl: (id: string) => `${ERP}/portal/agent/documents/${id}/download`,
+  ocrScan: (file: File, docType = "auto") => {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("docType", docType);
+    return agentFetch<Record<string, unknown>>("/portal/agent/ocr/scan", { method: "POST", form: fd });
+  },
   communications: () =>
     agentFetch<{ messages: Record<string, any>[]; support: Record<string, any>[] }>("/portal/agent/communications"),
   support: (body: Record<string, unknown>) =>

@@ -1,13 +1,13 @@
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { agentPortalApi } from "@/lib/agentPortalApi";
 import { ApiError, validateUploadFile } from "@/lib/api";
+import { DocumentUploadFlow } from "@/components/ocr/DocumentUploadFlow";
+import { docTypeToUploadCategory, type OcrScanResult } from "@/lib/documentIntelligence";
 
 export default function AgentDocumentsPage() {
   const [rows, setRows] = useState<Record<string, any>[]>([]);
   const [cases, setCases] = useState<Record<string, any>[]>([]);
   const [applicationId, setApplicationId] = useState("");
-  const [category, setCategory] = useState("passport");
-  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
 
@@ -28,66 +28,65 @@ export default function AgentDocumentsPage() {
       .catch((e) => setError(e instanceof ApiError ? e.message : "Failed"));
   }, []);
 
-  async function upload(e: FormEvent) {
-    e.preventDefault();
-    if (!file || !applicationId) {
-      setError("Choose booking and file");
-      return;
-    }
-    const invalid = validateUploadFile(file);
-    if (invalid) {
-      setError(invalid);
-      return;
-    }
-    const form = new FormData();
-    form.append("file", file);
-    form.append("applicationId", applicationId);
-    form.append("category", category);
-    try {
-      await agentPortalApi.uploadDocument(form);
-      setOk("Uploaded");
-      setFile(null);
-      await load();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Upload failed");
-    }
-  }
-
   return (
-    <div className="p-5 max-w-5xl space-y-4">
-      <h1 className="text-[16px] font-bold">Documents</h1>
-      {error && <p className="text-red-600 text-[11px]">{error}</p>}
-      {ok && <p className="text-emerald-700 text-[11px]">{ok}</p>}
-      <form onSubmit={upload} className="bg-white border rounded-xl p-4 flex flex-wrap gap-3 items-end">
-        <select className="border rounded-lg px-3 py-2 text-[12px]" value={applicationId} onChange={(e) => setApplicationId(e.target.value)}>
+    <div className="mx-auto max-w-5xl space-y-4 p-5">
+      <h1 className="text-[16px] font-bold">Customer Documents</h1>
+      {error && <p className="text-[11px] text-red-600">{error}</p>}
+      {ok && <p className="text-[11px] text-emerald-700">{ok}</p>}
+
+      <div className="rounded-xl border bg-white p-4">
+        <label className="mb-1 block text-[10px] font-bold uppercase text-slate-500">Booking</label>
+        <select
+          className="mb-3 w-full rounded-lg border px-3 py-2 text-[12px]"
+          value={applicationId}
+          onChange={(e) => setApplicationId(e.target.value)}
+        >
           {cases.map((c) => (
             <option key={String(c.id)} value={String(c.id)}>
               {String(c.referenceNo)}
             </option>
           ))}
         </select>
-        <input className="border rounded-lg px-3 py-2 text-[12px]" value={category} onChange={(e) => setCategory(e.target.value)} />
-        <input
-          type="file"
-          accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
-          className="text-[12px]"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
+
+        <DocumentUploadFlow
+          applicationId={applicationId}
+          scanFile={async (file, docType) => {
+            const bad = validateUploadFile(file);
+            if (bad) throw new Error(bad);
+            return (await agentPortalApi.ocrScan(file, docType)) as OcrScanResult;
+          }}
+          onSave={async ({ file, docType }) => {
+            if (!applicationId) {
+              setError("Choose a booking");
+              return false;
+            }
+            const form = new FormData();
+            form.append("file", file);
+            form.append("applicationId", applicationId);
+            form.append("category", docTypeToUploadCategory(docType));
+            try {
+              await agentPortalApi.uploadDocument(form);
+              setOk("Uploaded");
+              await load();
+              return true;
+            } catch (err) {
+              setError(err instanceof ApiError ? err.message : "Upload failed");
+              return false;
+            }
+          }}
         />
-        <button type="submit" className="px-3 py-2 rounded-lg bg-amber-600 text-white text-[11px] font-bold">
-          Upload
-        </button>
-      </form>
-      <ul className="bg-white border rounded-xl divide-y text-[11px]">
+      </div>
+
+      <ul className="divide-y rounded-xl border bg-white text-[11px]">
         {rows.map((r) => (
-          <li key={String(r.id)} className="p-3 flex justify-between">
-            <span>
-              {String(r.fileName)} · {String(r.category)} · {String(r.status)}
-            </span>
-            <a className="text-amber-700 underline" href={agentPortalApi.downloadUrl(String(r.id))} target="_blank" rel="noreferrer">
+          <li key={String(r.id)} className="flex justify-between px-3 py-2">
+            <span>{String(r.category || r.fileName || r.id)}</span>
+            <a className="font-semibold text-amber-700" href={agentPortalApi.downloadUrl(String(r.id))}>
               Download
             </a>
           </li>
         ))}
+        {!rows.length && <li className="px-3 py-4 text-slate-400">No documents yet.</li>}
       </ul>
     </div>
   );

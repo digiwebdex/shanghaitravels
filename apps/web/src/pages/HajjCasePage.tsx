@@ -274,6 +274,7 @@ export default function HajjCasePage() {
 
         <CaseDocumentsCard
           appId={app.id}
+          customerId={app.customerId}
           docs={docs}
           onSaved={reload}
           setError={setError}

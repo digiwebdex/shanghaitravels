@@ -28,6 +28,12 @@ import {
   VISA_TYPE_OPTIONS,
   type ChinaChecklist,
 } from "@/config/checklist";
+import {
+  PassportOcrReview,
+  emptyPassportForm,
+  formFromOcrScan,
+  type OcrScanResult,
+} from "@/components/ocr/PassportOcrReview";
 import CaseTimeline from "@/admin/shared/CaseTimeline";
 import { PageHeader, PageShell } from "@/components/enterprise/Page";
 import { CaseAssignCard } from "@/components/cases/CaseAssignCard";
@@ -412,6 +418,7 @@ export default function VisaCasePage() {
 
         <CaseDocumentsCard
           appId={app.id}
+          customerId={app.customerId}
           docs={docs}
           onSaved={reload}
           setError={setError}
@@ -570,68 +577,55 @@ function PassportOcrCard({
   setError: (s: string) => void;
   setOk: (s: string) => void;
 }) {
-  const { can } = useAuth();
-  const [passportNo, setNo] = useState("");
-  const [country, setCountry] = useState("Bangladesh");
-  const [issue, setIssue] = useState("");
-  const [expiry, setExpiry] = useState("");
+  const [form, setForm] = useState(() => emptyPassportForm());
+  const [scan, setScan] = useState<OcrScanResult | null>(null);
   const [primary, setPrimary] = useState(true);
   const [ocrMsg, setOcrMsg] = useState("");
-  const [scanId, setScanId] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
 
   async function saveManual(e: FormEvent) {
     e.preventDefault();
-    if (!passportNo.trim()) {
+    if (!form.passportNo.trim()) {
       setError("Passport no is required");
       return;
     }
     try {
-      if (scanId && can("ocr:apply")) {
-        await ocrApi.apply(scanId, {
-          customerId: app.customerId,
-          fields: {
-            passportNo: passportNo.trim(),
-            issuingCountry: country || undefined,
-            dateOfIssue: issue || undefined,
-            dateOfExpiry: expiry || undefined,
-          },
-          isPrimary: primary,
-        });
-      } else {
-        await passportsApi.create({
-          customerId: app.customerId,
-          passportNo: passportNo.trim(),
-          issuingCountry: country || undefined,
-          dateOfIssue: issue || undefined,
-          dateOfExpiry: expiry || undefined,
-          isPrimary: primary,
-        });
-      }
+      // Memory-only OCR scans are not persisted — always save via /passports.
+      await passportsApi.create({
+        customerId: app.customerId,
+        passportNo: form.passportNo.trim(),
+        issuingCountry: form.issuingCountry || undefined,
+        dateOfIssue: form.dateOfIssue || undefined,
+        dateOfExpiry: form.dateOfExpiry || undefined,
+        isPrimary: primary,
+      });
       setOk("Passport saved");
+      setForm(emptyPassportForm());
+      setScan(null);
       await onSaved();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Passport save failed");
     }
   }
 
-  async function scan(file: File) {
+  async function scanFile(file: File) {
     setOcrMsg("");
+    setScanning(true);
     const bad = validateUploadFile(file);
     if (bad) {
       setOcrMsg(bad);
+      setScanning(false);
       return;
     }
     try {
       const r = await ocrApi.scan(file, { customerId: app.customerId, applicationId: app.id });
-      setScanId(r.id);
+      const result = r as OcrScanResult;
+      setScan(result);
+      setForm(formFromOcrScan(result));
       const f = (r.fields || {}) as Record<string, string>;
-      if (f.passportNo) setNo(f.passportNo);
-      if (f.issuingCountry) setCountry(f.issuingCountry);
-      if (f.dateOfExpiry) setExpiry(f.dateOfExpiry);
-      if (f.dateOfIssue) setIssue(f.dateOfIssue);
       setOcrMsg(
         f.passportNo
-          ? `OCR read ${f.fullName || f.passportNo} — verify fields and Save.`
+          ? `OCR read ${f.fullName || f.passportNo} — verify amber fields (<90%) then Save.`
           : "Couldn't read MRZ — enter details manually.",
       );
     } catch (err) {
@@ -640,53 +634,45 @@ function PassportOcrCard({
       } else {
         setOcrMsg(err instanceof ApiError ? err.message : "Scan failed");
       }
+    } finally {
+      setScanning(false);
     }
   }
 
   return (
-    <section className="bg-white rounded-xl border border-slate-200 p-4">
-      <h2 className="text-[12px] font-bold text-slate-800 mb-3">Passport & OCR</h2>
-      <form onSubmit={saveManual} className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-        <div>
-          <label className={labelCls}>Passport no *</label>
-          <input className={inputCls} value={passportNo} onChange={(e) => setNo(e.target.value)} required />
+    <section className="rounded-xl border border-slate-200 bg-white p-4">
+      <h2 className="mb-3 text-[12px] font-bold text-slate-800">Passport & OCR</h2>
+      <Can perm="ocr:use">
+        <div className="mb-3">
+          <p className="mb-2 text-[10px] font-bold text-slate-500">Scan passport page</p>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/*"
+            disabled={scanning}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void scanFile(f);
+            }}
+            className="text-[11px]"
+          />
+          {scanning && <p className="mt-2 text-[11px] text-slate-500">Scanning…</p>}
         </div>
-        <div>
-          <label className={labelCls}>Issuing country</label>
-          <input className={inputCls} value={country} onChange={(e) => setCountry(e.target.value)} />
-        </div>
-        <div>
-          <label className={labelCls}>Date of issue</label>
-          <input type="date" className={inputCls} value={issue} onChange={(e) => setIssue(e.target.value)} />
-        </div>
-        <div>
-          <label className={labelCls}>Date of expiry</label>
-          <input type="date" className={inputCls} value={expiry} onChange={(e) => setExpiry(e.target.value)} />
-        </div>
-        <label className="flex items-center gap-2 text-[11px] text-slate-600 sm:col-span-2">
+      </Can>
+      <form onSubmit={saveManual} className="space-y-3">
+        <PassportOcrReview scan={scan} form={form} onChange={setForm} message={ocrMsg} />
+        <label className="flex items-center gap-2 text-[11px] text-slate-600">
           <input type="checkbox" checked={primary} onChange={(e) => setPrimary(e.target.checked)} /> Primary passport
         </label>
         <Can perm="ocr:apply">
-          <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white w-fit" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
+          <button
+            type="submit"
+            className="w-fit rounded-lg px-3 py-1.5 text-[10.5px] font-bold text-white"
+            style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
+          >
             Save passport
           </button>
         </Can>
       </form>
-      <Can perm="ocr:use">
-        <div className="border-t border-slate-100 pt-3">
-          <p className="text-[10px] font-bold text-slate-500 mb-2">Scan (OCR)</p>
-          <input
-            type="file"
-            accept="image/*,application/pdf"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void scan(f);
-            }}
-            className="text-[11px]"
-          />
-          {ocrMsg && <p className="text-[11px] text-slate-600 mt-2">{ocrMsg}</p>}
-        </div>
-      </Can>
     </section>
   );
 }

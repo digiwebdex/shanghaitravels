@@ -167,10 +167,13 @@ export const passportsApi = {
 };
 
 export const ocrApi = {
-  scan: (file: File, extra?: { customerId?: string; applicationId?: string }) => {
+  scan: (
+    file: File,
+    extra?: { customerId?: string; applicationId?: string; docType?: string },
+  ) => {
     const fd = new FormData();
     fd.append("file", file);
-    fd.append("docType", "passport");
+    fd.append("docType", extra?.docType || "auto");
     if (extra?.customerId) fd.append("customerId", extra.customerId);
     if (extra?.applicationId) fd.append("applicationId", extra.applicationId);
     return apiFetch<OcrScan>("/ocr/scan", { method: "POST", form: fd });
@@ -183,6 +186,27 @@ export const ocrApi = {
       isPrimary?: boolean;
     },
   ) => apiFetch(`/ocr/${id}/apply`, { method: "POST", body }),
+  stats: () =>
+    apiFetch<{
+      scannedToday: number;
+      byType: Record<string, number>;
+      failures: number;
+      averageConfidence: number | null;
+      averageProcessingMs: number | null;
+      journalSize: number;
+    }>("/ocr/intelligence/stats"),
+  recent: (take = 50) => apiFetch<Record<string, unknown>[]>(`/ocr/intelligence/recent?take=${take}`),
+  failed: (take = 50) => apiFetch<Record<string, unknown>[]>(`/ocr/intelligence/failed?take=${take}`),
+  checkDuplicate: (body: {
+    passportNo?: string;
+    nidNumber?: string;
+    visaNumber?: string;
+    customerId?: string;
+  }) =>
+    apiFetch<{
+      duplicate: boolean;
+      hits: { type: string; customerId: string; customerCode?: string; customerName?: string; detail?: string }[];
+    }>("/ocr/intelligence/check-duplicate", { method: "POST", body }),
 };
 
 export const financeApi = {

@@ -109,6 +109,22 @@ export const customerPortalApi = {
   uploadDocument: (form: FormData) =>
     portalFetch("/portal/customer/documents", { method: "POST", form }),
   downloadUrl: (id: string) => `${ERP}/portal/customer/documents/${id}/download`,
+  /** Public OCR endpoint (rate-limited) for document intelligence in the customer portal. */
+  ocrScan: async (file: File, docType = "auto") => {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("docType", docType);
+    const res = await fetch(`${ERP}/public/ocr/scan`, { method: "POST", body: fd, credentials: "include" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg =
+        data && typeof data === "object" && "message" in data
+          ? String((data as { message: string }).message)
+          : `HTTP ${res.status}`;
+      throw new ApiError(msg, res.status, data);
+    }
+    return data as Record<string, unknown>;
+  },
   finance: () => portalFetch<Record<string, unknown>>("/portal/customer/finance"),
   communications: () => portalFetch<{ messages: Record<string, unknown>[]; support: Record<string, unknown>[] }>(
     "/portal/customer/communications",

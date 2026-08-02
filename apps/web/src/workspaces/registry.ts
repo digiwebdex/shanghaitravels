@@ -213,6 +213,7 @@ export const WORKSPACES: Workspace[] = [
     tabs: [
       { kind: "overview", label: "Overview", to: "/operations", end: true, perm: "application:read" },
       { kind: "work", label: "Passports", to: "/passports", perm: "customer:read" },
+      { kind: "work", label: "Document Intelligence", to: "/operations/document-intelligence", perm: "ocr:use" },
       { kind: "work", label: "Documents", to: "/operations/documents", perm: "document:read-passport" },
       { kind: "work", label: "Case Journey", to: "/case-journey", perm: "application:read" },
       { kind: "work", label: "Notifications", to: "/operations/notifications", perm: "communication:manage" },
