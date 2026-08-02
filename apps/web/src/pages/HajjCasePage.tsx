@@ -282,6 +282,12 @@ export default function HajjCasePage() {
           onSaved={reload}
           setError={setError}
           setOk={setOk}
+          autofill={(fields) => {
+            const bits = [fields.fullName || fields.surname, fields.passportNo, fields.visaNumber, fields.nidNumber]
+              .filter(Boolean)
+              .join(" · ");
+            setOk(bits ? `OCR ready: ${bits}` : "OCR complete — review before save");
+          }}
         />
 
         <CaseFinanceCard

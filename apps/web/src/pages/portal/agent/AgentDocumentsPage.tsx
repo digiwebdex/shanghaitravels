@@ -3,6 +3,7 @@ import { agentPortalApi } from "@/lib/agentPortalApi";
 import { ApiError, validateUploadFile } from "@/lib/api";
 import { DocumentUploadFlow } from "@/components/ocr/DocumentUploadFlow";
 import { docTypeToUploadCategory, type OcrScanResult } from "@/lib/documentIntelligence";
+import { PortalPage } from "@/layouts/portalChrome";
 
 export default function AgentDocumentsPage() {
   const [rows, setRows] = useState<Record<string, any>[]>([]);
@@ -28,22 +29,27 @@ export default function AgentDocumentsPage() {
       .catch((e) => setError(e instanceof ApiError ? e.message : "Failed"));
   }, []);
 
-  return (
-    <div className="mx-auto max-w-5xl space-y-4 p-5">
-      <h1 className="text-[16px] font-bold">Customer Documents</h1>
-      {error && <p className="text-[11px] text-red-600">{error}</p>}
-      {ok && <p className="text-[11px] text-emerald-700">{ok}</p>}
+  const selected = cases.find((c) => String(c.id) === applicationId);
 
-      <div className="rounded-xl border bg-white p-4">
+  return (
+    <PortalPage
+      title="Customer Documents"
+      description="Attach traveler documents to a booking with OCR review before upload."
+    >
+      {error && <p className="text-[11px] text-[var(--error)]">{error}</p>}
+      {ok && <p className="text-[11px] text-[var(--success)]">{ok}</p>}
+
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-[var(--shadow-sm)]">
         <label className="mb-1 block text-[10px] font-bold uppercase text-[var(--muted-foreground)]">Booking</label>
         <select
-          className="mb-3 w-full rounded-lg border px-3 py-2 text-[12px]"
+          className="mb-3 w-full rounded-xl border border-[var(--border)] px-3 py-2 text-[12px]"
           value={applicationId}
           onChange={(e) => setApplicationId(e.target.value)}
         >
           {cases.map((c) => (
             <option key={String(c.id)} value={String(c.id)}>
               {String(c.referenceNo)}
+              {c.customer?.fullName ? ` · ${c.customer.fullName}` : ""}
             </option>
           ))}
         </select>
@@ -54,6 +60,36 @@ export default function AgentDocumentsPage() {
             const bad = validateUploadFile(file);
             if (bad) throw new Error(bad);
             return (await agentPortalApi.ocrScan(file, docType)) as OcrScanResult;
+          }}
+          checkDuplicate={async (fields) => {
+            const no = (fields.passportNo || "").trim().toUpperCase();
+            if (!no || !selected?.customer) return { duplicate: false, hits: [] };
+            const existing = String(selected.customer.passportNo || selected.passportNo || "")
+              .trim()
+              .toUpperCase();
+            if (existing && existing === no) {
+              return {
+                duplicate: true,
+                hits: [
+                  {
+                    type: "passport",
+                    customerId: String(selected.customerId || selected.customer.id || ""),
+                    customerCode: String(selected.customer.code || ""),
+                    customerName: String(selected.customer.fullName || "Customer"),
+                  },
+                ],
+              };
+            }
+            return { duplicate: false, hits: [] };
+          }}
+          onFields={(fields) => {
+            if (fields.passportNo || fields.fullName) {
+              setOk(
+                `OCR ready for ${String(selected?.referenceNo || "booking")}: ${
+                  fields.fullName || fields.passportNo || "fields"
+                }`,
+              );
+            }
           }}
           onSave={async ({ file, docType }) => {
             if (!applicationId) {
@@ -77,7 +113,7 @@ export default function AgentDocumentsPage() {
         />
       </div>
 
-      <ul className="divide-y rounded-xl border bg-white text-[11px]">
+      <ul className="divide-y divide-[var(--border)] rounded-2xl border border-[var(--border)] bg-[var(--card)] text-[11px]">
         {rows.map((r) => (
           <li key={String(r.id)} className="flex justify-between px-3 py-2">
             <span>{String(r.category || r.fileName || r.id)}</span>
@@ -88,6 +124,6 @@ export default function AgentDocumentsPage() {
         ))}
         {!rows.length && <li className="px-3 py-4 text-[var(--muted-foreground)]">No documents yet.</li>}
       </ul>
-    </div>
+    </PortalPage>
   );
 }

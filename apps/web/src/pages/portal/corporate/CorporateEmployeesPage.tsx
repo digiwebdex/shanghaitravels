@@ -60,6 +60,8 @@ export default function CorporateEmployeesPage() {
               const name = ocrFullName(fields);
               if (name) setFullName(name);
               if (fields.passportNo) setPassportNo(fields.passportNo);
+              if (fields.phone) setPhone(fields.phone);
+              setOk("OCR applied to employee form — review and add");
             }}
           />
         </div>
@@ -68,7 +70,11 @@ export default function CorporateEmployeesPage() {
         <input className="border rounded-lg px-3 py-2 text-[12px]" placeholder="Department" value={department} onChange={(e) => setDepartment(e.target.value)} />
         <input className="border rounded-lg px-3 py-2 text-[12px]" placeholder="Designation" value={designation} onChange={(e) => setDesignation(e.target.value)} />
         <input className="border rounded-lg px-3 py-2 text-[12px]" placeholder="Passport no" value={passportNo} onChange={(e) => setPassportNo(e.target.value)} />
-        <button type="submit" className="px-3 py-2 rounded-lg bg-teal-600 text-white text-[11px] font-bold w-fit">
+        <button
+          type="submit"
+          className="w-fit rounded-xl px-3 py-2 text-[11px] font-bold text-white"
+          style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
+        >
           Add employee
         </button>
       </form>

@@ -14,6 +14,7 @@ import { SUPPLIER_TYPES, supplierTypeLabel } from "@/config/nav";
 import { fmtBDTPlain } from "@/lib/money";
 import { EntityTabs } from "@/components/workflow/EntityTabs";
 import { NextStepBanner } from "@/components/workflow/MasterJourney";
+import { ScanDocumentPanel } from "@/components/ocr/ScanDocumentPanel";
 
 type Row = Supplier & { outstandingPoisha?: number };
 
@@ -31,6 +32,7 @@ export default function SuppliersPage() {
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [partnerTab, setPartnerTab] = useState("overview");
 
   const [form, setForm] = useState({
     name: "",
@@ -200,15 +202,47 @@ export default function SuppliersPage() {
             { id: "packages", label: "Packages" },
             { id: "timeline", label: "Timeline" },
           ]}
-          active="overview"
+          active={partnerTab}
           onChange={(id) => {
             if (id === "invoices" || id === "payments") navigate("/finance/ap");
             else if (id === "packages") navigate("/products/packages");
             else if (id === "bookings") navigate("/operations");
-            else if (id === "documents") navigate("/operations/documents");
+            else setPartnerTab(id);
           }}
         />
       </div>
+
+      {partnerTab === "documents" && (
+        <Surface className="mb-4">
+          <SurfaceHeader
+            title="Supplier documents"
+            hint="Scan trade license or company ID — OCR autofills the create form. Case files still live on bookings."
+          />
+          <div className="space-y-3 p-4 sm:p-5">
+            <Can perm="ocr:use">
+              <ScanDocumentPanel
+                defaultDocType="trade_license"
+                savePassportOnConfirm={false}
+                title="Scan trade license / company document"
+                onAutofill={(fields) => {
+                  setShowForm(true);
+                  setForm((f) => ({
+                    ...f,
+                    name: fields.companyName || fields.fullName || f.name,
+                    notes: [f.notes, fields.licenseNumber ? `License: ${fields.licenseNumber}` : ""]
+                      .filter(Boolean)
+                      .join(" · "),
+                  }));
+                  setOk("OCR applied to supplier form — review and save");
+                }}
+              />
+            </Can>
+            <Link className="text-[11px] font-bold text-[var(--accent)]" to="/operations/document-intelligence">
+              Open Document Intelligence →
+            </Link>
+          </div>
+        </Surface>
+      )}
 
       {!type && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5" aria-label="Supplier type summary">

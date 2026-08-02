@@ -257,6 +257,7 @@ export default function TransportCasePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <TransportDetailCard
             appId={app.id}
+            customerId={app.customerId}
             detail={app.transport}
             onSaved={reload}
             setError={setError}
@@ -281,6 +282,12 @@ export default function TransportCasePage() {
           onSaved={reload}
           setError={setError}
           setOk={setOk}
+          autofill={(fields) => {
+            const bits = [fields.fullName || fields.surname, fields.passportNo, fields.visaNumber, fields.nidNumber]
+              .filter(Boolean)
+              .join(" · ");
+            setOk(bits ? `OCR ready: ${bits}` : "OCR complete — review before save");
+          }}
         />
 
         <CaseFinanceCard

@@ -16,6 +16,7 @@ import {
   validateHotelForm,
   type HotelForm,
 } from "@/lib/hotel";
+import { ScanDocumentPanel, ocrFullName } from "@/components/ocr/ScanDocumentPanel";
 
 export function HotelDetailCard({
   appId,
@@ -23,12 +24,14 @@ export function HotelDetailCard({
   onSaved,
   setError,
   setOk,
+  customerId,
 }: {
   appId: string;
   detail?: HotelDetail | null;
   onSaved: () => Promise<void>;
   setError: (s: string) => void;
   setOk: (s: string) => void;
+  customerId?: string;
 }) {
   const { can } = useAuth();
   const [form, setForm] = useState<HotelForm>(emptyHotelForm);
@@ -106,6 +109,28 @@ export function HotelDetailCard({
       <p className="text-[10px] text-[var(--muted-foreground)] mb-3">
         Manual booking from supplier / property — no live hotel search.
       </p>
+      <Can perm="ocr:use">
+        <div className="mb-3">
+          <ScanDocumentPanel
+            customerId={customerId}
+            applicationId={appId}
+            defaultDocType="passport"
+            savePassportOnConfirm={Boolean(customerId)}
+            title="Guest passport (passenger documents)"
+            compact
+            onAutofill={(fields) => {
+              const name = ocrFullName(fields);
+              setForm((f) => ({
+                ...f,
+                notes: [f.notes, name ? `Guest: ${name}` : "", fields.passportNo ? `Passport: ${fields.passportNo}` : ""]
+                  .filter(Boolean)
+                  .join(" · "),
+              }));
+              setOk(name ? `Guest OCR: ${name}` : "Guest OCR ready");
+            }}
+          />
+        </div>
+      </Can>
       <form onSubmit={(e) => void save(e)} className="space-y-2">
         {catalog.length > 0 && (
           <div>

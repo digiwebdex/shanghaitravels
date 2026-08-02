@@ -314,9 +314,14 @@ export default function BookingWorkspacePage() {
             applicationId={app.id}
             defaultDocType="passport"
             title="Scan traveler passport"
-            onAutofill={(fields) =>
-              setOk(`OCR: ${ocrFullName(fields) || fields.passportNo || "fields ready"} — confirm Save`)
-            }
+            onAutofill={(fields) => {
+              const name = ocrFullName(fields);
+              setOk(
+                name || fields.passportNo
+                  ? `OCR: ${name || fields.passportNo} — confirm Save, then open Customer 360 to edit demographics`
+                  : "OCR complete — review before save",
+              );
+            }}
           />
           {app.customerId && (
             <Link to={customerWorkspaceHref(app.customerId, "passport")} className="text-[11px] font-bold text-[var(--accent)]">

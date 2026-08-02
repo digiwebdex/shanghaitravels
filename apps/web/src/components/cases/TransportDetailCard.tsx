@@ -15,6 +15,7 @@ import {
   validateTransportForm,
   type TransportForm,
 } from "@/lib/transport";
+import { ScanDocumentPanel, ocrFullName } from "@/components/ocr/ScanDocumentPanel";
 
 export function TransportDetailCard({
   appId,
@@ -22,12 +23,14 @@ export function TransportDetailCard({
   onSaved,
   setError,
   setOk,
+  customerId,
 }: {
   appId: string;
   detail?: TransportDetail | null;
   onSaved: () => Promise<void>;
   setError: (s: string) => void;
   setOk: (s: string) => void;
+  customerId?: string;
 }) {
   const { can } = useAuth();
   const [form, setForm] = useState<TransportForm>(emptyTransportForm);
@@ -104,6 +107,28 @@ export function TransportDetailCard({
       <p className="text-[10px] text-[var(--muted-foreground)] mb-3">
         Supplier-purchased transfer — no owned fleet or GPS. Driver/plate from supplier confirmation.
       </p>
+      <Can perm="ocr:use">
+        <div className="mb-3">
+          <ScanDocumentPanel
+            customerId={customerId}
+            applicationId={appId}
+            defaultDocType="passport"
+            savePassportOnConfirm={Boolean(customerId)}
+            title="Passenger / traveler documents"
+            compact
+            onAutofill={(fields) => {
+              const name = ocrFullName(fields);
+              setForm((f) => ({
+                ...f,
+                notes: [f.notes, name ? `Passenger: ${name}` : "", fields.passportNo ? `Passport: ${fields.passportNo}` : ""]
+                  .filter(Boolean)
+                  .join(" · "),
+              }));
+              setOk(name ? `Passenger OCR: ${name}` : "Passenger OCR ready");
+            }}
+          />
+        </div>
+      </Can>
       <form onSubmit={(e) => void save(e)} className="space-y-2">
         {(vehicles.length > 0 || routes.length > 0) && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

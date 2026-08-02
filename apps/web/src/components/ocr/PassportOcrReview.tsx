@@ -101,7 +101,9 @@ export function formFromOcrScan(scan: OcrScanResult): PassportFormFields {
 }
 
 function confColor(c: number, low: boolean) {
-  if (low || c < 90) return "border-amber-400 bg-amber-50";
+  if (low || c < 80) return "border-rose-300 bg-rose-50";
+  if (c < 90) return "border-amber-400 bg-amber-50";
+  if (c < 95) return "border-sky-300 bg-sky-50";
   if (c >= 95) return "border-emerald-300 bg-emerald-50/40";
   return "border-[var(--border)] bg-white";
 }

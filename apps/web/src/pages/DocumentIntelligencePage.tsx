@@ -20,11 +20,34 @@ import {
 } from "@/components/enterprise/Page";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { DocumentUploadFlow } from "@/components/ocr/DocumentUploadFlow";
-import { docTypeToUploadCategory, type OcrScanResult } from "@/lib/documentIntelligence";
+import {
+  confidenceClass,
+  docTypeToUploadCategory,
+  type OcrScanResult,
+} from "@/lib/documentIntelligence";
 
-type Tab = "dashboard" | "scan" | "queue" | "failed" | "search" | "settings";
+type Tab =
+  | "dashboard"
+  | "scan"
+  | "queue"
+  | "recent"
+  | "duplicates"
+  | "failed"
+  | "logs"
+  | "search"
+  | "settings";
 
-const TABS: Tab[] = ["dashboard", "scan", "queue", "failed", "search", "settings"];
+const TABS: Tab[] = [
+  "dashboard",
+  "scan",
+  "queue",
+  "recent",
+  "duplicates",
+  "failed",
+  "logs",
+  "search",
+  "settings",
+];
 
 export default function DocumentIntelligencePage() {
   const [params, setParams] = useSearchParams();
@@ -110,6 +133,44 @@ export default function DocumentIntelligencePage() {
     );
   }, [passportHits, needle]);
 
+  const duplicateGroups = useMemo(() => {
+    const map = new Map<string, typeof passportHits>();
+    for (const p of passportHits) {
+      const key = p.passportNo.trim().toUpperCase();
+      if (!key) continue;
+      const list = map.get(key) || [];
+      list.push(p);
+      map.set(key, list);
+    }
+    return [...map.entries()]
+      .filter(([, list]) => {
+        const cust = new Set(list.map((x) => x.customerId));
+        return cust.size > 1 || list.length > 1;
+      })
+      .map(([passportNo, list]) => ({ passportNo, list }))
+      .slice(0, 50);
+  }, [passportHits]);
+
+  const journalSearchHits = useMemo(() => {
+    if (!needle) return recent;
+    return recent.filter((row) => {
+      const blob = [
+        row.passportNo,
+        row.nidNumber,
+        row.visaNumber,
+        row.mrzLine1,
+        row.mrzLine2,
+        row.docType,
+        row.status,
+        JSON.stringify(row),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return blob.includes(needle);
+    });
+  }, [recent, needle]);
+
   return (
     <PageShell>
       <PageHeader
@@ -135,7 +196,10 @@ export default function DocumentIntelligencePage() {
             ["dashboard", "Dashboard"],
             ["scan", "Scan"],
             ["queue", "OCR Queue"],
+            ["recent", "Recent Documents"],
+            ["duplicates", "Duplicates"],
             ["failed", "Failed OCR"],
+            ["logs", "Processing Logs"],
             ["search", "Global Search"],
             ["settings", "Settings"],
           ] as const
@@ -235,18 +299,77 @@ export default function DocumentIntelligencePage() {
       )}
 
       {tab === "queue" && (
-          <Surface padded>
-            <h2 className="mb-2 flex items-center gap-2 text-[12px] font-bold text-[var(--primary)]">
-              <FileSearch size={14} /> OCR queue (session journal)
-            </h2>
-            <JournalTable rows={recent} />
-          </Surface>
+        <Surface padded>
+          <h2 className="mb-2 flex items-center gap-2 text-[12px] font-bold text-[var(--primary)]">
+            <FileSearch size={14} /> OCR queue
+          </h2>
+          <p className="mb-3 text-[11px] text-[var(--muted-foreground)]">
+            In-memory session journal of scans awaiting review or recently processed (existing OCR service).
+          </p>
+          <JournalTable rows={recent.filter((r) => String(r.status || "").toLowerCase() !== "failed")} />
+        </Surface>
+      )}
+
+      {tab === "recent" && (
+        <Surface padded>
+          <h2 className="mb-2 text-[12px] font-bold text-[var(--primary)]">Recent documents</h2>
+          <JournalTable rows={recent} />
+        </Surface>
+      )}
+
+      {tab === "duplicates" && (
+        <Surface padded className="space-y-4">
+          <h2 className="text-[12px] font-bold text-[var(--primary)]">Duplicate passports</h2>
+          <p className="text-[11px] text-[var(--muted-foreground)]">
+            Same passport number on more than one customer record — review before merging.
+          </p>
+          {!duplicateGroups.length ? (
+            <p className="text-[11px] text-[var(--muted-foreground)]">No duplicate passport numbers in loaded customers.</p>
+          ) : (
+            <ul className="space-y-3">
+              {duplicateGroups.map((g) => (
+                <li key={g.passportNo} className="rounded-2xl border border-amber-200 bg-amber-50/50 px-3 py-2 text-[11px]">
+                  <p className="font-mono font-bold text-[var(--primary)]">{g.passportNo}</p>
+                  <ul className="mt-1 space-y-1">
+                    {g.list.map((p) => (
+                      <li key={`${p.customerId}-${p.passportNo}`} className="flex justify-between gap-2">
+                        <span>
+                          {p.customerName} ({p.customerCode}) · exp {p.expiry}
+                        </span>
+                        <Link className="font-bold text-[var(--accent)]" to={`/customers/${p.customerId}`}>
+                          View
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div>
+            <label className={labelCls}>Check number before save</label>
+            <p className="text-[10px] text-[var(--muted-foreground)]">
+              Upload flows call <code className="font-mono">POST /ocr/intelligence/check-duplicate</code> for passport /
+              NID / visa.
+            </p>
+          </div>
+        </Surface>
       )}
 
       {tab === "failed" && (
         <Surface padded>
           <h2 className="mb-2 text-[12px] font-bold text-[var(--primary)]">Failed OCR</h2>
           <JournalTable rows={failed} />
+        </Surface>
+      )}
+
+      {tab === "logs" && (
+        <Surface padded>
+          <h2 className="mb-2 text-[12px] font-bold text-[var(--primary)]">Processing logs</h2>
+          <p className="mb-3 text-[11px] text-[var(--muted-foreground)]">
+            Timestamped OCR journal with confidence bands (memory-backed until staff Save).
+          </p>
+          <JournalTable rows={recent} showConfidenceTone />
         </Surface>
       )}
 
@@ -261,7 +384,7 @@ export default function DocumentIntelligencePage() {
               placeholder="Passport / NID / visa number, customer name, or MRZ fragment"
             />
             <p className="mt-1 text-[10px] text-[var(--muted-foreground)]">
-              Searches OCR journal and saved customer passports (no schema change).
+              Searches OCR journal (passport, NID, visa, MRZ) and saved customer passports.
             </p>
           </div>
           <div>
@@ -271,7 +394,10 @@ export default function DocumentIntelligencePage() {
             ) : (
               <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)]">
                 {savedPassportHits.slice(0, 30).map((p) => (
-                  <li key={`${p.customerId}-${p.passportNo}`} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-[11px]">
+                  <li
+                    key={`${p.customerId}-${p.passportNo}`}
+                    className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-[11px]"
+                  >
                     <div>
                       <span className="font-mono font-semibold">{p.passportNo}</span>
                       <span className="text-[var(--muted-foreground)]"> · exp {p.expiry}</span>
@@ -286,7 +412,7 @@ export default function DocumentIntelligencePage() {
           </div>
           <div>
             <h3 className="mb-2 text-[11px] font-bold text-[var(--primary)]">OCR journal</h3>
-            <JournalTable rows={journalHits} />
+            <JournalTable rows={needle ? journalSearchHits : journalHits} showConfidenceTone />
           </div>
         </Surface>
       )}
@@ -308,7 +434,13 @@ export default function DocumentIntelligencePage() {
   );
 }
 
-function JournalTable({ rows }: { rows: Record<string, unknown>[] }) {
+function JournalTable({
+  rows,
+  showConfidenceTone,
+}: {
+  rows: Record<string, unknown>[];
+  showConfidenceTone?: boolean;
+}) {
   if (!rows.length) return <p className="text-[11px] text-[var(--muted-foreground)]">No entries yet — run a scan.</p>;
   return (
     <div className="overflow-x-auto">
@@ -324,20 +456,40 @@ function JournalTable({ rows }: { rows: Record<string, unknown>[] }) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
-            <tr key={String(r.id)} className="border-t border-[var(--border)]">
-              <td className="py-2 font-mono text-[10px]">{String(r.createdAt || "").replace("T", " ").slice(0, 19)}</td>
-              <td className="py-2">{String(r.docType || "—")}</td>
-              <td className="py-2">{String(r.status || "—")}</td>
-              <td className="py-2">
-                {r.averageConfidence != null ? `${r.averageConfidence}%` : r.confidence != null ? `${Math.round(Number(r.confidence) * 100)}%` : "—"}
-              </td>
-              <td className="py-2 font-mono text-[10px]">
-                {[r.passportNo, r.nidNumber, r.visaNumber].filter(Boolean).join(" · ") || "—"}
-              </td>
-              <td className="py-2">{r.processingMs != null ? String(r.processingMs) : "—"}</td>
-            </tr>
-          ))}
+          {rows.map((r) => {
+            const conf =
+              r.averageConfidence != null
+                ? Number(r.averageConfidence)
+                : r.confidence != null
+                  ? Math.round(Number(r.confidence) * (Number(r.confidence) <= 1 ? 100 : 1))
+                  : null;
+            return (
+              <tr key={String(r.id)} className="border-t border-[var(--border)]">
+                <td className="py-2 font-mono text-[10px]">
+                  {String(r.createdAt || "").replace("T", " ").slice(0, 19)}
+                </td>
+                <td className="py-2">{String(r.docType || "—")}</td>
+                <td className="py-2">{String(r.status || "—")}</td>
+                <td className="py-2">
+                  {conf != null ? (
+                    showConfidenceTone ? (
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${confidenceClass(conf)}`}>
+                        {conf}%
+                      </span>
+                    ) : (
+                      `${conf}%`
+                    )
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td className="py-2 font-mono text-[10px]">
+                  {[r.passportNo, r.nidNumber, r.visaNumber, r.mrzLine1].filter(Boolean).join(" · ") || "—"}
+                </td>
+                <td className="py-2">{r.processingMs != null ? String(r.processingMs) : "—"}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

@@ -403,7 +403,16 @@ export default function CustomerWorkspacePage() {
             customerId={c.id}
             defaultDocType="auto"
             title="Upload & OCR document"
-            onAutofill={() => setOk("Document processed — review fields before save")}
+            onAutofill={(fields) => {
+              setForm((f) => ({
+                ...f,
+                fullName: ocrFullName(fields) || f.fullName,
+                nationality: fields.nationality || f.nationality,
+                gender: ocrGenderToForm(fields.gender) || f.gender,
+                dob: fields.dateOfBirth || f.dob,
+              }));
+              setOk("OCR applied to profile fields — save profile if demographics changed");
+            }}
           />
           <Link to="/operations/document-intelligence?tab=search" className="text-[11px] font-bold text-[var(--accent)]">
             Global document search →
