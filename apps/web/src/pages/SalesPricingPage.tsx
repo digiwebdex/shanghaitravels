@@ -111,7 +111,7 @@ export default function SalesPricingPage() {
         <SuccessBanner message={ok} />
         <Can perm="sales:pricing">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <form onSubmit={(e) => void createTemplate(e)} className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
+            <form onSubmit={(e) => void createTemplate(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 space-y-2">
               <h2 className="text-[12px] font-bold">New template</h2>
               <div>
                 <label className={labelCls}>Name</label>
@@ -139,7 +139,7 @@ export default function SalesPricingPage() {
                 Save template
               </button>
             </form>
-            <form onSubmit={(e) => void createBook(e)} className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
+            <form onSubmit={(e) => void createBook(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 space-y-2">
               <h2 className="text-[12px] font-bold">New price book</h2>
               <div>
                 <label className={labelCls}>Name</label>
@@ -179,11 +179,11 @@ export default function SalesPricingPage() {
                 <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                   Save price book
                 </button>
-                <button type="button" className="px-3 py-1.5 rounded-lg text-[10.5px] font-semibold border border-slate-200" onClick={() => void resolve()}>
+                <button type="button" className="px-3 py-1.5 rounded-lg text-[10.5px] font-semibold border border-[var(--border)]" onClick={() => void resolve()}>
                   Resolve price
                 </button>
               </div>
-              {resolved && <pre className="text-[10px] bg-slate-50 p-2 rounded-lg overflow-auto">{JSON.stringify(resolved, null, 2)}</pre>}
+              {resolved && <pre className="text-[10px] bg-[var(--muted)] p-2 rounded-lg overflow-auto">{JSON.stringify(resolved, null, 2)}</pre>}
             </form>
           </div>
         </Can>
@@ -193,13 +193,13 @@ export default function SalesPricingPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Templates</h2>
               <ul className="space-y-2 text-[11px]">
                 {templates.map((t) => (
-                  <li key={t.id} className="border-b border-slate-50 pb-2">
+                  <li key={t.id} className="border-b border-[var(--border)] pb-2">
                     <span className="font-bold">{t.code}</span> {t.name} · {t.serviceType}
-                    <div className="text-slate-500">
+                    <div className="text-[var(--muted-foreground)]">
                       {(t.lines || []).map((l) => (
                         <div key={l.lineNo}>
                           {l.description} — {formatBdt(l.unitPricePoisha)}
@@ -208,14 +208,14 @@ export default function SalesPricingPage() {
                     </div>
                   </li>
                 ))}
-                {templates.length === 0 && <li className="text-slate-400">No templates.</li>}
+                {templates.length === 0 && <li className="text-[var(--muted-foreground)]">No templates.</li>}
               </ul>
             </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Price books</h2>
               <ul className="space-y-2 text-[11px]">
                 {books.map((b) => (
-                  <li key={b.id} className="border-b border-slate-50 pb-2 flex justify-between gap-2">
+                  <li key={b.id} className="border-b border-[var(--border)] pb-2 flex justify-between gap-2">
                     <span>
                       <span className="font-bold">{b.code}</span> {b.name} · {b.kind}
                     </span>
@@ -224,7 +224,7 @@ export default function SalesPricingPage() {
                     </span>
                   </li>
                 ))}
-                {books.length === 0 && <li className="text-slate-400">No price books.</li>}
+                {books.length === 0 && <li className="text-[var(--muted-foreground)]">No price books.</li>}
               </ul>
             </section>
           </div>

@@ -25,8 +25,8 @@ export default function AgentRegisterPage() {
       </div>
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm space-y-4 bg-white border rounded-xl p-6">
-          <h2 className="text-[16px] font-bold text-slate-900">Become an Agent</h2>
-          <p className="text-[12px] text-slate-600 leading-relaxed">
+          <h2 className="text-[16px] font-bold text-[var(--primary)]">Become an Agent</h2>
+          <p className="text-[12px] text-[var(--muted-foreground)] leading-relaxed">
             Apply to become a Shanghai Travels partner. Our sales team creates agent
             accounts after onboarding — then you sign in with the invitation credentials.
           </p>
@@ -38,11 +38,11 @@ export default function AgentRegisterPage() {
           </a>
           <Link
             to="/portal/agent/login"
-            className="flex w-full items-center justify-center py-2.5 rounded-lg border border-slate-200 text-slate-700 text-[12px] font-semibold hover:bg-slate-50 transition-colors"
+            className="flex w-full items-center justify-center py-2.5 rounded-lg border border-[var(--border)] text-[var(--primary)] text-[12px] font-semibold hover:bg-[var(--muted)] transition-colors"
           >
             Already invited? Sign in
           </Link>
-          <p className="text-[11px] text-slate-400 text-center">
+          <p className="text-[11px] text-[var(--muted-foreground)] text-center">
             No public agent registration form — accounts are created by staff only.
           </p>
         </div>

@@ -45,14 +45,14 @@ export default function AgentCustomerDetailPage() {
 
   return (
     <div className="p-5 max-w-3xl space-y-4">
-      <Link className="text-[11px] text-amber-700 underline" to="/portal/agent/customers">
+      <Link className="text-[11px] text-[var(--accent)] underline" to="/portal/agent/customers">
         ← Customers
       </Link>
       {error && <p className="text-red-600 text-[11px]">{error}</p>}
       {data && (
         <>
           <h1 className="text-[16px] font-bold">{data.customer?.fullName}</h1>
-          <p className="text-[12px] text-slate-600">
+          <p className="text-[12px] text-[var(--muted-foreground)]">
             {data.customer?.phone} · {data.customer?.email || "—"}
           </p>
           <section className="bg-white border rounded-xl p-4">
@@ -66,7 +66,7 @@ export default function AgentCustomerDetailPage() {
             </ul>
             <form onSubmit={addPassport} className="flex gap-2">
               <input className="border rounded px-2 py-1 text-[11px] flex-1" value={passportNo} onChange={(e) => setPassportNo(e.target.value)} placeholder="Passport no" />
-              <button className="text-[11px] text-amber-700 font-semibold">Add</button>
+              <button className="text-[11px] text-[var(--accent)] font-semibold">Add</button>
             </form>
           </section>
           <section className="bg-white border rounded-xl p-4">
@@ -80,7 +80,7 @@ export default function AgentCustomerDetailPage() {
             </ul>
             <form onSubmit={addTraveller} className="flex gap-2">
               <input className="border rounded px-2 py-1 text-[11px] flex-1" value={travellerName} onChange={(e) => setTravellerName(e.target.value)} placeholder="Traveller full name" />
-              <button className="text-[11px] text-amber-700 font-semibold">Add</button>
+              <button className="text-[11px] text-[var(--accent)] font-semibold">Add</button>
             </form>
           </section>
           <section className="bg-white border rounded-xl p-4">
@@ -88,7 +88,7 @@ export default function AgentCustomerDetailPage() {
             <ul className="text-[11px] space-y-1">
               {(data.bookings || []).map((b: any) => (
                 <li key={b.id}>
-                  <Link className="text-amber-700 underline" to={`/portal/agent/bookings/${b.id}`}>
+                  <Link className="text-[var(--accent)] underline" to={`/portal/agent/bookings/${b.id}`}>
                     {b.referenceNo}
                   </Link>{" "}
                   · {b.serviceType} · {b.status}

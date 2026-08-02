@@ -28,9 +28,9 @@ export function CaseDocumentsCard({
   const { can } = useAuth();
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4">
+    <section className="rounded-xl border border-[var(--border)] bg-white p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-[12px] font-bold text-slate-800">Document collection</h2>
+        <h2 className="text-[12px] font-bold text-[var(--primary)]">Document collection</h2>
         <Link
           to="/operations/document-intelligence"
           className="text-[10px] font-bold text-[var(--accent)]"
@@ -91,17 +91,17 @@ export function CaseDocumentsCard({
       </Can>
 
       {!can("ocr:use") && (
-        <p className="mb-3 text-[11px] text-slate-500">
+        <p className="mb-3 text-[11px] text-[var(--muted-foreground)]">
           OCR requires <code className="font-mono">ocr:use</code>. You can still view uploaded files below.
         </p>
       )}
 
       {docs.length === 0 ? (
-        <p className="text-[11px] text-slate-400">No documents uploaded yet.</p>
+        <p className="text-[11px] text-[var(--muted-foreground)]">No documents uploaded yet.</p>
       ) : (
         <table className="w-full">
           <thead>
-            <tr className="text-left text-[9.5px] uppercase text-slate-400">
+            <tr className="text-left text-[9.5px] uppercase text-[var(--muted-foreground)]">
               <th className="py-1 font-bold">Type</th>
               <th className="py-1 font-bold">File</th>
               <th className="py-1 font-bold">Status</th>
@@ -109,11 +109,11 @@ export function CaseDocumentsCard({
           </thead>
           <tbody>
             {docs.map((d) => (
-              <tr key={d.id} className="border-t border-slate-50 text-[11px]">
+              <tr key={d.id} className="border-t border-[var(--border)] text-[11px]">
                 <td className="py-2">{(d.category || "").replace(/_/g, " ")}</td>
                 <td className="py-2">{d.fileName || "—"}</td>
                 <td className="py-2">
-                  <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold">
+                  <span className="rounded bg-[var(--background)] px-1.5 py-0.5 text-[9px] font-bold">
                     {d.status || "uploaded"}
                   </span>
                 </td>
@@ -123,7 +123,7 @@ export function CaseDocumentsCard({
         </table>
       )}
       {!can("document:upload") && !can("document:read") && !can("ocr:use") && (
-        <p className="text-[11px] text-slate-400">No document permission.</p>
+        <p className="text-[11px] text-[var(--muted-foreground)]">No document permission.</p>
       )}
     </section>
   );

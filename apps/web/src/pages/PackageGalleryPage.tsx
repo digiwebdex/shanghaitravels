@@ -96,7 +96,7 @@ export default function PackageGalleryPage() {
         <PackagePicker value={packageId} onChange={(id) => setPackageId(id)} label="Package" required />
 
         {packageId && (
-          <form onSubmit={(e) => void addItem(e)} className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <form onSubmit={(e) => void addItem(e)} className="bg-white border border-[var(--border)] rounded-xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div className="sm:col-span-2">
               <label className={labelCls}>Image URL *</label>
               <input className={inputCls} value={url} onChange={(e) => setUrl(e.target.value)} required />
@@ -122,10 +122,10 @@ export default function PackageGalleryPage() {
                 key={p.id}
                 type="button"
                 onClick={() => setPackageId(p.id)}
-                className="text-left p-3 rounded-xl border border-slate-200 bg-white hover:border-amber-300 text-[11px]"
+                className="text-left p-3 rounded-xl border border-[var(--border)] bg-white hover:border-[var(--accent)] text-[11px]"
               >
                 <span className="font-bold">{p.name}</span>
-                <span className="text-slate-400 block">{p.code}</span>
+                <span className="text-[var(--muted-foreground)] block">{p.code}</span>
               </button>
             ))}
           </div>
@@ -134,7 +134,7 @@ export default function PackageGalleryPage() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {items.map((item) => (
-              <figure key={item.id} className="rounded-xl border border-slate-200 overflow-hidden bg-white">
+              <figure key={item.id} className="rounded-xl border border-[var(--border)] overflow-hidden bg-white">
                 <img src={item.url} alt={item.caption || ""} className="h-32 w-full object-cover" loading="lazy" />
                 <figcaption className="p-2 text-[10px] flex justify-between gap-1">
                   <span className="truncate">{item.caption || "—"}</span>

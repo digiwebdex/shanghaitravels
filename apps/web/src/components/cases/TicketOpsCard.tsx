@@ -57,18 +57,18 @@ export function TicketOpsCard({
   const issueGate = canMarkTicketIssued(detail, stages);
 
   return (
-    <section className="bg-white rounded-xl border border-slate-200 p-4" aria-labelledby="ticket-ops-heading">
-      <h2 id="ticket-ops-heading" className="text-[12px] font-bold text-slate-800 mb-1">
+    <section className="bg-white rounded-xl border border-[var(--border)] p-4" aria-labelledby="ticket-ops-heading">
+      <h2 id="ticket-ops-heading" className="text-[12px] font-bold text-[var(--primary)] mb-1">
         Ticket operations
       </h2>
-      <p className="text-[10px] text-slate-400 mb-3">
+      <p className="text-[10px] text-[var(--muted-foreground)] mb-3">
         Manual fulfilment actions — fare quote, issue, reissue, cancel, refund request. No GDS.
       </p>
 
       <div className="space-y-4">
         <Can perm="application:note">
-          <div className="border-b border-slate-100 pb-3">
-            <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Fare quotation</p>
+          <div className="border-b border-[var(--border)] pb-3">
+            <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase mb-2">Fare quotation</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
                 <label className={labelCls} htmlFor="ops-fare-amt">
@@ -102,7 +102,7 @@ export function TicketOpsCard({
             <button
               type="button"
               disabled={busy || closed || !fareAmount.trim()}
-              className="mt-2 px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold disabled:opacity-50"
+              className="mt-2 px-3 py-1.5 rounded-lg border border-[var(--border)] text-[10.5px] font-semibold disabled:opacity-50"
               onClick={() =>
                 run(async () => {
                   const msg = buildFareQuotationNote(fareAmount, fareNote);
@@ -119,13 +119,13 @@ export function TicketOpsCard({
         </Can>
 
         <Can perm="application:advance-stage">
-          <div className="border-b border-slate-100 pb-3">
-            <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Ticket issue</p>
-            <p className="text-[10px] text-slate-400 mb-2">
+          <div className="border-b border-[var(--border)] pb-3">
+            <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase mb-1">Ticket issue</p>
+            <p className="text-[10px] text-[var(--muted-foreground)] mb-2">
               Requires ticket number on Air ticket details, then advances to “{ISSUE_STAGE_NAME}”.
             </p>
             {!issueGate.ok && (
-              <p className="text-[10px] text-amber-700 mb-2" role="status">
+              <p className="text-[10px] text-[var(--accent)] mb-2" role="status">
                 {issueGate.reason}
               </p>
             )}
@@ -151,8 +151,8 @@ export function TicketOpsCard({
         </Can>
 
         <Can perm="application:note">
-          <div className="border-b border-slate-100 pb-3">
-            <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Reissue</p>
+          <div className="border-b border-[var(--border)] pb-3">
+            <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase mb-2">Reissue</p>
             <label className={labelCls} htmlFor="ops-reissue">
               Reissue details
             </label>
@@ -167,7 +167,7 @@ export function TicketOpsCard({
             <button
               type="button"
               disabled={busy || closed || !reissueNote.trim()}
-              className="mt-2 px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold disabled:opacity-50"
+              className="mt-2 px-3 py-1.5 rounded-lg border border-[var(--border)] text-[10.5px] font-semibold disabled:opacity-50"
               onClick={() =>
                 run(async () => {
                   const msg = buildReissueNote(reissueNote);
@@ -183,9 +183,9 @@ export function TicketOpsCard({
         </Can>
 
         <Can perm="application:note">
-          <div className="border-b border-slate-100 pb-3">
-            <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Refund request</p>
-            <p className="text-[10px] text-slate-400 mb-2">
+          <div className="border-b border-[var(--border)] pb-3">
+            <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase mb-2">Refund request</p>
+            <p className="text-[10px] text-[var(--muted-foreground)] mb-2">
               Logs a refund request on the case timeline. Post the money refund under Invoice &amp; payment
               (payment:refund).
             </p>
@@ -203,7 +203,7 @@ export function TicketOpsCard({
             <button
               type="button"
               disabled={busy || closed || !refundNote.trim()}
-              className="mt-2 px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold disabled:opacity-50"
+              className="mt-2 px-3 py-1.5 rounded-lg border border-[var(--border)] text-[10.5px] font-semibold disabled:opacity-50"
               onClick={() =>
                 run(async () => {
                   const msg = buildRefundRequestNote(refundNote);
@@ -220,7 +220,7 @@ export function TicketOpsCard({
 
         <Can perm="application:update">
           <div>
-            <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Cancellation</p>
+            <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase mb-2">Cancellation</p>
             <label className={labelCls} htmlFor="ops-cancel">
               Cancel reason
             </label>

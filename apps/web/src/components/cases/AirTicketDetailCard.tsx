@@ -71,9 +71,9 @@ export function AirTicketDetailCard({
   const disabled = !can("application:update");
 
   return (
-    <section className="bg-white rounded-xl border border-slate-200 p-4">
-      <h2 className="text-[12px] font-bold text-slate-800 mb-1">Air ticket details</h2>
-      <p className="text-[10px] text-slate-400 mb-3">
+    <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+      <h2 className="text-[12px] font-bold text-[var(--primary)] mb-1">Air ticket details</h2>
+      <p className="text-[10px] text-[var(--muted-foreground)] mb-3">
         Manual entry from airline / consolidator — no GDS lookup.
       </p>
       <form onSubmit={(e) => void save(e)} className="space-y-2">

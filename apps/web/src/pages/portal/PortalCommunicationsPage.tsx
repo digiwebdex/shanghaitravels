@@ -57,9 +57,9 @@ export default function PortalCommunicationsPage() {
           <h2 className="text-[12px] font-bold mb-2">Timeline / messages</h2>
           <ul className="text-[11px] space-y-2">
             {messages.map((m) => (
-              <li key={String(m.id)} className="border-b border-slate-50 pb-1">
+              <li key={String(m.id)} className="border-b border-[var(--border)] pb-1">
                 <div className="font-semibold">{String(m.subject || m.summary)}</div>
-                <div className="text-slate-500">
+                <div className="text-[var(--muted-foreground)]">
                   {String(m.channel)} · {new Date(String(m.createdAt)).toLocaleString()}
                 </div>
               </li>
@@ -71,7 +71,7 @@ export default function PortalCommunicationsPage() {
           <ul className="text-[11px] space-y-2">
             {support.map((s) => (
               <li key={String(s.id)}>
-                {String(s.subject)} · <span className="text-slate-500">{String(s.status)}</span>
+                {String(s.subject)} · <span className="text-[var(--muted-foreground)]">{String(s.status)}</span>
               </li>
             ))}
           </ul>

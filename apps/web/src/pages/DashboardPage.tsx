@@ -24,11 +24,11 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
 import { ErrorBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
 import { Pill, statusTone } from "@/components/enterprise/DataTable";
 import {
   PageHeader,
   PageShell,
+  SkeletonRows,
   Surface,
   SurfaceHeader,
   btnGhost,
@@ -41,7 +41,7 @@ import {
 } from "@/dashboard/DashboardDataProvider";
 import { fmtBDTCompact, fmtBDTPlain } from "@/lib/money";
 import { brand, chartColors } from "@/styles/tokens";
-import { MasterJourneyStrip, NextStepBanner } from "@/components/workflow/MasterJourney";
+import { JourneyContinuity, NextStepBanner } from "@/components/workflow/MasterJourney";
 
 function roleLens(role?: string): {
   title: string;
@@ -113,31 +113,31 @@ function roleLens(role?: string): {
 const MetricCard = memo(function MetricCard({ metric, money }: { metric: Metric; money?: boolean }) {
   if (metric.provenance === "unavailable" && metric.value == null) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-200 bg-white/60 p-4">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{metric.label}</p>
-        <p className="mt-2 text-[13px] font-semibold text-slate-300">—</p>
+      <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--card)]/60 p-4">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">{metric.label}</p>
+        <p className="mt-2 text-[13px] font-semibold text-[var(--navy-200)]">—</p>
       </div>
     );
   }
   const inner = (
     <>
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{metric.label}</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">{metric.label}</p>
         <span
           className={`rounded px-1.5 py-[1px] text-[8px] font-bold uppercase ${
             metric.provenance === "aggregate"
-              ? "bg-emerald-50 text-emerald-700"
-              : "bg-slate-100 text-slate-500"
+              ? "bg-[var(--success-bg)] text-[var(--success-foreground)]"
+              : "bg-[var(--muted)] text-[var(--muted-foreground)]"
           }`}
         >
           {metric.provenance}
         </span>
       </div>
-      <p className="mt-2 text-[20px] font-black tabular-nums tracking-tight text-slate-900">
+      <p className="mt-2 text-[20px] font-black tabular-nums tracking-tight text-[var(--primary)]">
         {money ? fmtBDTCompact(metric.value as number) : (metric.value ?? 0).toLocaleString()}
       </p>
       {money && metric.value != null && (
-        <p className="mt-0.5 text-[10px] text-slate-400">{fmtBDTPlain(metric.value as number)}</p>
+        <p className="mt-0.5 text-[10px] text-[var(--muted-foreground)]">{fmtBDTPlain(metric.value as number)}</p>
       )}
     </>
   );
@@ -145,13 +145,17 @@ const MetricCard = memo(function MetricCard({ metric, money }: { metric: Metric;
     return (
       <Link
         to={metric.href}
-        className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:border-orange-300 hover:shadow-sm"
+        className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-[var(--shadow-sm)] transition-all hover:border-[var(--accent)] hover:shadow-[var(--shadow-md)]"
       >
         {inner}
       </Link>
     );
   }
-  return <div className="rounded-2xl border border-slate-200 bg-white p-4">{inner}</div>;
+  return (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-[var(--shadow-sm)]">
+      {inner}
+    </div>
+  );
 });
 
 function DashboardBody() {
@@ -196,15 +200,17 @@ function DashboardBody() {
         }
       />
 
-      <MasterJourneyStrip active="booking" compact />
+      <JourneyContinuity
+        active="booking"
+        previousHint="Lead → Customer → Documents"
+        nextHint="Operations queue → Finance → Travel"
+      />
       <NextStepBanner title={lens.title} body={lens.body} actions={lens.actions} />
 
       <ErrorBanner message={d.error} />
 
       {d.loading ? (
-        <div className="flex justify-center py-20">
-          <InlineSpinner />
-        </div>
+        <SkeletonRows rows={10} />
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
@@ -317,11 +323,11 @@ function DashboardBody() {
                 }
               />
               {d.recent.applications.length === 0 ? (
-                <p className="px-4 py-10 text-center text-[11.5px] text-slate-400">No recent applications</p>
+                <p className="px-4 py-10 text-center text-[11.5px] text-[var(--muted-foreground)]">No recent applications</p>
               ) : (
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-slate-100 text-left text-[9.5px] uppercase tracking-wider text-slate-400">
+                    <tr className="border-b border-[var(--border)] text-left text-[9.5px] uppercase tracking-wider text-[var(--muted-foreground)]">
                       <th className="px-4 py-2 font-bold">Ref</th>
                       <th className="px-4 py-2 font-bold">Service</th>
                       <th className="px-4 py-2 font-bold">Customer</th>
@@ -330,7 +336,7 @@ function DashboardBody() {
                   </thead>
                   <tbody>
                     {d.recent.applications.map((a) => (
-                      <tr key={a.id} className="border-b border-slate-50 hover:bg-slate-50/80">
+                      <tr key={a.id} className="border-b border-[var(--border)] hover:bg-[var(--muted)]/80">
                         <td className="px-4 py-2.5">
                           <Link
                             to={serviceHref(a.serviceType, a.id)}
@@ -339,8 +345,8 @@ function DashboardBody() {
                             {a.referenceNo}
                           </Link>
                         </td>
-                        <td className="px-4 py-2.5 text-[11px] text-slate-600">{a.serviceType}</td>
-                        <td className="px-4 py-2.5 text-[11px] text-slate-700">{a.customer?.fullName || "—"}</td>
+                        <td className="px-4 py-2.5 text-[11px] text-[var(--muted-foreground)]">{a.serviceType}</td>
+                        <td className="px-4 py-2.5 text-[11px] text-[var(--primary)]">{a.customer?.fullName || "—"}</td>
                         <td className="px-4 py-2.5">
                           <Pill value={a.status} tone={statusTone(a.status)} />
                         </td>
@@ -359,7 +365,7 @@ function DashboardBody() {
                     <Link
                       key={a.id}
                       to={a.to}
-                      className="flex items-center gap-2 rounded-xl border border-slate-100 px-2.5 py-2 text-[11px] font-semibold text-slate-700 transition-colors hover:border-orange-200 hover:bg-orange-50/50"
+                      className="flex items-center gap-2 rounded-xl border border-[var(--border)] px-2.5 py-2 text-[11px] font-semibold text-[var(--primary)] transition-colors hover:border-orange-200 hover:bg-orange-50/50"
                     >
                       <a.icon size={13} className="flex-shrink-0 text-orange-600" />
                       <span className="truncate">{a.label}</span>
@@ -371,15 +377,15 @@ function DashboardBody() {
               <Surface>
                 <SurfaceHeader title="Pending tasks" />
                 {d.tasks.length === 0 ? (
-                  <p className="px-4 py-8 text-center text-[11px] text-slate-400">No open tasks</p>
+                  <p className="px-4 py-8 text-center text-[11px] text-[var(--muted-foreground)]">No open tasks</p>
                 ) : (
-                  <ul className="divide-y divide-slate-100">
+                  <ul className="divide-y divide-[var(--border)]">
                     {d.tasks.map((t) => (
                       <li key={t.id} className="flex items-start justify-between gap-2 px-4 py-2.5">
                         <div className="min-w-0">
-                          <p className="truncate text-[11.5px] font-semibold text-slate-800">{t.title}</p>
+                          <p className="truncate text-[11.5px] font-semibold text-[var(--primary)]">{t.title}</p>
                           {t.dueAt && (
-                            <p className="text-[10px] text-slate-400">Due {t.dueAt.slice(0, 10)}</p>
+                            <p className="text-[10px] text-[var(--muted-foreground)]">Due {t.dueAt.slice(0, 10)}</p>
                           )}
                         </div>
                         <Pill value={t.status} tone={statusTone(t.status)} />
@@ -420,11 +426,11 @@ function SnapRow({
   return (
     <Link
       to={metric.href || "/"}
-      className="flex items-center gap-2.5 rounded-xl px-2 py-2 transition-colors hover:bg-slate-50"
+      className="flex items-center gap-2.5 rounded-xl px-2 py-2 transition-colors hover:bg-[var(--muted)]"
     >
       <Icon size={14} className="text-orange-600" />
-      <span className="flex-1 text-[11.5px] font-medium text-slate-600">{label}</span>
-      <span className="text-[12px] font-bold tabular-nums text-slate-900">
+      <span className="flex-1 text-[11.5px] font-medium text-[var(--muted-foreground)]">{label}</span>
+      <span className="text-[12px] font-bold tabular-nums text-[var(--primary)]">
         {metric.value == null ? "—" : money ? fmtBDTCompact(metric.value as number) : metric.value.toLocaleString()}
       </span>
     </Link>
@@ -432,7 +438,7 @@ function SnapRow({
 }
 
 function EmptyChart() {
-  return <p className="flex h-full items-center justify-center text-[11.5px] text-slate-400">No chart data for your permissions</p>;
+  return <p className="flex h-full items-center justify-center text-[11.5px] text-[var(--muted-foreground)]">No chart data for your permissions</p>;
 }
 
 function serviceHref(serviceType: string, id: string): string {

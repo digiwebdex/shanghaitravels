@@ -61,14 +61,14 @@ export default function CorporateCompanyPage() {
         <>
           <section className="bg-white border rounded-xl p-4 text-[11px] space-y-2">
             <h2 className="text-[12px] font-bold">{String(data.companyName || "Company")}</h2>
-            <p className="text-slate-600">{String(data.code || data.registrationNo || "—")}</p>
+            <p className="text-[var(--muted-foreground)]">{String(data.code || data.registrationNo || "—")}</p>
             <div className="grid grid-cols-2 gap-3 pt-2">
               <div>
-                <div className="text-[10px] text-slate-500 uppercase">Credit limit</div>
+                <div className="text-[10px] text-[var(--muted-foreground)] uppercase">Credit limit</div>
                 <div className="font-bold text-[13px]">{formatPoisha(data.creditLimitPoisha)}</div>
               </div>
               <div>
-                <div className="text-[10px] text-slate-500 uppercase">Payment terms</div>
+                <div className="text-[10px] text-[var(--muted-foreground)] uppercase">Payment terms</div>
                 <div className="font-semibold">{String(data.paymentTerms || "—")}</div>
               </div>
             </div>

@@ -38,10 +38,10 @@ export function CaseAssignCard({
   }
 
   return (
-    <section className="bg-white rounded-xl border border-slate-200 p-4">
-      <h2 className="text-[12px] font-bold text-slate-800 mb-3">Staff assignment</h2>
+    <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+      <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Staff assignment</h2>
       {!can("application:assign") ? (
-        <p className="text-[11px] text-slate-400">You do not have assign permission.</p>
+        <p className="text-[11px] text-[var(--muted-foreground)]">You do not have assign permission.</p>
       ) : (
         <>
           <label className={labelCls} htmlFor="case-assign-select">
@@ -69,7 +69,7 @@ export function CaseAssignCard({
               ))}
           </select>
           {options.length === 0 && (
-            <p className="text-[10px] text-slate-400 mt-1">
+            <p className="text-[10px] text-[var(--muted-foreground)] mt-1">
               No other active staff returned — you can still assign to yourself.
             </p>
           )}

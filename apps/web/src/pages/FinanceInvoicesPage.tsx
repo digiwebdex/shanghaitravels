@@ -53,7 +53,7 @@ export default function FinanceInvoicesPage() {
       header: "Due",
       className: "text-right tabular-nums font-semibold",
       render: (r) => (
-        <span className={(r.due ?? 0) > 0 ? "text-red-600" : "text-slate-500"}>{fmtBDTPlain(r.due ?? 0)}</span>
+        <span className={(r.due ?? 0) > 0 ? "text-red-600" : "text-[var(--muted-foreground)]"}>{fmtBDTPlain(r.due ?? 0)}</span>
       ),
     },
   ];

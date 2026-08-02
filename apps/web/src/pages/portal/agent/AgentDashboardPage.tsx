@@ -3,7 +3,12 @@ import { Link } from "react-router";
 import { agentPortalApi } from "@/lib/agentPortalApi";
 import { ApiError } from "@/lib/api";
 import { formatPoisha } from "@/lib/agentPortal";
-import { InlineSpinner } from "@/components/FullPageSpinner";
+import {
+  PortalLoading,
+  PortalPage,
+  PortalSection,
+  PortalStat,
+} from "@/layouts/portalChrome";
 
 export default function AgentDashboardPage() {
   const [data, setData] = useState<Record<string, any> | null>(null);
@@ -16,58 +21,56 @@ export default function AgentDashboardPage() {
       .catch((e) => setError(e instanceof ApiError ? e.message : "Failed"));
   }, []);
 
-  if (!data && !error) {
-    return (
-      <div className="flex justify-center py-20">
-        <InlineSpinner />
-      </div>
-    );
-  }
+  if (!data && !error) return <PortalLoading />;
 
   return (
-    <div className="p-5 max-w-5xl space-y-4">
-      <h1 className="text-[16px] font-bold">Dashboard</h1>
-      {error && <p className="text-red-600 text-[12px]">{error}</p>}
+    <PortalPage
+      title="Agent dashboard"
+      description="Packages → customers → OCR → booking request → commission — stay in this portal."
+      actions={
+        <Link
+          to="/portal/agent/bookings"
+          className="rounded-xl px-3 py-2 text-[11px] font-bold text-white"
+          style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
+        >
+          Manage bookings
+        </Link>
+      }
+    >
+      {error && <p className="text-[12px] text-[var(--error)]">{error}</p>}
       {data && (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Stat label="Active bookings" value={data.bookings?.open ?? 0} />
-            <Stat label="Pending quotes" value={data.pendingQuotations ?? 0} />
-            <Stat label="Wallet" value={formatPoisha(data.walletBalance)} />
-            <Stat label="Outstanding" value={formatPoisha(data.outstandingPoisha)} />
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <PortalStat label="Active bookings" value={data.bookings?.open ?? 0} />
+            <PortalStat label="Pending quotes" value={data.pendingQuotations ?? 0} />
+            <PortalStat label="Wallet" value={formatPoisha(data.walletBalance)} />
+            <PortalStat label="Outstanding" value={formatPoisha(data.outstandingPoisha)} />
           </div>
-          <div className="grid md:grid-cols-2 gap-3">
-            <section className="bg-white border rounded-xl p-4 text-[11px]">
-              <h2 className="text-[12px] font-bold mb-2">Sales summary</h2>
-              <p>Bookings this month: <span className="font-semibold">{data.salesSummary?.bookingsThisMonth ?? 0}</span></p>
-              <p className="mt-1">Commission rate: {((data.agent?.commissionRateBps || 0) / 100).toFixed(2)}%</p>
-              <Link className="text-amber-700 underline mt-2 inline-block" to="/portal/agent/bookings">
-                Manage bookings
-              </Link>
-            </section>
-            <section className="bg-white border rounded-xl p-4 text-[11px]">
-              <h2 className="text-[12px] font-bold mb-2">Notifications</h2>
-              <ul className="space-y-1">
+          <div className="grid gap-3 md:grid-cols-2">
+            <PortalSection title="Sales summary">
+              <p className="text-[11px] text-[var(--primary)]">
+                Bookings this month:{" "}
+                <span className="font-bold">{data.salesSummary?.bookingsThisMonth ?? 0}</span>
+              </p>
+              <p className="mt-1 text-[11px] text-[var(--muted-foreground)]">
+                Commission rate: {((data.agent?.commissionRateBps || 0) / 100).toFixed(2)}%
+              </p>
+            </PortalSection>
+            <PortalSection title="Notifications">
+              <ul className="space-y-1 text-[11px]">
                 {(data.notifications || []).map((n: any) => (
-                  <li key={n.id} className="truncate">
+                  <li key={n.id} className="truncate text-[var(--primary)]">
                     {n.subject || n.body}
                   </li>
                 ))}
-                {!data.notifications?.length && <li className="text-slate-400">No notifications</li>}
+                {!data.notifications?.length && (
+                  <li className="text-[var(--muted-foreground)]">No notifications</li>
+                )}
               </ul>
-            </section>
+            </PortalSection>
           </div>
         </>
       )}
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="bg-white border rounded-xl p-3">
-      <div className="text-[10px] text-slate-500 uppercase tracking-wide">{label}</div>
-      <div className="text-[16px] font-bold mt-1">{value}</div>
-    </div>
+    </PortalPage>
   );
 }

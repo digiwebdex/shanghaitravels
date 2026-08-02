@@ -103,13 +103,13 @@ export default function AdminSettingsPage() {
         {loading ? (
           <div className="flex justify-center py-16"><InlineSpinner /></div>
         ) : rows.length === 0 ? (
-          <p className="px-4 py-12 text-center text-[11.5px] text-slate-400">No settings yet</p>
+          <p className="px-4 py-12 text-center text-[11.5px] text-[var(--muted-foreground)]">No settings yet</p>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-[var(--border)]">
             {rows.map((r) => (
               <div key={r.key} className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5">
-                <p className="font-mono text-[11px] font-bold text-slate-800">{r.key}</p>
-                <pre className="max-w-xl overflow-x-auto rounded-lg bg-slate-50 px-2 py-1 font-mono text-[10.5px] text-slate-600">
+                <p className="font-mono text-[11px] font-bold text-[var(--primary)]">{r.key}</p>
+                <pre className="max-w-xl overflow-x-auto rounded-lg bg-[var(--muted)] px-2 py-1 font-mono text-[10.5px] text-[var(--muted-foreground)]">
                   {typeof r.value === "string" ? r.value : JSON.stringify(r.value, null, 2)}
                 </pre>
               </div>

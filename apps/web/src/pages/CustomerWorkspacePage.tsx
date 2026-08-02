@@ -17,11 +17,12 @@ import { passportExpiry } from "@/lib/types";
 import { Can } from "@/auth/Can";
 import { useAuth } from "@/auth/AuthProvider";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
 import {
+  EmptyPanel,
   KpiCard,
   PageHeader,
   PageShell,
+  SkeletonRows,
   StatStrip,
   Surface,
   btnGhost,
@@ -31,7 +32,7 @@ import {
   labelCls,
 } from "@/components/enterprise/Page";
 import { EntityTabPanel, EntityTabs } from "@/components/workflow/EntityTabs";
-import { MasterJourneyStrip, NextStepBanner } from "@/components/workflow/MasterJourney";
+import { JourneyContinuity, NextStepBanner } from "@/components/workflow/MasterJourney";
 import { ScanDocumentPanel, ocrFullName, ocrGenderToForm } from "@/components/ocr/ScanDocumentPanel";
 import { CustomerDocumentTimeline } from "@/components/ocr/OcrOpsWidget";
 import {
@@ -172,10 +173,8 @@ export default function CustomerWorkspacePage() {
 
   if (loading) {
     return (
-      <PageShell>
-        <div className="flex justify-center py-20">
-          <InlineSpinner />
-        </div>
+      <PageShell wide>
+        <SkeletonRows rows={8} />
       </PageShell>
     );
   }
@@ -216,7 +215,17 @@ export default function CustomerWorkspacePage() {
         }
       />
 
-      <MasterJourneyStrip active={openBookings.length ? "operations" : completed.length ? "repeat" : "customer"} />
+      <JourneyContinuity
+        active={openBookings.length ? "operations" : completed.length ? "repeat" : "customer"}
+        previousHint={c.passports?.length ? "Profile & passport on file" : "Customer created"}
+        nextHint={
+          !c.passports?.length
+            ? "Scan passport with OCR"
+            : openBookings.length
+              ? "Continue Booking 360"
+              : "Start unified booking"
+        }
+      />
 
       <NextStepBanner
         title={
@@ -226,7 +235,7 @@ export default function CustomerWorkspacePage() {
               ? "Continue open bookings"
               : "Start a booking from this customer"
         }
-        body="Never create a duplicate customer. Upload documents → OCR → booking → operations → finance — all from this workspace."
+        body="Never create a duplicate customer. Stay in Customer 360 — upload → OCR → booking → operations → finance."
         actions={
           !c.passports?.length
             ? [
@@ -353,7 +362,15 @@ export default function CustomerWorkspacePage() {
             </Link>
           </div>
           {!bookings.length ? (
-            <p className="text-[12px] text-[var(--muted-foreground)]">No bookings yet.</p>
+            <EmptyPanel
+              title="No bookings yet"
+              hint="Start the unified booking wizard — do not create a duplicate customer."
+              action={
+                <Link to={`/bookings/new?customerId=${c.id}`} className={btnPrimary} style={btnPrimaryStyle}>
+                  New booking
+                </Link>
+              }
+            />
           ) : (
             <ul className="divide-y divide-[var(--border)]">
               {bookings.map((b) => (
@@ -367,7 +384,7 @@ export default function CustomerWorkspacePage() {
                     </span>
                     <p className="text-[11px] text-[var(--primary)]">{b.title || "—"}</p>
                   </div>
-                  <Link to={serviceCaseHref(b.serviceType, b.id)} className="text-[11px] font-semibold text-slate-500">
+                  <Link to={serviceCaseHref(b.serviceType, b.id)} className="text-[11px] font-semibold text-[var(--muted-foreground)]">
                     Service desk →
                   </Link>
                 </li>
@@ -523,7 +540,7 @@ export default function CustomerWorkspacePage() {
             <ul className="space-y-2">
               {comms.slice(0, 30).map((m, i) => (
                 <li key={String(m.id || i)} className="rounded-xl border border-[var(--border)] px-3 py-2 text-[11px]">
-                  <span className="font-bold uppercase text-slate-400">{m.channel || "note"}</span>
+                  <span className="font-bold uppercase text-[var(--muted-foreground)]">{m.channel || "note"}</span>
                   <p className="font-semibold text-[var(--primary)]">{m.subject || m.body || "—"}</p>
                 </li>
               ))}

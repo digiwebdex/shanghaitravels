@@ -61,45 +61,45 @@ export default function CommsReportsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Communication volume</h2>
               <ul className="text-[11px] space-y-1">
                 {(volume?.messages || []).map((r) => (
-                  <li key={r.channel} className="flex justify-between border-b border-slate-50 pb-1">
+                  <li key={r.channel} className="flex justify-between border-b border-[var(--border)] pb-1">
                     <span>messages · {r.channel}</span>
                     <span className="font-semibold">{r.count}</span>
                   </li>
                 ))}
                 {(volume?.timeline || []).map((r) => (
-                  <li key={`t-${r.channel}`} className="flex justify-between border-b border-slate-50 pb-1">
+                  <li key={`t-${r.channel}`} className="flex justify-between border-b border-[var(--border)] pb-1">
                     <span>timeline · {r.channel}</span>
                     <span className="font-semibold">{r.count}</span>
                   </li>
                 ))}
               </ul>
             </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Response time</h2>
               <p className="text-[11px]">
                 Avg {response?.avgResponseHours ?? 0} hours · sample {response?.sampleSize ?? 0}
               </p>
               <h2 className="text-[12px] font-bold mb-2 mt-4">SLA compliance</h2>
-              <pre className="text-[10px] bg-slate-50 p-2 rounded-lg overflow-auto">{JSON.stringify(sla, null, 2)}</pre>
+              <pre className="text-[10px] bg-[var(--muted)] p-2 rounded-lg overflow-auto">{JSON.stringify(sla, null, 2)}</pre>
             </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Activity completion</h2>
               <ul className="text-[11px] space-y-1">
                 {completion.map((r) => (
-                  <li key={r.status} className="flex justify-between border-b border-slate-50 pb-1">
+                  <li key={r.status} className="flex justify-between border-b border-[var(--border)] pb-1">
                     <span>{r.status}</span>
                     <span className="font-semibold">{r.count}</span>
                   </li>
                 ))}
               </ul>
             </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Executive productivity</h2>
-              <pre className="text-[10px] bg-slate-50 p-2 rounded-lg overflow-auto max-h-56">{JSON.stringify(productivity, null, 2)}</pre>
+              <pre className="text-[10px] bg-[var(--muted)] p-2 rounded-lg overflow-auto max-h-56">{JSON.stringify(productivity, null, 2)}</pre>
             </section>
           </div>
         )}

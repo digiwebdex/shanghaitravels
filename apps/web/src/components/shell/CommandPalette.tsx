@@ -205,16 +205,16 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
         type="button"
         aria-label="Close search"
         onClick={onClose}
-        className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-[var(--navy-900)]/50 backdrop-blur-[2px]"
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-label={placeholder}
-        className="relative flex max-h-[62vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+        className="relative flex max-h-[62vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-lg)]"
       >
-        <div className="flex flex-shrink-0 items-center gap-2.5 border-b border-slate-100 px-4 py-3">
-          <Search size={15} className="flex-shrink-0 text-slate-400" />
+        <div className="flex flex-shrink-0 items-center gap-2.5 border-b border-[var(--border)] px-4 py-3">
+          <Search size={15} className="flex-shrink-0 text-[var(--muted-foreground)]" />
           <input
             ref={inputRef}
             value={query}
@@ -232,13 +232,15 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
               if (e.key === "Enter" && results[cursor]) go(results[cursor].to);
             }}
             placeholder="Search customers, bookings, passport refs, suppliers, leads…"
-            className="w-full bg-transparent text-[13px] text-slate-900 outline-none placeholder:text-slate-400"
+            className="w-full bg-transparent text-[13px] text-[var(--primary)] outline-none placeholder:text-[var(--muted-foreground)]"
           />
-          <kbd className="rounded border border-slate-200 px-1.5 py-0.5 text-[9px] font-bold text-slate-400">ESC</kbd>
+          <kbd className="rounded border border-[var(--border)] px-1.5 py-0.5 text-[9px] font-bold text-[var(--muted-foreground)]">
+            ESC
+          </kbd>
         </div>
         <div ref={listRef} className="flex-1 overflow-y-auto p-2">
           {!results.length ? (
-            <p className="px-3 py-6 text-center text-[12px] text-slate-400">No matches</p>
+            <p className="px-3 py-6 text-center text-[12px] text-[var(--muted-foreground)]">No matches</p>
           ) : (
             results.map((r, i) => (
               <button
@@ -248,20 +250,20 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                 onMouseEnter={() => setCursor(i)}
                 onClick={() => go(r.to)}
                 className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left ${
-                  i === cursor ? "bg-orange-50" : "hover:bg-slate-50"
+                  i === cursor ? "bg-[var(--orange-50)]" : "hover:bg-[var(--muted)]"
                 }`}
               >
-                <r.icon size={15} className="text-slate-400" />
+                <r.icon size={15} className="text-[var(--muted-foreground)]" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[12.5px] font-semibold text-slate-900">{r.label}</p>
-                  <p className="text-[10px] text-slate-400">{r.group}</p>
+                  <p className="truncate text-[12.5px] font-semibold text-[var(--primary)]">{r.label}</p>
+                  <p className="text-[10px] text-[var(--muted-foreground)]">{r.group}</p>
                 </div>
-                {i === cursor && <CornerDownLeft size={12} className="text-orange-500" />}
+                {i === cursor && <CornerDownLeft size={12} className="text-[var(--accent)]" />}
               </button>
             ))
           )}
         </div>
-        <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2 text-[10px] text-slate-400">
+        <div className="flex items-center justify-between border-t border-[var(--border)] px-4 py-2 text-[10px] text-[var(--muted-foreground)]">
           <span>Global search · modules + live entities</span>
           <span className="inline-flex items-center gap-1">
             <Quote size={10} /> invoices via Finance desk

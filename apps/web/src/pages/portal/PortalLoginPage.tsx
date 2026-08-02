@@ -45,18 +45,18 @@ export default function PortalLoginPage() {
 
   return (
     <div className="min-h-screen grid md:grid-cols-2">
-      <div className="hidden md:flex bg-slate-950 text-white p-10 flex-col justify-between">
+      <div className="hidden md:flex bg-[var(--navy-700)] text-white p-10 flex-col justify-between">
         <div>
-          <p className="text-amber-300 text-[11px] tracking-[0.2em] uppercase font-semibold">Shanghai Travels</p>
-          <h1 className="text-3xl font-bold mt-4 max-w-sm">Your travel bookings, documents, and payments in one place.</h1>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--orange-300)]">Shanghai Travels</p>
+          <h1 className="mt-4 max-w-sm text-3xl font-bold">Your travel bookings, documents, and payments in one place.</h1>
         </div>
-        <p className="text-white/50 text-[12px]">Customer self-service portal</p>
+        <p className="text-[12px] text-white/50">Customer self-service portal · TravelOS</p>
       </div>
-      <div className="flex items-center justify-center p-6">
-        <form onSubmit={onSubmit} className="w-full max-w-sm space-y-3 bg-white border border-slate-200 rounded-xl p-5">
-          <h2 className="text-[16px] font-bold text-slate-800">Sign in</h2>
+      <div className="flex items-center justify-center bg-[var(--background)] p-6">
+        <form onSubmit={onSubmit} className="w-full max-w-sm space-y-3 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow-card)]">
+          <h2 className="text-[16px] font-extrabold text-[var(--primary)]">Sign in</h2>
           <input
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-[12px]"
+            className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-[12px]"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -64,14 +64,14 @@ export default function PortalLoginPage() {
           {!otpMode ? (
             <input
               type="password"
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-[12px]"
+              className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-[12px]"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           ) : (
             <input
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-[12px]"
+              className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-[12px]"
               placeholder="OTP code"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
@@ -79,13 +79,17 @@ export default function PortalLoginPage() {
           )}
           {error && <p className="text-red-600 text-[11px]">{error}</p>}
           {info && <p className="text-emerald-700 text-[11px]">{info}</p>}
-          <button type="submit" className="w-full py-2 rounded-lg bg-amber-600 text-white text-[12px] font-bold">
+          <button
+            type="submit"
+            className="w-full rounded-xl py-2.5 text-[12px] font-bold text-white"
+            style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}
+          >
             {otpMode ? "Verify OTP" : "Sign in"}
           </button>
-          <button type="button" onClick={() => void sendOtp()} className="w-full text-[11px] text-amber-700 underline">
+          <button type="button" onClick={() => void sendOtp()} className="w-full text-[11px] text-[var(--accent)] underline">
             Use email OTP instead
           </button>
-          <div className="text-[11px] text-slate-500 flex justify-between">
+          <div className="text-[11px] text-[var(--muted-foreground)] flex justify-between">
             <Link to="/portal/customer/register">Register</Link>
             <Link to="/portal/customer/forgot">Forgot password</Link>
           </div>

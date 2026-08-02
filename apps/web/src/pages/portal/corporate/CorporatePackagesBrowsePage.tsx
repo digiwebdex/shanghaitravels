@@ -30,7 +30,7 @@ export default function CorporatePackagesBrowsePage() {
   return (
     <div className="p-6 max-w-6xl space-y-4">
       <h1 className="text-[18px] font-bold">Corporate packages</h1>
-      <p className="text-[12px] text-slate-500">Approved packages for employee travel requests.</p>
+      <p className="text-[12px] text-[var(--muted-foreground)]">Approved packages for employee travel requests.</p>
       <ErrorBanner message={error} />
       {loading ? (
         <InlineSpinner />

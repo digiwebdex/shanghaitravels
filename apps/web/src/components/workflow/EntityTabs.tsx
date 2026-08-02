@@ -36,7 +36,7 @@ export function EntityTabs({
             className={`shrink-0 rounded-2xl border px-3.5 py-2 text-[11.5px] font-bold transition-colors ${
               on
                 ? "border-[var(--accent)] bg-[var(--orange-50)] text-[var(--accent)]"
-                : "border-[var(--border)] bg-white text-[var(--primary)] hover:border-slate-300"
+                : "border-[var(--border)] bg-[var(--card)] text-[var(--primary)] hover:border-[var(--navy-200)]"
             }`}
           >
             {t.label}

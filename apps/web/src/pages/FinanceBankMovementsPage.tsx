@@ -86,7 +86,7 @@ export default function FinanceBankMovementsPage() {
         <SuccessBanner message={ok} />
 
         <Can perm="banking:manage">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div>
               <label className={labelCls}>Type</label>
               <select className={inputCls} value={type} onChange={(e) => setType(e.target.value)}>
@@ -142,10 +142,10 @@ export default function FinanceBankMovementsPage() {
         ) : rows.length === 0 ? (
           <EmptyState title="No movements" hint="Post a transfer or deposit to begin the bank book." />
         ) : (
-          <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+          <div className="bg-white rounded-xl border border-[var(--border)] overflow-x-auto">
             <table className="w-full text-left text-[11px]">
               <thead>
-                <tr className="text-[10px] uppercase text-slate-500 border-b">
+                <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b">
                   <th className="px-3 py-2">No</th>
                   <th className="px-3 py-2">Type</th>
                   <th className="px-3 py-2">From</th>
@@ -157,7 +157,7 @@ export default function FinanceBankMovementsPage() {
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr key={r.id} className="border-b border-slate-50">
+                  <tr key={r.id} className="border-b border-[var(--border)]">
                     <td className="px-3 py-2 font-semibold">{r.movementNo}</td>
                     <td className="px-3 py-2">{r.type}</td>
                     <td className="px-3 py-2">{r.fromBankAccount?.name || "—"}</td>

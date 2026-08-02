@@ -316,7 +316,7 @@ export default function AdminLayout() {
         <button
           type="button"
           onClick={() => setCollapsed((c) => !c)}
-          className="absolute -right-3 top-[68px] z-30 flex size-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-md transition-colors hover:bg-slate-50"
+          className="absolute -right-3 top-[68px] z-30 flex size-6 items-center justify-center rounded-full border border-[var(--border)] bg-white text-[var(--muted-foreground)] shadow-md transition-colors hover:bg-[var(--muted)]"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? <ChevronRight size={11} /> : <ChevronLeft size={11} />}
@@ -351,13 +351,13 @@ export default function AdminLayout() {
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <header
-          className="flex flex-shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-3 sm:px-4"
+          className="flex flex-shrink-0 items-center gap-2 border-b border-[var(--border)] bg-white px-3 sm:px-4"
           style={{ height: 56 }}
         >
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 lg:hidden"
+            className="rounded-lg p-2 text-[var(--muted-foreground)] transition-colors hover:bg-[var(--background)] lg:hidden"
             aria-label="Open navigation"
           >
             <Menu size={17} />
@@ -366,11 +366,11 @@ export default function AdminLayout() {
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
-            className="flex flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left transition-colors hover:border-slate-300 hover:bg-white sm:max-w-md"
+            className="flex flex-1 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-left transition-colors hover:border-slate-300 hover:bg-white sm:max-w-md"
           >
-            <Search size={13} className="flex-shrink-0 text-slate-400" />
-            <span className="flex-1 truncate text-[11.5px] text-slate-400">{searchPlaceholder}</span>
-            <kbd className="hidden flex-shrink-0 rounded border border-slate-200 bg-white px-1.5 py-[1px] font-mono text-[9px] font-semibold text-slate-400 sm:block">
+            <Search size={13} className="flex-shrink-0 text-[var(--muted-foreground)]" />
+            <span className="flex-1 truncate text-[11.5px] text-[var(--muted-foreground)]">{searchPlaceholder}</span>
+            <kbd className="hidden flex-shrink-0 rounded border border-[var(--border)] bg-white px-1.5 py-[1px] font-mono text-[9px] font-semibold text-[var(--muted-foreground)] sm:block">
               ⌘K
             </kbd>
           </button>
@@ -390,7 +390,7 @@ export default function AdminLayout() {
             <button
               type="button"
               onClick={() => navigate("/operations/notifications")}
-              className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100"
+              className="rounded-lg p-2 text-[var(--muted-foreground)] transition-colors hover:bg-[var(--background)]"
               aria-label="Notifications"
               title="Notifications"
             >
@@ -422,7 +422,7 @@ export default function AdminLayout() {
                   </button>
                 </div>
                 {createOpen && (
-                  <div className="absolute right-0 top-full z-50 mt-1.5 w-60 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
+                  <div className="absolute right-0 top-full z-50 mt-1.5 w-60 overflow-hidden rounded-xl border border-[var(--border)] bg-white py-1 shadow-xl">
                     {quickActions.map((a) => (
                       <button
                         key={a.id}
@@ -431,7 +431,7 @@ export default function AdminLayout() {
                           setCreateOpen(false);
                           navigate(a.to);
                         }}
-                        className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[11.5px] text-slate-600 transition-colors hover:bg-slate-50"
+                        className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[11.5px] text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)]"
                       >
                         <a.icon size={13} className="flex-shrink-0 text-orange-600" />
                         {a.label}
@@ -447,7 +447,7 @@ export default function AdminLayout() {
                 type="button"
                 onClick={() => setProfileOpen((o) => !o)}
                 className={`flex items-center gap-2 rounded-lg px-1.5 py-1.5 transition-colors ${
-                  profileOpen ? "bg-slate-100" : "hover:bg-slate-100"
+                  profileOpen ? "bg-[var(--background)]" : "hover:bg-[var(--background)]"
                 }`}
               >
                 <div
@@ -457,21 +457,21 @@ export default function AdminLayout() {
                   {initials}
                 </div>
                 <div className="hidden text-left xl:block">
-                  <p className="text-[11px] font-bold leading-none text-slate-800">
+                  <p className="text-[11px] font-bold leading-none text-[var(--primary)]">
                     {user?.fullName || user?.email}
                   </p>
-                  <p className="mt-1 text-[9px] leading-none text-slate-400">{user?.role}</p>
+                  <p className="mt-1 text-[9px] leading-none text-[var(--muted-foreground)]">{user?.role}</p>
                 </div>
                 <ChevronDown
                   size={10}
-                  className={`text-slate-400 transition-transform ${profileOpen ? "rotate-180" : ""}`}
+                  className={`text-[var(--muted-foreground)] transition-transform ${profileOpen ? "rotate-180" : ""}`}
                 />
               </button>
               {profileOpen && (
-                <div className="absolute right-0 top-full z-50 mt-1.5 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
-                  <div className="border-b border-slate-100 px-4 py-3.5">
-                    <p className="text-[12px] font-bold text-slate-800">{user?.fullName || "—"}</p>
-                    <p className="mt-0.5 text-[9.5px] text-slate-400">{user?.email}</p>
+                <div className="absolute right-0 top-full z-50 mt-1.5 w-56 overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-xl">
+                  <div className="border-b border-[var(--border)] px-4 py-3.5">
+                    <p className="text-[12px] font-bold text-[var(--primary)]">{user?.fullName || "—"}</p>
+                    <p className="mt-0.5 text-[9.5px] text-[var(--muted-foreground)]">{user?.email}</p>
                     <span className="mt-1.5 inline-block rounded-full border border-orange-200 bg-orange-100 px-2 py-0.5 text-[9px] font-bold text-orange-700">
                       {user?.role}
                     </span>
@@ -483,11 +483,11 @@ export default function AdminLayout() {
                         setProfileOpen(false);
                         navigate("/change-password");
                       }}
-                      className="flex w-full items-center gap-2.5 px-3 py-2 text-[11px] text-slate-600 transition-colors hover:bg-slate-50"
+                      className="flex w-full items-center gap-2.5 px-3 py-2 text-[11px] text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)]"
                     >
-                      <User size={12} className="text-slate-400" /> Change password
+                      <User size={12} className="text-[var(--muted-foreground)]" /> Change password
                     </button>
-                    <div className="mt-1 border-t border-slate-100 pt-1">
+                    <div className="mt-1 border-t border-[var(--border)] pt-1">
                       <button
                         type="button"
                         onClick={async () => {

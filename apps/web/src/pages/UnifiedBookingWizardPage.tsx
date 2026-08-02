@@ -17,7 +17,7 @@ import {
   inputCls,
   labelCls,
 } from "@/components/enterprise/Page";
-import { MasterJourneyStrip } from "@/components/workflow/MasterJourney";
+import { JourneyContinuity } from "@/components/workflow/MasterJourney";
 import { ScanDocumentPanel, ocrFullName, ocrGenderToForm } from "@/components/ocr/ScanDocumentPanel";
 import { bookingWorkspaceHref, SERVICE_OPTIONS, type ServiceKind } from "@/lib/workflow";
 import { toPoisha } from "@/lib/money";
@@ -257,7 +257,11 @@ export default function UnifiedBookingWizardPage() {
           { label: "New booking" },
         ]}
       />
-      <MasterJourneyStrip active={step >= 9 ? "finance" : step >= 6 ? "booking" : step >= 3 ? "documents" : "customer"} />
+      <JourneyContinuity
+        active={step >= 9 ? "finance" : step >= 6 ? "booking" : step >= 3 ? "documents" : "customer"}
+        previousHint={step === 0 ? "Customer selected or walk-in" : STEPS[Math.max(0, step - 1)]}
+        nextHint={step < STEPS.length - 1 ? STEPS[step + 1] : "Open Booking 360"}
+      />
 
       <Surface padded className="mb-4">
         <ol className="flex flex-wrap gap-1.5">
@@ -269,7 +273,7 @@ export default function UnifiedBookingWizardPage() {
                   ? "border-[var(--accent)] bg-[var(--orange-50)] text-[var(--accent)]"
                   : i < step
                     ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                    : "border-slate-200 text-slate-400"
+                    : "border-[var(--border)] text-[var(--muted-foreground)]"
               }`}
             >
               {i < step ? <Check size={10} /> : <span className="opacity-60">{i + 1}</span>}

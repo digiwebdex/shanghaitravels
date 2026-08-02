@@ -45,11 +45,11 @@ export default function FinanceAccountingPage() {
           <Link
             key={item.to}
             to={item.to}
-            className="rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-orange-300 hover:shadow-sm"
+            className="rounded-2xl border border-[var(--border)] bg-white p-5 transition-all hover:border-orange-300 hover:shadow-sm"
           >
             <item.icon size={18} className="text-orange-600" />
-            <p className="mt-3 text-[14px] font-bold text-slate-900">{item.label}</p>
-            <p className="mt-1 text-[11.5px] text-slate-500">{item.hint}</p>
+            <p className="mt-3 text-[14px] font-bold text-[var(--primary)]">{item.label}</p>
+            <p className="mt-1 text-[11.5px] text-[var(--muted-foreground)]">{item.hint}</p>
           </Link>
         ))}
       </div>

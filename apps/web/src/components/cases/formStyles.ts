@@ -1,15 +1,17 @@
+/** Shared case-form chrome — V4.2 brand tokens (no slate admin leftovers). */
 export const inputCls =
-  "w-full px-2.5 py-2 text-[11px] border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-amber-400";
-export const labelCls = "block text-[10px] font-bold text-slate-500 mb-1";
+  "w-full rounded-lg border border-[var(--border)] bg-[var(--input-background)] px-2.5 py-2 text-[11px] text-[var(--foreground)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(249,115,22,0.15)]";
+export const labelCls =
+  "mb-1 block text-[10px] font-bold uppercase tracking-[0.06em] text-[var(--muted-foreground)]";
 
 export const STATUS_PILL: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-600",
-  in_progress: "bg-amber-100 text-amber-800",
-  docs_required: "bg-orange-100 text-orange-800",
-  on_hold: "bg-slate-200 text-slate-700",
-  submitted: "bg-blue-100 text-blue-800",
-  approved: "bg-emerald-100 text-emerald-800",
-  rejected: "bg-red-100 text-red-800",
-  completed: "bg-emerald-50 text-emerald-700",
-  cancelled: "bg-slate-100 text-slate-500",
+  draft: "bg-[var(--navy-50)] text-[var(--primary)]",
+  in_progress: "bg-[var(--orange-100)] text-[var(--orange-700)]",
+  docs_required: "bg-[var(--orange-50)] text-[var(--accent)]",
+  on_hold: "bg-[var(--muted)] text-[var(--muted-foreground)]",
+  submitted: "bg-[var(--info-bg)] text-[var(--info-foreground)]",
+  approved: "bg-[var(--success-bg)] text-[var(--success-foreground)]",
+  rejected: "bg-[var(--error-bg)] text-[var(--error-foreground)]",
+  completed: "bg-[var(--success-bg)] text-[var(--success-foreground)]",
+  cancelled: "bg-[var(--muted)] text-[var(--muted-foreground)]",
 };

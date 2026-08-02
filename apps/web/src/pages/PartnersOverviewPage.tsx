@@ -24,17 +24,17 @@ export default function PartnersOverviewPage() {
           <Link
             key={c.to}
             to={c.to}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:border-amber-300 hover:shadow-sm"
+            className="rounded-2xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:border-[var(--accent)] hover:shadow-sm"
           >
-            <c.icon size={18} className="text-amber-600" />
-            <p className="mt-3 text-[14px] font-bold text-slate-900">{c.label}</p>
-            <p className="mt-1 text-[11.5px] text-slate-500">{c.hint}</p>
+            <c.icon size={18} className="text-[var(--accent)]" />
+            <p className="mt-3 text-[14px] font-bold text-[var(--primary)]">{c.label}</p>
+            <p className="mt-1 text-[11.5px] text-[var(--muted-foreground)]">{c.hint}</p>
           </Link>
         ))}
       </div>
       <Surface padded>
-        <p className="text-[12px] font-bold text-slate-800">Suppliers in your partner network</p>
-        <p className="mt-1 text-[11.5px] leading-relaxed text-slate-500">
+        <p className="text-[12px] font-bold text-[var(--primary)]">Suppliers in your partner network</p>
+        <p className="mt-1 text-[11.5px] leading-relaxed text-[var(--muted-foreground)]">
           Supplier records support accounts payable, package costing and supplier ledgers across bookings and
           finance.
         </p>

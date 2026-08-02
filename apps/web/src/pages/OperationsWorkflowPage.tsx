@@ -45,7 +45,7 @@ export default function OperationsWorkflowPage() {
   }
 
   const columns: Column<WorkflowTemplate>[] = [
-    { key: "name", header: "Template", render: (r) => <span className="font-semibold text-slate-800">{r.name}</span> },
+    { key: "name", header: "Template", render: (r) => <span className="font-semibold text-[var(--primary)]">{r.name}</span> },
     { key: "service", header: "Service", render: (r) => <Pill value={r.serviceType} tone="blue" /> },
     { key: "ver", header: "Version", render: (r) => `v${r.version}` },
     { key: "stages", header: "Stages", render: (r) => `${r.stages?.length ?? 0}` },
@@ -63,7 +63,7 @@ export default function OperationsWorkflowPage() {
           <Can perm="settings:manage">
             <button
               type="button"
-              className="text-[11px] font-semibold text-amber-700 hover:underline"
+              className="text-[11px] font-semibold text-[var(--accent)] hover:underline"
               onClick={() => void activate(r.id)}
             >
               Activate

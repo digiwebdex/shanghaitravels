@@ -139,25 +139,25 @@ export function CaseFinanceCard({
 
   if (!can("invoice:amount:read") && !can("invoice:manage")) {
     return (
-      <section className="bg-white rounded-xl border border-slate-200 p-4">
-        <h2 className="text-[12px] font-bold text-slate-800 mb-2">Invoice & payment</h2>
-        <p className="text-[11px] text-slate-400">Finance module hidden for your role.</p>
+      <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+        <h2 className="text-[12px] font-bold text-[var(--primary)] mb-2">Invoice & payment</h2>
+        <p className="text-[11px] text-[var(--muted-foreground)]">Finance module hidden for your role.</p>
       </section>
     );
   }
 
   return (
-    <section className="bg-white rounded-xl border border-slate-200 p-4">
-      <h2 className="text-[12px] font-bold text-slate-800 mb-3">Invoice & payment</h2>
+    <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+      <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Invoice & payment</h2>
 
       {activeInvoice && (
-        <div className="mb-3 px-3 py-2 rounded-lg bg-slate-50 border border-slate-100 text-[11px]">
-          <p className="font-bold text-slate-800">
+        <div className="mb-3 px-3 py-2 rounded-lg bg-[var(--muted)] border border-[var(--border)] text-[11px]">
+          <p className="font-bold text-[var(--primary)]">
             {activeInvoice.invoiceNo} · {fmtBDTPlain(activeInvoice.total)} ·{" "}
-            <span className="text-slate-500">{activeInvoice.status}</span>
+            <span className="text-[var(--muted-foreground)]">{activeInvoice.status}</span>
           </p>
           {activeInvoice.paid != null && (
-            <p className="text-slate-500 mt-0.5">
+            <p className="text-[var(--muted-foreground)] mt-0.5">
               Paid {fmtBDTPlain(activeInvoice.paid)} · Due {fmtBDTPlain(activeInvoice.due)}
             </p>
           )}
@@ -196,7 +196,7 @@ export function CaseFinanceCard({
             <button
               type="button"
               onClick={() => void issue()}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold"
+              className="px-3 py-1.5 rounded-lg border border-[var(--border)] text-[10.5px] font-semibold"
             >
               Issue invoice
             </button>
@@ -218,8 +218,8 @@ export function CaseFinanceCard({
       {(can("payment:record") || can("payment:refund")) &&
         activeInvoice &&
         ["issued", "partially_paid", "paid"].includes(activeInvoice.status) && (
-          <div className="border-t border-slate-100 pt-3 space-y-2">
-            <p className="text-[10px] font-bold text-slate-500 uppercase">Record payment / refund</p>
+          <div className="border-t border-[var(--border)] pt-3 space-y-2">
+            <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase">Record payment / refund</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
                 <label className={labelCls} htmlFor="fin-pay-amt">

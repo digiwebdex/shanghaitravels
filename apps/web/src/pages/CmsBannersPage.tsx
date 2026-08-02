@@ -75,7 +75,7 @@ export default function CmsBannersPage() {
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         <Can perm="cms:manage">
-          <form onSubmit={save} className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <form onSubmit={save} className="bg-white border border-[var(--border)] rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Code</label>
               <input className={inputCls} value={code} onChange={(e) => setCode(e.target.value)} />
@@ -110,11 +110,11 @@ export default function CmsBannersPage() {
         ) : (
           <ul className="space-y-2">
             {rows.map((b) => (
-              <li key={b.id} className="bg-white border border-slate-200 rounded-xl p-3 text-[11px]">
+              <li key={b.id} className="bg-white border border-[var(--border)] rounded-xl p-3 text-[11px]">
                 <div className="font-bold">
-                  {b.title} <span className="text-slate-400">· {b.placement}</span>
+                  {b.title} <span className="text-[var(--muted-foreground)]">· {b.placement}</span>
                 </div>
-                <div className="text-slate-600">{b.subtitle}</div>
+                <div className="text-[var(--muted-foreground)]">{b.subtitle}</div>
               </li>
             ))}
           </ul>

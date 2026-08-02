@@ -93,15 +93,15 @@ export default function CommsActivitiesPage() {
               ["Done", sla.done],
               ["Compliance", `${sla.compliancePct}%`],
             ].map(([k, v]) => (
-              <div key={String(k)} className="bg-white rounded-xl border border-slate-200 p-3 text-center">
-                <div className="text-[10px] text-slate-500 uppercase font-semibold">{k}</div>
-                <div className="text-[16px] font-bold text-slate-800">{v}</div>
+              <div key={String(k)} className="bg-white rounded-xl border border-[var(--border)] p-3 text-center">
+                <div className="text-[10px] text-[var(--muted-foreground)] uppercase font-semibold">{k}</div>
+                <div className="text-[16px] font-bold text-[var(--primary)]">{v}</div>
               </div>
             ))}
           </div>
         )}
         <Can perm="comms:manage">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
             <div className="sm:col-span-2">
               <label className={labelCls}>Subject *</label>
               <input className={inputCls} value={subject} onChange={(e) => setSubject(e.target.value)} required />
@@ -147,13 +147,13 @@ export default function CommsActivitiesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Open / recent</h2>
               <ul className="space-y-2 text-[11px]">
                 {rows.map((a) => (
-                  <li key={a.id} className="border-b border-slate-50 pb-2 flex flex-wrap gap-2 items-center">
+                  <li key={a.id} className="border-b border-[var(--border)] pb-2 flex flex-wrap gap-2 items-center">
                     <span className="font-bold">{a.subject}</span>
-                    <span className="text-slate-500">{a.status}</span>
+                    <span className="text-[var(--muted-foreground)]">{a.status}</span>
                     {a.dueAt && <span>due {new Date(a.dueAt).toLocaleString("en-BD")}</span>}
                     {a.slaDueAt && <span className="text-rose-700">SLA {new Date(a.slaDueAt).toLocaleString("en-BD")}</span>}
                     {a.recurrenceRule && a.recurrenceRule !== "none" && <span>{a.recurrenceRule}</span>}
@@ -180,18 +180,18 @@ export default function CommsActivitiesPage() {
                     )}
                   </li>
                 ))}
-                {rows.length === 0 && <li className="text-slate-400">No activities.</li>}
+                {rows.length === 0 && <li className="text-[var(--muted-foreground)]">No activities.</li>}
               </ul>
             </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Calendar (this month)</h2>
               <ul className="space-y-2 text-[11px]">
                 {calendar.map((a) => (
-                  <li key={a.id} className="border-b border-slate-50 pb-2">
+                  <li key={a.id} className="border-b border-[var(--border)] pb-2">
                     <span className="font-semibold">{a.dueAt ? new Date(a.dueAt).toLocaleDateString("en-BD") : "—"}</span> — {a.subject}
                   </li>
                 ))}
-                {calendar.length === 0 && <li className="text-slate-400">Nothing scheduled.</li>}
+                {calendar.length === 0 && <li className="text-[var(--muted-foreground)]">Nothing scheduled.</li>}
               </ul>
             </section>
           </div>

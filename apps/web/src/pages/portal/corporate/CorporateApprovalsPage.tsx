@@ -29,7 +29,7 @@ export default function CorporateApprovalsPage() {
   return (
     <div className="p-5 max-w-5xl space-y-4">
       <h1 className="text-[16px] font-bold">Pending approvals</h1>
-      <p className="text-[11px] text-slate-500">Review and decide on travel requests awaiting your approval.</p>
+      <p className="text-[11px] text-[var(--muted-foreground)]">Review and decide on travel requests awaiting your approval.</p>
       {error && <p className="text-red-600 text-[11px]">{error}</p>}
       {ok && <p className="text-emerald-700 text-[11px]">{ok}</p>}
       <ul className="bg-white border rounded-xl divide-y text-[11px]">
@@ -40,11 +40,11 @@ export default function CorporateApprovalsPage() {
                 <div className="font-semibold">
                   {String(r.referenceNo || r.travelRequest?.referenceNo || r.id)} · {String(r.serviceType || r.travelRequest?.serviceType)}
                 </div>
-                <div className="text-slate-500">
+                <div className="text-[var(--muted-foreground)]">
                   {String(r.employee?.fullName || r.travelRequest?.employee?.fullName || "—")} · {String(r.purpose || r.travelRequest?.purpose || "")}
                 </div>
               </div>
-              <span className="text-slate-400 shrink-0">{String(r.stepName || r.status || "pending")}</span>
+              <span className="text-[var(--muted-foreground)] shrink-0">{String(r.stepName || r.status || "pending")}</span>
             </div>
             <input
               className="w-full border rounded-lg px-3 py-1.5 text-[11px]"
@@ -62,7 +62,7 @@ export default function CorporateApprovalsPage() {
             </div>
           </li>
         ))}
-        {!rows.length && <li className="p-4 text-slate-400">No pending approvals</li>}
+        {!rows.length && <li className="p-4 text-[var(--muted-foreground)]">No pending approvals</li>}
       </ul>
     </div>
   );

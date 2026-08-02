@@ -60,7 +60,7 @@ export default function FinanceJournalDetailPage() {
     return (
       <div className="p-5">
         <ErrorBanner message={error || "Journal not found"} />
-        <Link to="/finance/journals" className="text-[11px] text-amber-600 font-semibold">
+        <Link to="/finance/journals" className="text-[11px] text-[var(--accent)] font-semibold">
           ← Journals
         </Link>
       </div>
@@ -71,11 +71,11 @@ export default function FinanceJournalDetailPage() {
     <div>
       <div className="p-5 max-w-[1100px] space-y-4">
         <div>
-          <Link to="/finance/journals" className="text-[10px] font-semibold text-amber-600 hover:underline">
+          <Link to="/finance/journals" className="text-[10px] font-semibold text-[var(--accent)] hover:underline">
             ← Journals
           </Link>
-          <h1 className="text-[16px] font-bold text-slate-800 mt-1">{je.journalNo}</h1>
-          <p className="text-[11px] text-slate-500">
+          <h1 className="text-[16px] font-bold text-[var(--primary)] mt-1">{je.journalNo}</h1>
+          <p className="text-[11px] text-[var(--muted-foreground)]">
             {je.type} · {je.status} · {new Date(je.entryDate).toLocaleDateString("en-BD")} · period{" "}
             {je.period?.code || "—"}
           </p>
@@ -84,12 +84,12 @@ export default function FinanceJournalDetailPage() {
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
 
-        <section className="bg-white rounded-xl border border-slate-200 p-4">
-          <p className="text-[11px] text-slate-600 mb-3">{je.memo || "No memo"}</p>
+        <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+          <p className="text-[11px] text-[var(--muted-foreground)] mb-3">{je.memo || "No memo"}</p>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b border-[var(--border)]">
                   <th className="px-3 py-2 font-bold">#</th>
                   <th className="px-3 py-2 font-bold">Account</th>
                   <th className="px-3 py-2 font-bold">Debit</th>
@@ -99,14 +99,14 @@ export default function FinanceJournalDetailPage() {
               </thead>
               <tbody>
                 {(je.lines || []).map((l) => (
-                  <tr key={l.id || l.lineNo} className="border-b border-slate-50 text-[11px]">
+                  <tr key={l.id || l.lineNo} className="border-b border-[var(--border)] text-[11px]">
                     <td className="px-3 py-2">{l.lineNo}</td>
                     <td className="px-3 py-2 font-semibold">
                       {l.glAccount ? `${l.glAccount.code} · ${l.glAccount.name}` : l.glAccountId.slice(0, 8)}
                     </td>
                     <td className="px-3 py-2">{l.debitPoisha ? formatBdt(l.debitPoisha) : "—"}</td>
                     <td className="px-3 py-2">{l.creditPoisha ? formatBdt(l.creditPoisha) : "—"}</td>
-                    <td className="px-3 py-2 text-slate-500">{l.memo || "—"}</td>
+                    <td className="px-3 py-2 text-[var(--muted-foreground)]">{l.memo || "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -124,13 +124,13 @@ export default function FinanceJournalDetailPage() {
           </div>
         </section>
 
-        <section className="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap gap-2">
+        <section className="bg-white rounded-xl border border-[var(--border)] p-4 flex flex-wrap gap-2">
           <Can perm="journal:create">
             {(je.status === "draft" || je.status === "rejected") && (
               <button
                 type="button"
                 disabled={busy}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold disabled:opacity-50"
+                className="px-3 py-1.5 rounded-lg border border-[var(--border)] text-[10.5px] font-semibold disabled:opacity-50"
                 onClick={() => run(() => glApi.submitJournal(je.id), "Submitted for approval")}
               >
                 Submit for approval
@@ -174,7 +174,7 @@ export default function FinanceJournalDetailPage() {
               <button
                 type="button"
                 disabled={busy}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold disabled:opacity-50"
+                className="px-3 py-1.5 rounded-lg border border-[var(--border)] text-[10.5px] font-semibold disabled:opacity-50"
                 onClick={() => run(() => glApi.voidJournal(je.id, "Voided in UI"), "Voided")}
               >
                 Void

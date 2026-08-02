@@ -80,7 +80,7 @@ export default function PortalProfilePage() {
             className="flex gap-2 mt-2"
           >
             <input className="border rounded px-2 py-1 text-[11px] flex-1" value={passportNo} onChange={(e) => setPassportNo(e.target.value)} placeholder="Passport no" />
-            <button className="text-[11px] text-amber-700 font-semibold">Add</button>
+            <button className="text-[11px] text-[var(--accent)] font-semibold">Add</button>
           </form>
         </Card>
         <Card title="Family members" items={family.map((f) => `${f.fullName}${f.relationship ? " · " + f.relationship : ""}`)}>
@@ -98,7 +98,7 @@ export default function PortalProfilePage() {
             className="flex gap-2 mt-2"
           >
             <input className="border rounded px-2 py-1 text-[11px] flex-1" value={famName} onChange={(e) => setFamName(e.target.value)} placeholder="Name" />
-            <button className="text-[11px] text-amber-700 font-semibold">Add</button>
+            <button className="text-[11px] text-[var(--accent)] font-semibold">Add</button>
           </form>
         </Card>
         <Card title="Saved travellers" items={travellers.map((t) => t.fullName)}>
@@ -116,7 +116,7 @@ export default function PortalProfilePage() {
             className="flex gap-2 mt-2"
           >
             <input className="border rounded px-2 py-1 text-[11px] flex-1" value={travName} onChange={(e) => setTravName(e.target.value)} placeholder="Name" />
-            <button className="text-[11px] text-amber-700 font-semibold">Add</button>
+            <button className="text-[11px] text-[var(--accent)] font-semibold">Add</button>
           </form>
         </Card>
         <Card title="Emergency contacts" items={emergency.map((e) => `${e.fullName} · ${e.phone}`)}>
@@ -136,7 +136,7 @@ export default function PortalProfilePage() {
           >
             <input className="border rounded px-2 py-1 text-[11px] flex-1" value={emName} onChange={(e) => setEmName(e.target.value)} placeholder="Name" />
             <input className="border rounded px-2 py-1 text-[11px] flex-1" value={emPhone} onChange={(e) => setEmPhone(e.target.value)} placeholder="Phone" />
-            <button className="text-[11px] text-amber-700 font-semibold">Add</button>
+            <button className="text-[11px] text-[var(--accent)] font-semibold">Add</button>
           </form>
         </Card>
       </div>
@@ -152,7 +152,7 @@ function Card({ title, items, children }: { title: string; items: string[]; chil
         {items.map((x, i) => (
           <li key={i}>{x}</li>
         ))}
-        {!items.length && <li className="text-slate-400">None yet</li>}
+        {!items.length && <li className="text-[var(--muted-foreground)]">None yet</li>}
       </ul>
       {children}
     </section>

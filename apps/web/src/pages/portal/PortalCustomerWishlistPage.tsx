@@ -40,7 +40,7 @@ export default function PortalCustomerWishlistPage() {
       {loading ? (
         <InlineSpinner />
       ) : !rows.length ? (
-        <p className="text-[12px] text-slate-500">No saved packages.</p>
+        <p className="text-[12px] text-[var(--muted-foreground)]">No saved packages.</p>
       ) : (
         <ul className="space-y-2">
           {rows.map((p) => (
@@ -49,7 +49,7 @@ export default function PortalCustomerWishlistPage() {
                 <Link to={`/portal/customer/packages/${p.slug}/book`} className="font-bold text-amber-800">
                   {p.name}
                 </Link>
-                <p className="text-slate-500">{formatPrice(displayPricePoisha(p))}</p>
+                <p className="text-[var(--muted-foreground)]">{formatPrice(displayPricePoisha(p))}</p>
               </div>
               <button type="button" className="text-red-600" onClick={() => void remove(p.id)}>
                 Remove

@@ -17,7 +17,7 @@ export default function AgentBookingDetailPage() {
 
   return (
     <div className="p-5 max-w-3xl space-y-4">
-      <Link className="text-[11px] text-amber-700 underline" to="/portal/agent/bookings">
+      <Link className="text-[11px] text-[var(--accent)] underline" to="/portal/agent/bookings">
         ← Bookings
       </Link>
       {error && <p className="text-red-600 text-[12px]">{error}</p>}
@@ -26,7 +26,7 @@ export default function AgentBookingDetailPage() {
           <h1 className="text-[16px] font-bold">
             {app.referenceNo} · {app.serviceType}
           </h1>
-          <p className="text-[12px] text-slate-600">
+          <p className="text-[12px] text-[var(--muted-foreground)]">
             {app.customer?.fullName} · {app.customer?.phone} · {app.status}
           </p>
           <section className="bg-white border rounded-xl p-4">

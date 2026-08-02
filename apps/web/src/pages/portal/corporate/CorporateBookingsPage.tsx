@@ -17,10 +17,10 @@ export default function CorporateBookingsPage() {
   return (
     <div className="p-5 max-w-5xl space-y-4">
       <h1 className="text-[16px] font-bold">Bookings</h1>
-      <p className="text-[11px] text-slate-500">ERP bookings linked to approved corporate travel requests.</p>
+      <p className="text-[11px] text-[var(--muted-foreground)]">ERP bookings linked to approved corporate travel requests.</p>
       {error && <p className="text-red-600 text-[11px]">{error}</p>}
       <table className="w-full text-[11px] bg-white border rounded-xl overflow-hidden">
-        <thead className="bg-slate-50 text-slate-500">
+        <thead className="bg-[var(--muted)] text-[var(--muted-foreground)]">
           <tr>
             <th className="text-left p-2">Reference</th>
             <th className="text-left p-2">Service</th>
@@ -32,7 +32,7 @@ export default function CorporateBookingsPage() {
           {rows.map((r) => (
             <tr key={String(r.id)} className="border-t">
               <td className="p-2">
-                <Link className="text-teal-700 underline font-semibold" to={`/portal/corporate/bookings/${r.id}`}>
+                <Link className="text-[var(--accent)] underline font-semibold" to={`/portal/corporate/bookings/${r.id}`}>
                   {String(r.referenceNo)}
                 </Link>
               </td>
@@ -43,7 +43,7 @@ export default function CorporateBookingsPage() {
           ))}
           {!rows.length && (
             <tr>
-              <td colSpan={4} className="p-4 text-slate-400 text-center">
+              <td colSpan={4} className="p-4 text-[var(--muted-foreground)] text-center">
                 No bookings yet
               </td>
             </tr>

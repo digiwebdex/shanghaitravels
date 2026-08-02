@@ -67,42 +67,42 @@ export default function TransportReportsPage() {
                 { label: "Cancelled", value: cancelled },
                 { label: "Statuses tracked", value: byStatus.length },
               ].map((c) => (
-                <div key={c.label} className="bg-white rounded-xl border border-slate-200 p-4">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">{c.label}</p>
-                  <p className="text-[22px] font-bold text-slate-800 mt-1">{c.value}</p>
+                <div key={c.label} className="bg-white rounded-xl border border-[var(--border)] p-4">
+                  <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase">{c.label}</p>
+                  <p className="text-[22px] font-bold text-[var(--primary)] mt-1">{c.value}</p>
                 </div>
               ))}
             </div>
 
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold text-slate-800 mb-3">By status</h2>
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+              <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">By status</h2>
               {byStatus.length === 0 ? (
-                <p className="text-[11px] text-slate-400">No transport cases yet.</p>
+                <p className="text-[11px] text-[var(--muted-foreground)]">No transport cases yet.</p>
               ) : (
                 <ul className="space-y-1.5">
                   {byStatus.map(([status, n]) => (
-                    <li key={status} className="flex justify-between text-[11px] border-b border-slate-50 pb-1.5">
-                      <span className="font-semibold text-slate-700">{status}</span>
-                      <span className="text-slate-500">{n}</span>
+                    <li key={status} className="flex justify-between text-[11px] border-b border-[var(--border)] pb-1.5">
+                      <span className="font-semibold text-[var(--primary)]">{status}</span>
+                      <span className="text-[var(--muted-foreground)]">{n}</span>
                     </li>
                   ))}
                 </ul>
               )}
             </section>
 
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold text-slate-800 mb-3">Recent bookings</h2>
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+              <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Recent bookings</h2>
               <ul className="space-y-2">
                 {rows.slice(0, 15).map((a) => (
-                  <li key={a.id} className="text-[11px] flex flex-wrap gap-x-3 gap-y-1 border-b border-slate-50 pb-2">
-                    <Link to={`/transport/${a.id}`} className="font-bold text-amber-700 hover:underline">
+                  <li key={a.id} className="text-[11px] flex flex-wrap gap-x-3 gap-y-1 border-b border-[var(--border)] pb-2">
+                    <Link to={`/transport/${a.id}`} className="font-bold text-[var(--accent)] hover:underline">
                       {a.referenceNo}
                     </Link>
-                    <span className="text-slate-600">{a.customer?.fullName || "—"}</span>
-                    <span className="text-slate-400">
+                    <span className="text-[var(--muted-foreground)]">{a.customer?.fullName || "—"}</span>
+                    <span className="text-[var(--muted-foreground)]">
                       stage {a.currentStage}/{a.totalStages}
                     </span>
-                    <span className="text-slate-500">{a.status}</span>
+                    <span className="text-[var(--muted-foreground)]">{a.status}</span>
                   </li>
                 ))}
               </ul>

@@ -41,7 +41,7 @@ export default function CorporateFinancePage() {
                   <span>{formatPoisha(i.total, i.currency)}</span>
                 </li>
               ))}
-              {!data.invoices?.length && <li className="text-slate-400">No invoices</li>}
+              {!data.invoices?.length && <li className="text-[var(--muted-foreground)]">No invoices</li>}
             </ul>
           </section>
           <section className="bg-white border rounded-xl p-4">
@@ -53,7 +53,7 @@ export default function CorporateFinancePage() {
                   <span>{formatPoisha(s.balance ?? s.total)}</span>
                 </li>
               ))}
-              {!data.statements?.length && <li className="text-slate-400">No statements</li>}
+              {!data.statements?.length && <li className="text-[var(--muted-foreground)]">No statements</li>}
             </ul>
           </section>
         </>
@@ -65,7 +65,7 @@ export default function CorporateFinancePage() {
 function Box({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-white border rounded-xl p-3">
-      <div className="text-[10px] text-slate-500 uppercase">{label}</div>
+      <div className="text-[10px] text-[var(--muted-foreground)] uppercase">{label}</div>
       <div className="font-bold mt-1">{value}</div>
     </div>
   );

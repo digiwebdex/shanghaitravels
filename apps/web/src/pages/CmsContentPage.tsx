@@ -69,7 +69,7 @@ export default function CmsContentPage() {
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         <Can perm="cms:manage">
-          <form onSubmit={save} className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <form onSubmit={save} className="bg-white border border-[var(--border)] rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Type</label>
               <select className={inputCls} value={type} onChange={(e) => setType(e.target.value)}>
@@ -104,8 +104,8 @@ export default function CmsContentPage() {
             <InlineSpinner />
           </div>
         ) : (
-          <table className="w-full text-[11px] bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <thead className="bg-slate-50 text-slate-500">
+          <table className="w-full text-[11px] bg-white border border-[var(--border)] rounded-xl overflow-hidden">
+            <thead className="bg-[var(--muted)] text-[var(--muted-foreground)]">
               <tr>
                 <th className="text-left p-2">Type</th>
                 <th className="text-left p-2">Title</th>
@@ -115,7 +115,7 @@ export default function CmsContentPage() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} className="border-t border-slate-100">
+                <tr key={r.id} className="border-t border-[var(--border)]">
                   <td className="p-2">{r.type}</td>
                   <td className="p-2 font-semibold">{r.title}</td>
                   <td className="p-2">{r.status}</td>

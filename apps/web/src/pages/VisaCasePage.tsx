@@ -198,7 +198,7 @@ export default function VisaCasePage() {
     return (
       <div className="p-5">
         <ErrorBanner message={error || "Case not found"} />
-        <Link to="/visa" className="text-[11px] text-amber-600 font-semibold">
+        <Link to="/visa" className="text-[11px] text-[var(--accent)] font-semibold">
           ← Visa cases
         </Link>
       </div>
@@ -218,7 +218,7 @@ export default function VisaCasePage() {
         breadcrumb={[{ label: "Visa Services", to: "/visa" }, { label: app.referenceNo }]}
         actions={
           <div className="flex flex-col items-end gap-1 text-[11px] text-[var(--muted-foreground)]">
-            <span className={`text-[9.5px] font-bold px-2 py-0.5 rounded ${STATUS_PILL[app.status] || "bg-slate-100"}`}>
+            <span className={`text-[9.5px] font-bold px-2 py-0.5 rounded ${STATUS_PILL[app.status] || "bg-[var(--background)]"}`}>
               {app.status}
             </span>
             <p>
@@ -239,8 +239,8 @@ export default function VisaCasePage() {
       <SuccessBanner message={ok} />
 
         {/* Processing / status tracking */}
-        <section className="bg-white rounded-xl border border-slate-200 p-4">
-          <h2 className="text-[12px] font-bold text-slate-800 mb-3">Processing & status tracking</h2>
+        <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+          <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Processing & status tracking</h2>
           {timelineStages.length > 0 ? (
             <CaseTimeline
               stages={timelineStages}
@@ -262,17 +262,17 @@ export default function VisaCasePage() {
                 ) : s.status === "active" ? (
                   <Circle size={14} className="text-amber-500 fill-amber-200" />
                 ) : (
-                  <Circle size={14} className="text-slate-300" />
+                  <Circle size={14} className="text-[var(--navy-200)]" />
                 )}
-                <span className="font-semibold text-slate-700">
+                <span className="font-semibold text-[var(--primary)]">
                   {s.stageNo}. {s.name}
                 </span>
-                <span className="text-slate-400">· {s.status}</span>
+                <span className="text-[var(--muted-foreground)]">· {s.status}</span>
               </div>
             ))}
           </div>
 
-          <div className="mt-4 border-t border-slate-100 pt-3">
+          <div className="mt-4 border-t border-[var(--border)] pt-3">
             <label className={labelCls}>Note for current stage (optional)</label>
             <input className={inputCls} value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. COVA ref · CVASC appointment…" />
             <div className="flex flex-wrap gap-2 mt-3">
@@ -281,7 +281,7 @@ export default function VisaCasePage() {
                   type="button"
                   disabled={busy || !note.trim()}
                   onClick={() => run(() => applicationsApi.note(app.id, note.trim()), "Note saved")}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold disabled:opacity-50"
+                  className="px-3 py-1.5 rounded-lg border border-[var(--border)] text-[10.5px] font-semibold disabled:opacity-50"
                 >
                   Save note
                 </button>
@@ -337,7 +337,7 @@ export default function VisaCasePage() {
                       "Case marked completed (delivery / archive)",
                     )
                   }
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold disabled:opacity-50"
+                  className="px-3 py-1.5 rounded-lg border border-[var(--border)] text-[10.5px] font-semibold disabled:opacity-50"
                 >
                   Mark delivered / archive
                 </button>
@@ -365,9 +365,9 @@ export default function VisaCasePage() {
         />
 
         {/* Checklist — server-persisted per case */}
-        <section className="bg-white rounded-xl border border-slate-200 p-4">
-          <h2 className="text-[12px] font-bold text-slate-800 mb-1">Document checklist</h2>
-          <p className="text-[10px] text-slate-400 mb-3">
+        <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+          <h2 className="text-[12px] font-bold text-[var(--primary)] mb-1">Document checklist</h2>
+          <p className="text-[10px] text-[var(--muted-foreground)] mb-3">
             China visa · {visaTypeKey} · synced for all staff. Uploads remain the file record.
           </p>
           <ul className="space-y-1.5">
@@ -375,7 +375,7 @@ export default function VisaCasePage() {
               const meta = checklistMeta[item];
               return (
                 <li key={item}>
-                  <label className="flex items-start gap-2 text-[11px] text-slate-700 cursor-pointer">
+                  <label className="flex items-start gap-2 text-[11px] text-[var(--primary)] cursor-pointer">
                     <input
                       type="checkbox"
                       className="mt-0.5"
@@ -400,7 +400,7 @@ export default function VisaCasePage() {
                     <span className="flex-1">
                       <span>{item}</span>
                       {checked[item] && meta?.checkedByName && (
-                        <span className="block text-[9px] text-slate-400 mt-0.5">
+                        <span className="block text-[9px] text-[var(--muted-foreground)] mt-0.5">
                           ✓ {meta.checkedByName}
                           {meta.checkedAt
                             ? ` · ${new Date(meta.checkedAt).toLocaleString("en-BD")}`
@@ -435,23 +435,23 @@ export default function VisaCasePage() {
         />
 
         {/* History */}
-        <section className="bg-white rounded-xl border border-slate-200 p-4">
-          <h2 className="text-[12px] font-bold text-slate-800 mb-3">
+        <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+          <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">
             History ({(journey?.events || app.events || []).length})
           </h2>
           {(journey?.events || app.events || []).length === 0 ? (
-            <p className="text-[11px] text-slate-400">No history yet.</p>
+            <p className="text-[11px] text-[var(--muted-foreground)]">No history yet.</p>
           ) : (
             <ul className="space-y-2">
               {(journey?.events || app.events || []).map((ev) => (
-                <li key={ev.id} className="flex gap-3 text-[11px] border-b border-slate-50 pb-2">
-                  <span className="text-slate-400 flex-shrink-0 w-[140px]">
+                <li key={ev.id} className="flex gap-3 text-[11px] border-b border-[var(--border)] pb-2">
+                  <span className="text-[var(--muted-foreground)] flex-shrink-0 w-[140px]">
                     {new Date(ev.createdAt).toLocaleString()}
                   </span>
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 h-fit">
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--background)] text-[var(--muted-foreground)] h-fit">
                     {ev.type}
                   </span>
-                  <span className="text-slate-700">{ev.message}</span>
+                  <span className="text-[var(--primary)]">{ev.message}</span>
                 </li>
               ))}
             </ul>
@@ -514,8 +514,8 @@ function VisaDetailCard({
   }
 
   return (
-    <section className="bg-white rounded-xl border border-slate-200 p-4">
-      <h2 className="text-[12px] font-bold text-slate-800 mb-3">Visa details</h2>
+    <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+      <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Visa details</h2>
       <form onSubmit={save} className="space-y-2">
         <div>
           <label className={labelCls}>Visa type</label>
@@ -577,9 +577,9 @@ function PassportOcrCard({
   setOk: (s: string) => void;
 }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4 space-y-2">
-      <h2 className="text-[12px] font-bold text-slate-800">Passport & OCR</h2>
-      <p className="text-[10px] text-slate-500">
+    <section className="rounded-xl border border-[var(--border)] bg-white p-4 space-y-2">
+      <h2 className="text-[12px] font-bold text-[var(--primary)]">Passport & OCR</h2>
+      <p className="text-[10px] text-[var(--muted-foreground)]">
         Upload → OCR → review confidence → save passport to customer and case documents.
       </p>
       <ScanDocumentPanel

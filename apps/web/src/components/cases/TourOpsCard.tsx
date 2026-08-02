@@ -57,18 +57,18 @@ export function TourOpsCard({
   const startGate = canStartTour(stages);
 
   return (
-    <section className="bg-white rounded-xl border border-slate-200 p-4" aria-labelledby="tour-ops-heading">
-      <h2 id="tour-ops-heading" className="text-[12px] font-bold text-slate-800 mb-1">
+    <section className="bg-white rounded-xl border border-[var(--border)] p-4" aria-labelledby="tour-ops-heading">
+      <h2 id="tour-ops-heading" className="text-[12px] font-bold text-[var(--primary)] mb-1">
         Tour operations
       </h2>
-      <p className="text-[10px] text-slate-400 mb-3">
+      <p className="text-[10px] text-[var(--muted-foreground)] mb-3">
         Customer quotation, supplier costing, package voucher, modify, cancel — curated supplier products.
       </p>
 
       <div className="space-y-4">
         <Can perm="application:note">
-          <div className="border-b border-slate-100 pb-3">
-            <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Customer quotation</p>
+          <div className="border-b border-[var(--border)] pb-3">
+            <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase mb-2">Customer quotation</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
                 <label className={labelCls} htmlFor="tour-quote-amt">
@@ -102,7 +102,7 @@ export function TourOpsCard({
             <button
               type="button"
               disabled={busy || closed || !quoteAmt.trim()}
-              className="mt-2 px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold disabled:opacity-50"
+              className="mt-2 px-3 py-1.5 rounded-lg border border-[var(--border)] text-[10.5px] font-semibold disabled:opacity-50"
               onClick={() =>
                 run(async () => {
                   const msg = buildTourQuoteNote(quoteAmt, quoteNote);
@@ -119,13 +119,13 @@ export function TourOpsCard({
         </Can>
 
         <Can perm="application:advance-stage">
-          <div className="border-b border-slate-100 pb-3">
-            <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Package confirmation</p>
-            <p className="text-[10px] text-slate-400 mb-2">
+          <div className="border-b border-[var(--border)] pb-3">
+            <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase mb-1">Package confirmation</p>
+            <p className="text-[10px] text-[var(--muted-foreground)] mb-2">
               Requires confirmation / voucher number, then advances to “{CONFIRM_STAGE_NAME}”.
             </p>
             {!confirmGate.ok && (
-              <p className="text-[10px] text-amber-700 mb-2" role="status">
+              <p className="text-[10px] text-[var(--accent)] mb-2" role="status">
                 {confirmGate.reason}
               </p>
             )}
@@ -151,20 +151,20 @@ export function TourOpsCard({
         </Can>
 
         <Can perm="application:advance-stage">
-          <div className="border-b border-slate-100 pb-3">
-            <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Package voucher / departure</p>
-            <p className="text-[10px] text-slate-400 mb-2">
+          <div className="border-b border-[var(--border)] pb-3">
+            <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase mb-1">Package voucher / departure</p>
+            <p className="text-[10px] text-[var(--muted-foreground)] mb-2">
               Advances to “{IN_PROGRESS_STAGE_NAME}”. Attach voucher PDF under Documents.
             </p>
             {!startGate.ok && (
-              <p className="text-[10px] text-amber-700 mb-2" role="status">
+              <p className="text-[10px] text-[var(--accent)] mb-2" role="status">
                 {startGate.reason}
               </p>
             )}
             <button
               type="button"
               disabled={busy || closed || !startGate.ok}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold disabled:opacity-50"
+              className="px-3 py-1.5 rounded-lg border border-[var(--border)] text-[10.5px] font-semibold disabled:opacity-50"
               onClick={() =>
                 run(
                   () =>
@@ -182,8 +182,8 @@ export function TourOpsCard({
         </Can>
 
         <Can perm="application:note">
-          <div className="border-b border-slate-100 pb-3">
-            <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Modification</p>
+          <div className="border-b border-[var(--border)] pb-3">
+            <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase mb-2">Modification</p>
             <label className={labelCls} htmlFor="tour-mod">
               Change details
             </label>
@@ -198,7 +198,7 @@ export function TourOpsCard({
             <button
               type="button"
               disabled={busy || closed || !modNote.trim()}
-              className="mt-2 px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold disabled:opacity-50"
+              className="mt-2 px-3 py-1.5 rounded-lg border border-[var(--border)] text-[10.5px] font-semibold disabled:opacity-50"
               onClick={() =>
                 run(async () => {
                   const msg = buildTourModificationNote(modNote);
@@ -214,8 +214,8 @@ export function TourOpsCard({
         </Can>
 
         <Can perm="application:note">
-          <div className="border-b border-slate-100 pb-3">
-            <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Refund request</p>
+          <div className="border-b border-[var(--border)] pb-3">
+            <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase mb-2">Refund request</p>
             <label className={labelCls} htmlFor="tour-refund">
               Refund notes
             </label>
@@ -230,7 +230,7 @@ export function TourOpsCard({
             <button
               type="button"
               disabled={busy || closed || !refundNote.trim()}
-              className="mt-2 px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold disabled:opacity-50"
+              className="mt-2 px-3 py-1.5 rounded-lg border border-[var(--border)] text-[10.5px] font-semibold disabled:opacity-50"
               onClick={() =>
                 run(async () => {
                   const msg = buildTourRefundRequestNote(refundNote);
@@ -247,7 +247,7 @@ export function TourOpsCard({
 
         <Can perm="application:update">
           <div>
-            <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Cancellation</p>
+            <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase mb-2">Cancellation</p>
             <label className={labelCls} htmlFor="tour-cancel">
               Cancel reason
             </label>

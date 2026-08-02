@@ -45,7 +45,7 @@ export default function PortalReportsPage() {
             <ul className="text-[11px] space-y-1 max-h-80 overflow-auto">
               {(data.downloadableDocuments || []).map((d: any) => (
                 <li key={d.id}>
-                  <a className="text-amber-700 underline" href={customerPortalApi.downloadUrl(d.id)} target="_blank" rel="noreferrer">
+                  <a className="text-[var(--accent)] underline" href={customerPortalApi.downloadUrl(d.id)} target="_blank" rel="noreferrer">
                     {d.fileName}
                   </a>
                 </li>

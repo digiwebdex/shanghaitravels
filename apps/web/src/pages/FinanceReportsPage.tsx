@@ -65,19 +65,19 @@ export default function FinanceReportsPage() {
           </div>
         ) : (
           <>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold text-slate-800 mb-3">Trial Balance</h2>
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+              <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Trial Balance</h2>
               {!tb || tb.rows.length === 0 ? (
-                <p className="text-[11px] text-slate-400">No posted journals yet.</p>
+                <p className="text-[11px] text-[var(--muted-foreground)]">No posted journals yet.</p>
               ) : (
                 <>
-                  <p className="text-[11px] mb-2 text-slate-600">
+                  <p className="text-[11px] mb-2 text-[var(--muted-foreground)]">
                     Totals {formatBdt(tb.totalDebitPoisha)} / {formatBdt(tb.totalCreditPoisha)} ·{" "}
                     {tb.balanced ? "Balanced ✓" : "OUT OF BALANCE"}
                   </p>
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                      <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b border-[var(--border)]">
                         <th className="px-3 py-2 font-bold">Code</th>
                         <th className="px-3 py-2 font-bold">Name</th>
                         <th className="px-3 py-2 font-bold">Debit</th>
@@ -86,7 +86,7 @@ export default function FinanceReportsPage() {
                     </thead>
                     <tbody>
                       {tb.rows.map((r) => (
-                        <tr key={r.code} className="border-b border-slate-50 text-[11px]">
+                        <tr key={r.code} className="border-b border-[var(--border)] text-[11px]">
                           <td className="px-3 py-2 font-semibold">{r.code}</td>
                           <td className="px-3 py-2">{r.name}</td>
                           <td className="px-3 py-2">{r.debitPoisha ? formatBdt(r.debitPoisha) : "—"}</td>
@@ -99,35 +99,35 @@ export default function FinanceReportsPage() {
               )}
             </section>
 
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold text-slate-800 mb-3">Journal Register</h2>
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+              <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Journal Register</h2>
               {register.length === 0 ? (
-                <p className="text-[11px] text-slate-400">No journals.</p>
+                <p className="text-[11px] text-[var(--muted-foreground)]">No journals.</p>
               ) : (
                 <ul className="space-y-2">
                   {register.slice(0, 30).map((j) => (
-                    <li key={j.id} className="text-[11px] flex flex-wrap gap-x-3 border-b border-slate-50 pb-2">
-                      <Link to={`/finance/journals/${j.id}`} className="font-bold text-amber-700 hover:underline">
+                    <li key={j.id} className="text-[11px] flex flex-wrap gap-x-3 border-b border-[var(--border)] pb-2">
+                      <Link to={`/finance/journals/${j.id}`} className="font-bold text-[var(--accent)] hover:underline">
                         {j.journalNo}
                       </Link>
-                      <span className="text-slate-500">{j.status}</span>
-                      <span className="text-slate-600">{formatBdt(j.totalDebitPoisha)}</span>
-                      <span className="text-slate-400">{j.type}</span>
+                      <span className="text-[var(--muted-foreground)]">{j.status}</span>
+                      <span className="text-[var(--muted-foreground)]">{formatBdt(j.totalDebitPoisha)}</span>
+                      <span className="text-[var(--muted-foreground)]">{j.type}</span>
                     </li>
                   ))}
                 </ul>
               )}
             </section>
 
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold text-slate-800 mb-3">Chart of Accounts</h2>
-              <p className="text-[11px] text-slate-500 mb-2">{accounts.length} accounts</p>
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+              <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Chart of Accounts</h2>
+              <p className="text-[11px] text-[var(--muted-foreground)] mb-2">{accounts.length} accounts</p>
               <ul className="space-y-1 max-h-64 overflow-y-auto">
                 {accounts.map((a) => (
-                  <li key={a.id} className="text-[11px] flex gap-2 border-b border-slate-50 pb-1">
+                  <li key={a.id} className="text-[11px] flex gap-2 border-b border-[var(--border)] pb-1">
                     <span className="font-semibold w-16">{a.code}</span>
-                    <span className="text-slate-700 flex-1">{a.name}</span>
-                    <span className="text-slate-400">{a.type}</span>
+                    <span className="text-[var(--primary)] flex-1">{a.name}</span>
+                    <span className="text-[var(--muted-foreground)]">{a.type}</span>
                   </li>
                 ))}
               </ul>

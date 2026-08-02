@@ -86,7 +86,7 @@ export default function AdminUsersPage() {
   }
 
   const columns: Column<StaffUser>[] = [
-    { key: "name", header: "Name", render: (r) => <span className="font-semibold text-slate-800">{r.fullName}</span> },
+    { key: "name", header: "Name", render: (r) => <span className="font-semibold text-[var(--primary)]">{r.fullName}</span> },
     { key: "email", header: "Email", render: (r) => r.email },
     { key: "role", header: "Role", render: (r) => <Pill value={r.role} tone="blue" /> },
     { key: "status", header: "Status", render: (r) => <Pill value={r.status} tone={statusTone(r.status)} /> },
@@ -98,7 +98,7 @@ export default function AdminUsersPage() {
         <Can perm="user:manage">
           <button
             type="button"
-            className="text-[11px] font-semibold text-amber-700 hover:underline"
+            className="text-[11px] font-semibold text-[var(--accent)] hover:underline"
             onClick={() => void toggle(r.id, r.status)}
           >
             {r.status === "active" ? "Disable" : "Enable"}
@@ -134,8 +134,8 @@ export default function AdminUsersPage() {
       {created && (
         <Surface padded>
           <p className="text-[12px] font-bold text-emerald-800">Temporary password for {created.email}</p>
-          <p className="mt-1 font-mono text-[14px] font-black text-slate-900">{created.tempPassword}</p>
-          <p className="mt-1 text-[10.5px] text-slate-500">Copy now — it will not be shown again.</p>
+          <p className="mt-1 font-mono text-[14px] font-black text-[var(--primary)]">{created.tempPassword}</p>
+          <p className="mt-1 text-[10.5px] text-[var(--muted-foreground)]">Copy now — it will not be shown again.</p>
         </Surface>
       )}
       {showForm && (

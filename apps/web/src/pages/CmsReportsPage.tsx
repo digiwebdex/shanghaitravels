@@ -46,7 +46,7 @@ export default function CmsReportsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Publishing</h2>
               <ul className="text-[11px] space-y-1">
                 <li className="flex justify-between">
@@ -63,33 +63,33 @@ export default function CmsReportsPage() {
                 </li>
               </ul>
             </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Form submissions</h2>
               <ul className="text-[11px] space-y-1">
                 {data.formSubmissions.map((r) => (
-                  <li key={r.formType} className="flex justify-between border-b border-slate-50 pb-1">
+                  <li key={r.formType} className="flex justify-between border-b border-[var(--border)] pb-1">
                     <span>{r.formType}</span>
                     <span className="font-semibold">{r.count}</span>
                   </li>
                 ))}
               </ul>
             </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Page views</h2>
               <ul className="text-[11px] space-y-1 max-h-64 overflow-auto">
                 {data.pageViews.map((r) => (
-                  <li key={r.path} className="flex justify-between border-b border-slate-50 pb-1">
+                  <li key={r.path} className="flex justify-between border-b border-[var(--border)] pb-1">
                     <span className="truncate mr-2">{r.path}</span>
                     <span className="font-semibold">{r.count}</span>
                   </li>
                 ))}
               </ul>
             </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Lead generation by page</h2>
               <ul className="text-[11px] space-y-1">
                 {data.leadGenerationByPage.map((r) => (
-                  <li key={r.pageSlug} className="flex justify-between border-b border-slate-50 pb-1">
+                  <li key={r.pageSlug} className="flex justify-between border-b border-[var(--border)] pb-1">
                     <span>{r.pageSlug}</span>
                     <span className="font-semibold">{r.count}</span>
                   </li>

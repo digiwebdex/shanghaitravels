@@ -46,7 +46,7 @@ export default function CorporatePackageRequestPage() {
 
   return (
     <div className="p-6 max-w-lg space-y-4">
-      <Link to="/portal/corporate/packages" className="text-[12px] text-teal-700">
+      <Link to="/portal/corporate/packages" className="text-[12px] text-[var(--accent)]">
         ← Packages
       </Link>
       <h1 className="text-[18px] font-bold">Request corporate package</h1>
@@ -54,7 +54,7 @@ export default function CorporatePackageRequestPage() {
         <div className="p-3 rounded-xl border bg-teal-50 text-[12px]">
           <p className="font-bold">{pkg.name}</p>
           <p>{formatPrice(displayPricePoisha(pkg))}</p>
-          <p className="text-[10px] font-mono text-slate-500">PackageID: {pkg.id}</p>
+          <p className="text-[10px] font-mono text-[var(--muted-foreground)]">PackageID: {pkg.id}</p>
         </div>
       )}
       <ErrorBanner message={error} />

@@ -87,7 +87,7 @@ export default function FinanceAnalysisPage() {
               type="button"
               onClick={() => setMode(k)}
               className={`px-2.5 py-1.5 rounded-lg text-[10.5px] font-semibold border ${
-                mode === k ? "border-amber-300 bg-amber-50 text-amber-800" : "border-slate-200 text-slate-600"
+                mode === k ? "border-amber-300 bg-amber-50 text-amber-800" : "border-[var(--border)] text-[var(--muted-foreground)]"
               }`}
             >
               {label}
@@ -95,7 +95,7 @@ export default function FinanceAnalysisPage() {
           ))}
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+        <div className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
           {mode === "account" && (
             <div className="sm:col-span-2">
               <label className={labelCls}>Account</label>
@@ -128,14 +128,14 @@ export default function FinanceAnalysisPage() {
             <InlineSpinner />
           </div>
         ) : mode === "travel" && data ? (
-          <pre className="bg-white rounded-xl border border-slate-200 p-4 text-[10px] overflow-auto max-h-[520px]">
+          <pre className="bg-white rounded-xl border border-[var(--border)] p-4 text-[10px] overflow-auto max-h-[520px]">
             {JSON.stringify(data, null, 2)}
           </pre>
         ) : rows ? (
-          <section className="bg-white rounded-xl border border-slate-200 p-4">
+          <section className="bg-white rounded-xl border border-[var(--border)] p-4">
             <table className="w-full text-left">
               <thead>
-                <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b border-[var(--border)]">
                   <th className="px-2 py-2 font-bold">Key</th>
                   <th className="px-2 py-2 font-bold">Debit</th>
                   <th className="px-2 py-2 font-bold">Credit</th>
@@ -144,7 +144,7 @@ export default function FinanceAnalysisPage() {
               </thead>
               <tbody>
                 {rows.map((r, i) => (
-                  <tr key={i} className="border-b border-slate-50 text-[11px]">
+                  <tr key={i} className="border-b border-[var(--border)] text-[11px]">
                     <td className="px-2 py-1.5 font-semibold">
                       {r.code || r.currencyCode || r.branchId || r.name || "—"}
                     </td>
@@ -159,7 +159,7 @@ export default function FinanceAnalysisPage() {
             </table>
           </section>
         ) : data ? (
-          <pre className="bg-white rounded-xl border border-slate-200 p-4 text-[10px] overflow-auto max-h-[520px]">
+          <pre className="bg-white rounded-xl border border-[var(--border)] p-4 text-[10px] overflow-auto max-h-[520px]">
             {JSON.stringify(data, null, 2)}
           </pre>
         ) : null}

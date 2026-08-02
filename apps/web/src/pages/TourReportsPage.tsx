@@ -90,9 +90,9 @@ export default function TourReportsPage() {
                 { label: "Cancelled", value: String(cancelled) },
                 { label: "Active products", value: String(packages.filter((p) => p.isActive !== false).length) },
               ].map((c) => (
-                <div key={c.label} className="bg-white rounded-xl border border-slate-200 p-4">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">{c.label}</p>
-                  <p className="text-[22px] font-bold text-slate-800 mt-1">{c.value}</p>
+                <div key={c.label} className="bg-white rounded-xl border border-[var(--border)] p-4">
+                  <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase">{c.label}</p>
+                  <p className="text-[22px] font-bold text-[var(--primary)] mt-1">{c.value}</p>
                 </div>
               ))}
             </div>
@@ -103,42 +103,42 @@ export default function TourReportsPage() {
                 { label: "Supplier cost (sum)", value: `৳${fromPoisha(costPoisha) || "0.00"}` },
                 { label: "Catalog margin", value: `৳${fromPoisha(profitPoisha) || "0.00"}` },
               ].map((c) => (
-                <div key={c.label} className="bg-white rounded-xl border border-slate-200 p-4">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">{c.label}</p>
-                  <p className="text-[18px] font-bold text-slate-800 mt-1">{c.value}</p>
+                <div key={c.label} className="bg-white rounded-xl border border-[var(--border)] p-4">
+                  <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase">{c.label}</p>
+                  <p className="text-[18px] font-bold text-[var(--primary)] mt-1">{c.value}</p>
                 </div>
               ))}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <section className="bg-white rounded-xl border border-slate-200 p-4">
-                <h2 className="text-[12px] font-bold text-slate-800 mb-3">Bookings by status</h2>
+              <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+                <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Bookings by status</h2>
                 {byStatus.length === 0 ? (
-                  <p className="text-[11px] text-slate-400">No tour cases yet.</p>
+                  <p className="text-[11px] text-[var(--muted-foreground)]">No tour cases yet.</p>
                 ) : (
                   <ul className="space-y-1.5">
                     {byStatus.map(([status, n]) => (
-                      <li key={status} className="flex justify-between text-[11px] border-b border-slate-50 pb-1.5">
-                        <span className="font-semibold text-slate-700">{status}</span>
-                        <span className="text-slate-500">{n}</span>
+                      <li key={status} className="flex justify-between text-[11px] border-b border-[var(--border)] pb-1.5">
+                        <span className="font-semibold text-[var(--primary)]">{status}</span>
+                        <span className="text-[var(--muted-foreground)]">{n}</span>
                       </li>
                     ))}
                   </ul>
                 )}
               </section>
 
-              <section className="bg-white rounded-xl border border-slate-200 p-4">
-                <h2 className="text-[12px] font-bold text-slate-800 mb-3">Package performance by type</h2>
+              <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+                <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Package performance by type</h2>
                 {byType.length === 0 ? (
-                  <p className="text-[11px] text-slate-400">No package products yet.</p>
+                  <p className="text-[11px] text-[var(--muted-foreground)]">No package products yet.</p>
                 ) : (
                   <ul className="space-y-1.5">
                     {byType.map(([type, n]) => (
-                      <li key={type} className="flex justify-between text-[11px] border-b border-slate-50 pb-1.5">
-                        <span className="font-semibold text-slate-700">
+                      <li key={type} className="flex justify-between text-[11px] border-b border-[var(--border)] pb-1.5">
+                        <span className="font-semibold text-[var(--primary)]">
                           {PACKAGE_TYPE_LABELS[type as keyof typeof PACKAGE_TYPE_LABELS] || type}
                         </span>
-                        <span className="text-slate-500">{n}</span>
+                        <span className="text-[var(--muted-foreground)]">{n}</span>
                       </li>
                     ))}
                   </ul>
@@ -146,19 +146,19 @@ export default function TourReportsPage() {
               </section>
             </div>
 
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold text-slate-800 mb-3">Recent bookings</h2>
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+              <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Recent bookings</h2>
               <ul className="space-y-2">
                 {rows.slice(0, 15).map((a) => (
-                  <li key={a.id} className="text-[11px] flex flex-wrap gap-x-3 gap-y-1 border-b border-slate-50 pb-2">
-                    <Link to={`/tours/${a.id}`} className="font-bold text-amber-700 hover:underline">
+                  <li key={a.id} className="text-[11px] flex flex-wrap gap-x-3 gap-y-1 border-b border-[var(--border)] pb-2">
+                    <Link to={`/tours/${a.id}`} className="font-bold text-[var(--accent)] hover:underline">
                       {a.referenceNo}
                     </Link>
-                    <span className="text-slate-600">{a.customer?.fullName || "—"}</span>
-                    <span className="text-slate-400">
+                    <span className="text-[var(--muted-foreground)]">{a.customer?.fullName || "—"}</span>
+                    <span className="text-[var(--muted-foreground)]">
                       stage {a.currentStage}/{a.totalStages}
                     </span>
-                    <span className="text-slate-500">{a.status}</span>
+                    <span className="text-[var(--muted-foreground)]">{a.status}</span>
                   </li>
                 ))}
               </ul>

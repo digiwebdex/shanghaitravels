@@ -106,9 +106,9 @@ export default function HajjPilgrimsPage() {
         <SuccessBanner message={ok} />
 
         <Can perm="settings:manage">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div className="sm:col-span-3">
-              <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Add pilgrim</p>
+              <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase mb-1">Add pilgrim</p>
               <ScanDocumentPanel
                 defaultDocType="passport"
                 savePassportOnConfirm={false}
@@ -208,17 +208,17 @@ export default function HajjPilgrimsPage() {
           </form>
         </Can>
 
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-slate-100 flex gap-2">
+        <div className="bg-white rounded-xl border border-[var(--border)] overflow-hidden">
+          <div className="px-4 py-3 border-b border-[var(--border)] flex gap-2">
             <input
-              className="flex-1 max-w-sm px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
+              className="flex-1 max-w-sm px-3 py-2 border border-[var(--border)] rounded-lg text-[11px]"
               placeholder="Search pilgrims…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && void load()}
               aria-label="Search pilgrims"
             />
-            <button type="button" onClick={() => void load()} className="px-3 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold">
+            <button type="button" onClick={() => void load()} className="px-3 py-2 rounded-lg border border-[var(--border)] text-[11px] font-semibold">
               Refresh
             </button>
           </div>
@@ -232,7 +232,7 @@ export default function HajjPilgrimsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                  <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b border-[var(--border)]">
                     <th className="px-4 py-2 font-bold">Code</th>
                     <th className="px-4 py-2 font-bold">Name</th>
                     <th className="px-4 py-2 font-bold">Passport</th>
@@ -243,15 +243,15 @@ export default function HajjPilgrimsPage() {
                 </thead>
                 <tbody>
                   {rows.map((p) => (
-                    <tr key={p.id} className="border-b border-slate-50 text-[11px]">
-                      <td className="px-4 py-2.5 font-semibold text-slate-800">{p.code}</td>
-                      <td className="px-4 py-2.5 text-slate-700">{p.fullName}</td>
-                      <td className="px-4 py-2.5 text-slate-600">
+                    <tr key={p.id} className="border-b border-[var(--border)] text-[11px]">
+                      <td className="px-4 py-2.5 font-semibold text-[var(--primary)]">{p.code}</td>
+                      <td className="px-4 py-2.5 text-[var(--primary)]">{p.fullName}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">
                         {p.passportNo || "—"} ({p.passportStatus || "—"})
                       </td>
-                      <td className="px-4 py-2.5 text-slate-600">{p.visaStatus || "—"}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{p.mahramName || "—"}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{p.phone || "—"}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{p.visaStatus || "—"}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{p.mahramName || "—"}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{p.phone || "—"}</td>
                     </tr>
                   ))}
                 </tbody>

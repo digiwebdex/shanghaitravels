@@ -202,9 +202,9 @@ export function HajjDetailCard({
   }
 
   return (
-    <section className="bg-white rounded-xl border border-slate-200 p-4">
-      <h2 className="text-[12px] font-bold text-slate-800 mb-1">Hajj / Umrah booking details</h2>
-      <p className="text-[10px] text-slate-400 mb-3">
+    <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+      <h2 className="text-[12px] font-bold text-[var(--primary)] mb-1">Hajj / Umrah booking details</h2>
+      <p className="text-[10px] text-[var(--muted-foreground)] mb-3">
         Pilgrim, package, group, flights, hotels, transport, rooming, and payment plan — operator booking.
       </p>
       <form onSubmit={(e) => void save(e)} className="space-y-2">
@@ -274,7 +274,7 @@ export function HajjDetailCard({
           )}
         </div>
 
-        <p className="text-[10px] font-bold text-slate-500 uppercase pt-1">Pilgrim</p>
+        <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase pt-1">Pilgrim</p>
         <div className="mb-2">
           <ScanDocumentPanel
             applicationId={appId}
@@ -383,7 +383,7 @@ export function HajjDetailCard({
           </div>
         </div>
 
-        <p className="text-[10px] font-bold text-slate-500 uppercase pt-1">Package & group</p>
+        <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase pt-1">Package & group</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div>
             <label className={labelCls}>Package name</label>
@@ -431,7 +431,7 @@ export function HajjDetailCard({
           </div>
         </div>
 
-        <p className="text-[10px] font-bold text-slate-500 uppercase pt-1">Ops (flights / hotels / transport / rooming)</p>
+        <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase pt-1">Ops (flights / hotels / transport / rooming)</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div>
             <label className={labelCls}>Departure</label>
@@ -479,7 +479,7 @@ export function HajjDetailCard({
           </div>
         </div>
 
-        <p className="text-[10px] font-bold text-slate-500 uppercase pt-1">Pricing (BDT)</p>
+        <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase pt-1">Pricing (BDT)</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <div>
             <label className={labelCls}>Supplier cost (৳)</label>
@@ -493,7 +493,7 @@ export function HajjDetailCard({
             <label className={labelCls}>Paid (৳)</label>
             <input type="number" min="0" step="0.01" className={inputCls} value={form.paidBdt} onChange={(e) => set("paidBdt", e.target.value)} disabled={disabled} />
           </div>
-          <div className="sm:col-span-3 text-[11px] text-slate-600">
+          <div className="sm:col-span-3 text-[11px] text-[var(--muted-foreground)]">
             Margin: {margin == null ? "—" : `৳${margin.toFixed(2)}`} · Balance:{" "}
             {balance == null ? "—" : `৳${balance.toFixed(2)}`}
           </div>

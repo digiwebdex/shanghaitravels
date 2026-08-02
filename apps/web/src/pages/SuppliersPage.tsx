@@ -119,8 +119,8 @@ export default function SuppliersPage() {
   const activeCount = useMemo(() => rows.filter((r) => r.isActive !== false).length, [rows]);
 
   const columns: Column<Row>[] = [
-    { key: "code", header: "Code", className: "font-mono font-semibold text-slate-800", render: (r) => r.code },
-    { key: "name", header: "Name", render: (r) => <span className="font-semibold text-slate-800">{r.name}</span> },
+    { key: "code", header: "Code", className: "font-mono font-semibold text-[var(--primary)]", render: (r) => r.code },
+    { key: "name", header: "Name", render: (r) => <span className="font-semibold text-[var(--primary)]">{r.name}</span> },
     {
       key: "type",
       header: "Type",
@@ -135,9 +135,9 @@ export default function SuppliersPage() {
       className: "text-right tabular-nums",
       render: (r) =>
         r.outstandingPoisha == null ? (
-          <span className="text-slate-300">—</span>
+          <span className="text-[var(--navy-200)]">—</span>
         ) : (
-          <span className={r.outstandingPoisha > 0 ? "font-semibold text-red-600" : "text-slate-500"}>
+          <span className={r.outstandingPoisha > 0 ? "font-semibold text-red-600" : "text-[var(--muted-foreground)]"}>
             {fmtBDTPlain(r.outstandingPoisha)}
           </span>
         ),
@@ -212,10 +212,10 @@ export default function SuppliersPage() {
 
       {!type && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5" aria-label="Supplier type summary">
-          <div className="rounded-2xl border border-slate-200 bg-white p-3.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Directory</p>
-            <p className="mt-1 text-[22px] font-black tabular-nums text-slate-900">{rows.length}</p>
-            <p className="text-[10px] text-slate-500">
+          <div className="rounded-2xl border border-[var(--border)] bg-white p-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Directory</p>
+            <p className="mt-1 text-[22px] font-black tabular-nums text-[var(--primary)]">{rows.length}</p>
+            <p className="text-[10px] text-[var(--muted-foreground)]">
               {activeCount} active
               {totalDue > 0 ? ` · ${fmtBDTPlain(totalDue)} due` : ""}
             </p>
@@ -226,14 +226,14 @@ export default function SuppliersPage() {
               <Link
                 key={t.type}
                 to={`/partners/suppliers/${t.type}`}
-                className="rounded-2xl border border-slate-200 bg-white p-3.5 transition-all hover:border-orange-300 hover:shadow-sm"
+                className="rounded-2xl border border-[var(--border)] bg-white p-3.5 transition-all hover:border-orange-300 hover:shadow-sm"
               >
-                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">
                   <t.icon size={12} className="text-orange-600" />
                   {t.label}
                 </div>
-                <p className="mt-1 text-[22px] font-black tabular-nums text-slate-900">{t.count}</p>
-                <p className={`text-[10px] ${t.due > 0 ? "font-semibold text-red-600" : "text-slate-500"}`}>
+                <p className="mt-1 text-[22px] font-black tabular-nums text-[var(--primary)]">{t.count}</p>
+                <p className={`text-[10px] ${t.due > 0 ? "font-semibold text-red-600" : "text-[var(--muted-foreground)]"}`}>
                   {t.due > 0 ? `${fmtBDTPlain(t.due)} due` : "No AP due"}
                 </p>
               </Link>
@@ -249,7 +249,7 @@ export default function SuppliersPage() {
             `rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors ${
               isActive
                 ? "border-[var(--primary)] bg-[var(--primary)] text-white"
-                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                : "border-[var(--border)] bg-white text-[var(--muted-foreground)] hover:border-slate-300"
             }`
           }
         >
@@ -263,7 +263,7 @@ export default function SuppliersPage() {
               `flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors ${
                 isActive
                   ? "border-[var(--primary)] bg-[var(--primary)] text-white"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                  : "border-[var(--border)] bg-white text-[var(--muted-foreground)] hover:border-slate-300"
               }`
             }
           >
@@ -385,7 +385,7 @@ export default function SuppliersPage() {
           action={
             <div className="flex gap-2">
               <input
-                className="w-44 rounded-lg border border-slate-200 px-3 py-1.5 text-[11.5px] sm:w-60"
+                className="w-44 rounded-lg border border-[var(--border)] px-3 py-1.5 text-[11.5px] sm:w-60"
                 placeholder="Search name, code, contact…"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}

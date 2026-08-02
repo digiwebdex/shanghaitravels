@@ -31,7 +31,7 @@ export default function FinanceCashPage() {
   }, []);
 
   const columns: Column<Account>[] = [
-    { key: "name", header: "Account", render: (r) => <span className="font-semibold text-slate-800">{r.name}</span> },
+    { key: "name", header: "Account", render: (r) => <span className="font-semibold text-[var(--primary)]">{r.name}</span> },
     { key: "type", header: "Type", render: (r) => <Pill value={r.type} tone="blue" /> },
     {
       key: "bal",

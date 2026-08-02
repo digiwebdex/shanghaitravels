@@ -85,7 +85,7 @@ export default function CrmQuotationsPage() {
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         <Can perm="quote:manage">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
             <div>
               <label className={labelCls}>Service</label>
               <select className={inputCls} value={serviceType} onChange={(e) => setServiceType(e.target.value)}>
@@ -138,18 +138,18 @@ export default function CrmQuotationsPage() {
             <InlineSpinner />
           </div>
         ) : (
-          <ul className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
+          <ul className="bg-white rounded-xl border border-[var(--border)] p-4 space-y-2">
             {rows.map((q) => (
-              <li key={q.id} className="text-[11px] flex flex-wrap gap-2 items-center border-b border-slate-50 pb-2">
+              <li key={q.id} className="text-[11px] flex flex-wrap gap-2 items-center border-b border-[var(--border)] pb-2">
                 <span className="font-bold">{q.quoteNo}</span>
                 <span>{q.serviceType}</span>
-                <span className="text-slate-500">{q.status}</span>
+                <span className="text-[var(--muted-foreground)]">{q.status}</span>
                 <span className="font-semibold">{formatBdt(q.totalPoisha)}</span>
                 {q.status === "draft" && (
                   <Can perm="quote:manage">
                     <button
                       type="button"
-                      className="text-[10px] font-semibold text-amber-700"
+                      className="text-[10px] font-semibold text-[var(--accent)]"
                       onClick={() =>
                         void crmApi
                           .setQuotationStatus(q.id, "sent")
@@ -163,7 +163,7 @@ export default function CrmQuotationsPage() {
                 )}
               </li>
             ))}
-            {rows.length === 0 && <p className="text-[11px] text-slate-400">No quotations.</p>}
+            {rows.length === 0 && <p className="text-[11px] text-[var(--muted-foreground)]">No quotations.</p>}
           </ul>
         )}
     </PageShell>

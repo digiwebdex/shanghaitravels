@@ -96,17 +96,17 @@ export default function OperationsCalendarPage() {
         <Surface>
           <SurfaceHeader title={`${items.length} event${items.length === 1 ? "" : "s"}`} hint="Tasks + bookings" />
           {byDate.length === 0 ? (
-            <p className="px-4 py-12 text-center text-[11.5px] text-slate-400">Nothing scheduled</p>
+            <p className="px-4 py-12 text-center text-[11.5px] text-[var(--muted-foreground)]">Nothing scheduled</p>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-[var(--border)]">
               {byDate.map(([date, list]) => (
                 <div key={date} className="grid grid-cols-[100px_1fr] gap-3 px-4 py-3 sm:px-5">
-                  <p className="text-[11px] font-bold tabular-nums text-slate-700">{date}</p>
+                  <p className="text-[11px] font-bold tabular-nums text-[var(--primary)]">{date}</p>
                   <ul className="space-y-2">
                     {list.map((i) => (
                       <li key={i.id} className="flex flex-wrap items-center gap-2">
                         <Pill value={i.kind} tone={i.kind === "task" ? "amber" : "blue"} />
-                        <Link to={i.href} className="text-[12px] font-semibold text-slate-800 hover:text-amber-700">
+                        <Link to={i.href} className="text-[12px] font-semibold text-[var(--primary)] hover:text-[var(--accent)]">
                           {i.title}
                         </Link>
                         <Pill value={i.status} tone={statusTone(i.status)} />

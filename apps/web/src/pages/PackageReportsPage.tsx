@@ -59,23 +59,23 @@ export default function PackageReportsPage() {
                 ["Bookings", report.totalBookings],
               ] as const
             ).map(([label, val]) => (
-              <div key={label} className="bg-white border border-slate-200 rounded-xl p-4">
-                <p className="text-[10px] text-slate-500 uppercase">{label}</p>
-                <p className="text-[20px] font-bold text-slate-800">{val}</p>
+              <div key={label} className="bg-white border border-[var(--border)] rounded-xl p-4">
+                <p className="text-[10px] text-[var(--muted-foreground)] uppercase">{label}</p>
+                <p className="text-[20px] font-bold text-[var(--primary)]">{val}</p>
               </div>
             ))}
-            <div className="col-span-2 md:col-span-4 bg-white border border-slate-200 rounded-xl p-4">
-              <p className="text-[10px] text-slate-500 uppercase mb-1">Revenue (listed packages)</p>
-              <p className="text-[24px] font-bold text-amber-700">{formatPrice(report.revenuePoisha)}</p>
+            <div className="col-span-2 md:col-span-4 bg-white border border-[var(--border)] rounded-xl p-4">
+              <p className="text-[10px] text-[var(--muted-foreground)] uppercase mb-1">Revenue (listed packages)</p>
+              <p className="text-[24px] font-bold text-[var(--accent)]">{formatPrice(report.revenuePoisha)}</p>
             </div>
             {report.topPackages?.length > 0 && (
-              <div className="col-span-2 md:col-span-4 bg-white border border-slate-200 rounded-xl p-4">
-                <p className="text-[11px] font-bold text-slate-700 mb-2">Top packages</p>
+              <div className="col-span-2 md:col-span-4 bg-white border border-[var(--border)] rounded-xl p-4">
+                <p className="text-[11px] font-bold text-[var(--primary)] mb-2">Top packages</p>
                 <ul className="text-[11px] space-y-1">
                   {report.topPackages.map((p) => (
                     <li key={p.id} className="flex justify-between">
                       <span>{p.name}</span>
-                      <span className="text-slate-500">
+                      <span className="text-[var(--muted-foreground)]">
                         {p.enquiries} enquiries · {p.bookings} bookings
                       </span>
                     </li>

@@ -74,7 +74,7 @@ export default function AgentFinancePage() {
 function Box({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-white border rounded-xl p-3">
-      <div className="text-[10px] text-slate-500 uppercase">{label}</div>
+      <div className="text-[10px] text-[var(--muted-foreground)] uppercase">{label}</div>
       <div className="font-bold mt-1">{value}</div>
     </div>
   );

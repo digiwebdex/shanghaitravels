@@ -86,9 +86,9 @@ export default function HajjReportsPage() {
                 { label: "Groups", value: String(groups.length) },
                 { label: "Packages", value: String(packages.length) },
               ].map((c) => (
-                <div key={c.label} className="bg-white rounded-xl border border-slate-200 p-4">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">{c.label}</p>
-                  <p className="text-[22px] font-bold text-slate-800 mt-1">{c.value}</p>
+                <div key={c.label} className="bg-white rounded-xl border border-[var(--border)] p-4">
+                  <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase">{c.label}</p>
+                  <p className="text-[22px] font-bold text-[var(--primary)] mt-1">{c.value}</p>
                 </div>
               ))}
             </div>
@@ -99,39 +99,39 @@ export default function HajjReportsPage() {
                 { label: "Supplier cost (sum)", value: `৳${fromPoisha(costPoisha) || "0.00"}` },
                 { label: "Catalog margin", value: `৳${fromPoisha(salesPoisha - costPoisha) || "0.00"}` },
               ].map((c) => (
-                <div key={c.label} className="bg-white rounded-xl border border-slate-200 p-4">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">{c.label}</p>
-                  <p className="text-[18px] font-bold text-slate-800 mt-1">{c.value}</p>
+                <div key={c.label} className="bg-white rounded-xl border border-[var(--border)] p-4">
+                  <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase">{c.label}</p>
+                  <p className="text-[18px] font-bold text-[var(--primary)] mt-1">{c.value}</p>
                 </div>
               ))}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <section className="bg-white rounded-xl border border-slate-200 p-4">
-                <h2 className="text-[12px] font-bold text-slate-800 mb-3">Bookings by status</h2>
+              <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+                <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Bookings by status</h2>
                 {byStatus.length === 0 ? (
-                  <p className="text-[11px] text-slate-400">No bookings yet.</p>
+                  <p className="text-[11px] text-[var(--muted-foreground)]">No bookings yet.</p>
                 ) : (
                   <ul className="space-y-1.5">
                     {byStatus.map(([status, n]) => (
-                      <li key={status} className="flex justify-between text-[11px] border-b border-slate-50 pb-1.5">
-                        <span className="font-semibold text-slate-700">{status}</span>
-                        <span className="text-slate-500">{n}</span>
+                      <li key={status} className="flex justify-between text-[11px] border-b border-[var(--border)] pb-1.5">
+                        <span className="font-semibold text-[var(--primary)]">{status}</span>
+                        <span className="text-[var(--muted-foreground)]">{n}</span>
                       </li>
                     ))}
                   </ul>
                 )}
               </section>
-              <section className="bg-white rounded-xl border border-slate-200 p-4">
-                <h2 className="text-[12px] font-bold text-slate-800 mb-3">Visa status (pilgrims)</h2>
+              <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+                <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Visa status (pilgrims)</h2>
                 {visaBreakdown.length === 0 ? (
-                  <p className="text-[11px] text-slate-400">No pilgrim profiles yet.</p>
+                  <p className="text-[11px] text-[var(--muted-foreground)]">No pilgrim profiles yet.</p>
                 ) : (
                   <ul className="space-y-1.5">
                     {visaBreakdown.map(([status, n]) => (
-                      <li key={status} className="flex justify-between text-[11px] border-b border-slate-50 pb-1.5">
-                        <span className="font-semibold text-slate-700">{status}</span>
-                        <span className="text-slate-500">{n}</span>
+                      <li key={status} className="flex justify-between text-[11px] border-b border-[var(--border)] pb-1.5">
+                        <span className="font-semibold text-[var(--primary)]">{status}</span>
+                        <span className="text-[var(--muted-foreground)]">{n}</span>
                       </li>
                     ))}
                   </ul>
@@ -139,59 +139,59 @@ export default function HajjReportsPage() {
               </section>
             </div>
 
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold text-slate-800 mb-3">Flight manifest (groups)</h2>
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+              <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Flight manifest (groups)</h2>
               {groups.length === 0 ? (
-                <p className="text-[11px] text-slate-400">No groups yet.</p>
+                <p className="text-[11px] text-[var(--muted-foreground)]">No groups yet.</p>
               ) : (
                 <ul className="space-y-2">
                   {groups.slice(0, 20).map((g) => (
-                    <li key={g.id} className="text-[11px] flex flex-wrap gap-x-3 gap-y-1 border-b border-slate-50 pb-2">
-                      <span className="font-bold text-slate-800">{g.code}</span>
-                      <span className="text-slate-600">{g.name}</span>
-                      <span className="text-slate-500">
+                    <li key={g.id} className="text-[11px] flex flex-wrap gap-x-3 gap-y-1 border-b border-[var(--border)] pb-2">
+                      <span className="font-bold text-[var(--primary)]">{g.code}</span>
+                      <span className="text-[var(--muted-foreground)]">{g.name}</span>
+                      <span className="text-[var(--muted-foreground)]">
                         {[g.airline, g.flightNo].filter(Boolean).join(" ") || "no flight"}
                       </span>
-                      <span className="text-slate-400">{toDateInput(g.departAt) || "—"}</span>
-                      <span className="text-slate-500">{g.status}</span>
+                      <span className="text-[var(--muted-foreground)]">{toDateInput(g.departAt) || "—"}</span>
+                      <span className="text-[var(--muted-foreground)]">{g.status}</span>
                     </li>
                   ))}
                 </ul>
               )}
             </section>
 
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold text-slate-800 mb-3">Rooming list notes</h2>
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+              <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Rooming list notes</h2>
               <ul className="space-y-2">
                 {groups
                   .filter((g) => g.roomingNote)
                   .slice(0, 15)
                   .map((g) => (
-                    <li key={g.id} className="text-[11px] border-b border-slate-50 pb-2">
-                      <span className="font-bold text-slate-800">{g.code}</span>
-                      <p className="text-slate-600 mt-0.5">{g.roomingNote}</p>
+                    <li key={g.id} className="text-[11px] border-b border-[var(--border)] pb-2">
+                      <span className="font-bold text-[var(--primary)]">{g.code}</span>
+                      <p className="text-[var(--muted-foreground)] mt-0.5">{g.roomingNote}</p>
                     </li>
                   ))}
                 {groups.every((g) => !g.roomingNote) && (
-                  <p className="text-[11px] text-slate-400">No rooming notes yet.</p>
+                  <p className="text-[11px] text-[var(--muted-foreground)]">No rooming notes yet.</p>
                 )}
               </ul>
             </section>
 
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold text-slate-800 mb-3">Recent bookings</h2>
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+              <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Recent bookings</h2>
               <ul className="space-y-2">
                 {rows.slice(0, 15).map((a) => (
-                  <li key={a.id} className="text-[11px] flex flex-wrap gap-x-3 gap-y-1 border-b border-slate-50 pb-2">
-                    <Link to={`/hajj/${a.id}`} className="font-bold text-amber-700 hover:underline">
+                  <li key={a.id} className="text-[11px] flex flex-wrap gap-x-3 gap-y-1 border-b border-[var(--border)] pb-2">
+                    <Link to={`/hajj/${a.id}`} className="font-bold text-[var(--accent)] hover:underline">
                       {a.referenceNo}
                     </Link>
-                    <span className="text-slate-500">{a.serviceType}</span>
-                    <span className="text-slate-600">{a.customer?.fullName || "—"}</span>
-                    <span className="text-slate-400">
+                    <span className="text-[var(--muted-foreground)]">{a.serviceType}</span>
+                    <span className="text-[var(--muted-foreground)]">{a.customer?.fullName || "—"}</span>
+                    <span className="text-[var(--muted-foreground)]">
                       stage {a.currentStage}/{a.totalStages}
                     </span>
-                    <span className="text-slate-500">{a.status}</span>
+                    <span className="text-[var(--muted-foreground)]">{a.status}</span>
                   </li>
                 ))}
               </ul>

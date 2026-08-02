@@ -57,22 +57,22 @@ export default function FinanceArApReportsPage() {
         ) : (
           <>
             {summary && (
-              <section className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
+              <section className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
                 <div>
-                  <p className="text-slate-500">AR outstanding</p>
-                  <p className="font-bold text-slate-800">{formatBdt(Number(summary.arOutstandingPoisha || 0))}</p>
+                  <p className="text-[var(--muted-foreground)]">AR outstanding</p>
+                  <p className="font-bold text-[var(--primary)]">{formatBdt(Number(summary.arOutstandingPoisha || 0))}</p>
                 </div>
                 <div>
-                  <p className="text-slate-500">AP outstanding</p>
-                  <p className="font-bold text-slate-800">{formatBdt(Number(summary.apOutstandingPoisha || 0))}</p>
+                  <p className="text-[var(--muted-foreground)]">AP outstanding</p>
+                  <p className="font-bold text-[var(--primary)]">{formatBdt(Number(summary.apOutstandingPoisha || 0))}</p>
                 </div>
                 <div>
-                  <p className="text-slate-500">AR customers</p>
-                  <p className="font-bold text-slate-800">{String(summary.arCustomers ?? 0)}</p>
+                  <p className="text-[var(--muted-foreground)]">AR customers</p>
+                  <p className="font-bold text-[var(--primary)]">{String(summary.arCustomers ?? 0)}</p>
                 </div>
                 <div>
-                  <p className="text-slate-500">AP suppliers</p>
-                  <p className="font-bold text-slate-800">{String(summary.apSuppliers ?? 0)}</p>
+                  <p className="text-[var(--muted-foreground)]">AP suppliers</p>
+                  <p className="font-bold text-[var(--primary)]">{String(summary.apSuppliers ?? 0)}</p>
                 </div>
               </section>
             )}
@@ -87,14 +87,14 @@ export default function FinanceArApReportsPage() {
 
 function AgingTable({ title, rows }: { title: string; rows: AgingRow[] }) {
   return (
-    <section className="bg-white rounded-xl border border-slate-200 p-4">
-      <h2 className="text-[12px] font-bold text-slate-800 mb-3">{title}</h2>
+    <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+      <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">{title}</h2>
       {rows.length === 0 ? (
-        <p className="text-[11px] text-slate-400">No outstanding balances.</p>
+        <p className="text-[11px] text-[var(--muted-foreground)]">No outstanding balances.</p>
       ) : (
         <table className="w-full text-left text-[11px]">
           <thead>
-            <tr className="text-[10px] uppercase text-slate-500 border-b">
+            <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b">
               <th className="px-2 py-2">Party</th>
               <th className="px-2 py-2">Current</th>
               <th className="px-2 py-2">1–30</th>
@@ -106,7 +106,7 @@ function AgingTable({ title, rows }: { title: string; rows: AgingRow[] }) {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.code + r.name} className="border-b border-slate-50">
+              <tr key={r.code + r.name} className="border-b border-[var(--border)]">
                 <td className="px-2 py-2 font-semibold">
                   {r.code} · {r.name}
                 </td>

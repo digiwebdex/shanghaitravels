@@ -91,7 +91,7 @@ export default function FinancePeriodsPage() {
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         <Can perm="gl:manage">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
             <div>
               <label className={labelCls}>Code *</label>
               <input className={inputCls} value={code} onChange={(e) => setCode(e.target.value)} required placeholder="FY2026" />
@@ -123,26 +123,26 @@ export default function FinancePeriodsPage() {
           <EmptyState title="No fiscal years" hint="Bootstrap foundation or create a fiscal year." />
         ) : (
           years.map((fy) => (
-            <section key={fy.id} className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold text-slate-800 mb-2">
+            <section key={fy.id} className="bg-white rounded-xl border border-[var(--border)] p-4">
+              <h2 className="text-[12px] font-bold text-[var(--primary)] mb-2">
                 {fy.code} · {fy.name}{" "}
-                <span className="text-slate-400 font-semibold">({fy.status})</span>
+                <span className="text-[var(--muted-foreground)] font-semibold">({fy.status})</span>
               </h2>
               <ul className="space-y-1.5">
                 {(fy.periods || []).map((p) => (
-                  <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 text-[11px] border-b border-slate-50 pb-1.5">
+                  <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 text-[11px] border-b border-[var(--border)] pb-1.5">
                     <span>
-                      <span className="font-semibold text-slate-800">{p.code}</span>{" "}
-                      <span className="text-slate-600">{p.name}</span>{" "}
-                      <span className="text-slate-400">{p.status}</span>
+                      <span className="font-semibold text-[var(--primary)]">{p.code}</span>{" "}
+                      <span className="text-[var(--muted-foreground)]">{p.name}</span>{" "}
+                      <span className="text-[var(--muted-foreground)]">{p.status}</span>
                     </span>
                     <Can perm="period:close">
                       {p.status === "open" ? (
-                        <button type="button" className="text-amber-700 font-semibold" onClick={() => void closePeriod(p.id)}>
+                        <button type="button" className="text-[var(--accent)] font-semibold" onClick={() => void closePeriod(p.id)}>
                           Close
                         </button>
                       ) : (
-                        <button type="button" className="text-slate-600 font-semibold" onClick={() => void reopenPeriod(p.id)}>
+                        <button type="button" className="text-[var(--muted-foreground)] font-semibold" onClick={() => void reopenPeriod(p.id)}>
                           Reopen
                         </button>
                       )}

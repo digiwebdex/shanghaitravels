@@ -73,12 +73,12 @@ export default function PortalDocumentsPage() {
         {rows.map((r) => (
           <li key={String(r.id)} className="flex justify-between px-3 py-2">
             <span>{String(r.category || r.fileName || r.id)}</span>
-            <a className="font-semibold text-amber-700" href={customerPortalApi.downloadUrl(String(r.id))}>
+            <a className="font-semibold text-[var(--accent)]" href={customerPortalApi.downloadUrl(String(r.id))}>
               Download
             </a>
           </li>
         ))}
-        {!rows.length && <li className="px-3 py-4 text-slate-400">No documents yet.</li>}
+        {!rows.length && <li className="px-3 py-4 text-[var(--muted-foreground)]">No documents yet.</li>}
       </ul>
     </div>
   );

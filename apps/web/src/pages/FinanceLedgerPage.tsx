@@ -75,7 +75,7 @@ export default function FinanceLedgerPage() {
       <FinanceModuleNav />
         <ErrorBanner message={error} />
 
-        <div className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+        <div className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
           <div className="sm:col-span-2">
             <label className={labelCls}>Account (drill-down)</label>
             <select className={inputCls} value={glAccountId} onChange={(e) => setGlAccountId(e.target.value)}>
@@ -102,16 +102,16 @@ export default function FinanceLedgerPage() {
             <InlineSpinner />
           </div>
         ) : (
-          <section className="bg-white rounded-xl border border-slate-200 p-4">
-            <p className="text-[11px] text-slate-600 mb-2">
+          <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+            <p className="text-[11px] text-[var(--muted-foreground)] mb-2">
               {entries.length} lines · Closing {formatBdt(closing)}
             </p>
             {entries.length === 0 ? (
-              <p className="text-[11px] text-slate-400">No posted lines for this filter.</p>
+              <p className="text-[11px] text-[var(--muted-foreground)]">No posted lines for this filter.</p>
             ) : (
               <table className="w-full text-left">
                 <thead>
-                  <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                  <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b border-[var(--border)]">
                     <th className="px-2 py-2 font-bold">Date</th>
                     <th className="px-2 py-2 font-bold">Journal</th>
                     <th className="px-2 py-2 font-bold">Account</th>
@@ -122,10 +122,10 @@ export default function FinanceLedgerPage() {
                 </thead>
                 <tbody>
                   {entries.map((e, i) => (
-                    <tr key={`${e.journalId}-${i}`} className="border-b border-slate-50 text-[11px]">
+                    <tr key={`${e.journalId}-${i}`} className="border-b border-[var(--border)] text-[11px]">
                       <td className="px-2 py-1.5">{new Date(e.entryDate).toLocaleDateString("en-BD")}</td>
                       <td className="px-2 py-1.5">
-                        <Link to={`/finance/journals/${e.journalId}`} className="font-bold text-amber-700 hover:underline">
+                        <Link to={`/finance/journals/${e.journalId}`} className="font-bold text-[var(--accent)] hover:underline">
                           {e.journalNo}
                         </Link>
                       </td>

@@ -4,9 +4,18 @@ import { Landmark } from "lucide-react";
 import { arApi, reportsApi, type FinanceSummary } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import { ErrorBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
-import { PageHeader, PageShell, Surface, SurfaceHeader } from "@/components/enterprise/Page";
+import {
+  JourneyContinuity,
+  NextStepBanner,
+} from "@/components/workflow/MasterJourney";
+import {
+  PageHeader,
+  PageShell,
+  SkeletonRows,
+  Surface,
+  SurfaceHeader,
+} from "@/components/enterprise/Page";
 import { fmtBDTCompact, fmtBDTPlain } from "@/lib/money";
 
 export default function FinanceDashboardPage() {
@@ -60,11 +69,23 @@ export default function FinanceDashboardPage() {
         breadcrumb={[{ label: "Finance ERP" }, { label: "Dashboard" }]}
       />
       <FinanceModuleNav />
+      <JourneyContinuity
+        active="finance"
+        previousHint="Booking operated · documents verified"
+        nextHint="Travel complete → after-sales feedback"
+      />
+      <NextStepBanner
+        title="Finance follows the booking"
+        body="Create invoices and record payments from Booking 360. This dashboard is the company lens — not a parallel entry path."
+        actions={[
+          { label: "Invoices", to: "/finance/invoices", primary: true },
+          { label: "Payments", to: "/finance/payments" },
+          { label: "New booking", to: "/bookings/new" },
+        ]}
+      />
       <ErrorBanner message={error} />
       {loading ? (
-        <div className="flex justify-center py-16">
-          <InlineSpinner />
-        </div>
+        <SkeletonRows rows={8} />
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -72,25 +93,31 @@ export default function FinanceDashboardPage() {
               <Link
                 key={c.label}
                 to={c.to}
-                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:border-amber-300 hover:shadow-sm"
+                className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-[var(--shadow-sm)] transition-all hover:border-[var(--accent)] hover:shadow-[var(--shadow-md)]"
               >
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{c.label}</p>
-                <p className="mt-2 text-[20px] font-black tabular-nums text-slate-900">{fmtBDTCompact(c.value)}</p>
-                <p className="mt-1 text-[10px] text-slate-400">{fmtBDTPlain(c.value)}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">
+                  {c.label}
+                </p>
+                <p className="mt-2 text-[20px] font-black tabular-nums text-[var(--primary)]">
+                  {fmtBDTCompact(c.value)}
+                </p>
+                <p className="mt-1 text-[10px] text-[var(--muted-foreground)]">{fmtBDTPlain(c.value)}</p>
               </Link>
             ))}
           </div>
           {summary && summary.accounts.length > 0 && (
             <Surface>
               <SurfaceHeader title="Cash & bank accounts" hint="Balances from /accounts via finance summary" />
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-[var(--border)]">
                 {summary.accounts.map((a) => (
                   <div key={a.name} className="flex items-center justify-between px-4 py-3 sm:px-5">
                     <div>
-                      <p className="text-[12px] font-semibold text-slate-800">{a.name}</p>
-                      <p className="text-[10px] uppercase text-slate-400">{a.type}</p>
+                      <p className="text-[12px] font-semibold text-[var(--primary)]">{a.name}</p>
+                      <p className="text-[10px] uppercase text-[var(--muted-foreground)]">{a.type}</p>
                     </div>
-                    <p className="text-[12px] font-bold tabular-nums text-slate-800">{fmtBDTPlain(a.currentBalance)}</p>
+                    <p className="text-[12px] font-bold tabular-nums text-[var(--primary)]">
+                      {fmtBDTPlain(a.currentBalance)}
+                    </p>
                   </div>
                 ))}
               </div>

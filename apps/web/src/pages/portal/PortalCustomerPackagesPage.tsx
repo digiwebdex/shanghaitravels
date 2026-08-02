@@ -35,7 +35,7 @@ export default function PortalCustomerPackagesPage() {
 
   return (
     <div className="p-6 max-w-6xl space-y-4">
-      <h1 className="text-[18px] font-bold text-slate-900">Browse packages</h1>
+      <h1 className="text-[18px] font-bold text-[var(--primary)]">Browse packages</h1>
       <ErrorBanner message={error} />
       {loading ? (
         <InlineSpinner />

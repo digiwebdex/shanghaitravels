@@ -131,9 +131,9 @@ export function TourDetailCard({
   }
 
   return (
-    <section className="bg-white rounded-xl border border-slate-200 p-4">
-      <h2 className="text-[12px] font-bold text-slate-800 mb-1">Tour booking details</h2>
-      <p className="text-[10px] text-slate-400 mb-3">
+    <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+      <h2 className="text-[12px] font-bold text-[var(--primary)] mb-1">Tour booking details</h2>
+      <p className="text-[10px] text-[var(--muted-foreground)] mb-3">
         Curated package booking from supplier products — not an OTA marketplace.
       </p>
       <form onSubmit={(e) => void save(e)} className="space-y-2">
@@ -243,7 +243,7 @@ export function TourDetailCard({
           </div>
         </div>
 
-        <p className="text-[10px] font-bold text-slate-500 uppercase pt-2">Builder</p>
+        <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase pt-2">Builder</p>
         <div className="grid grid-cols-1 gap-2">
           {(
             [
@@ -274,7 +274,7 @@ export function TourDetailCard({
           ))}
         </div>
 
-        <p className="text-[10px] font-bold text-slate-500 uppercase pt-2">Pricing (BDT)</p>
+        <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase pt-2">Pricing (BDT)</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {(
             [
@@ -328,7 +328,7 @@ export function TourDetailCard({
               disabled={disabled}
             />
           </div>
-          <div className="sm:col-span-2 text-[11px] text-slate-600">
+          <div className="sm:col-span-2 text-[11px] text-[var(--muted-foreground)]">
             Margin: {margin == null ? "—" : `৳${margin.toFixed(2)}`}
           </div>
           <div className="sm:col-span-2">

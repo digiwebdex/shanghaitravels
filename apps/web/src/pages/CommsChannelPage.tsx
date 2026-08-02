@@ -173,7 +173,7 @@ function CommsChannelPage({ channel }: { channel: Channel }) {
         ) : (
           <>
             <Can perm="comms:send">
-              <form onSubmit={(e) => void send(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+              <form onSubmit={(e) => void send(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
                 <div>
                   <label className={labelCls}>Lead</label>
                   <select className={inputCls} value={leadId} onChange={(e) => setLeadId(e.target.value)}>
@@ -233,7 +233,7 @@ function CommsChannelPage({ channel }: { channel: Channel }) {
               </form>
             </Can>
             <Can perm="comms:manage">
-              <form onSubmit={(e) => void createTpl(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+              <form onSubmit={(e) => void createTpl(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
                 <div>
                   <label className={labelCls}>New code</label>
                   <input className={inputCls} value={tplCode} onChange={(e) => setTplCode(e.target.value)} />
@@ -257,28 +257,28 @@ function CommsChannelPage({ channel }: { channel: Channel }) {
                   <textarea className={inputCls} rows={2} value={tplBody} onChange={(e) => setTplBody(e.target.value)} />
                 </div>
                 <div className="sm:col-span-4">
-                  <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-semibold border border-slate-200">
+                  <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-semibold border border-[var(--border)]">
                     Save template
                   </button>
                 </div>
               </form>
             </Can>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <section className="bg-white rounded-xl border border-slate-200 p-4">
+              <section className="bg-white rounded-xl border border-[var(--border)] p-4">
                 <h2 className="text-[12px] font-bold mb-2">Threads</h2>
                 <ul className="space-y-2 text-[11px]">
                   {threads.map((t) => (
                     <li key={t.id}>
-                      <button type="button" className="text-left w-full border-b border-slate-50 pb-2" onClick={() => void commsApi.getThread(t.id).then(setActiveThread)}>
+                      <button type="button" className="text-left w-full border-b border-[var(--border)] pb-2" onClick={() => void commsApi.getThread(t.id).then(setActiveThread)}>
                         <span className="font-bold">{t.subject || t.partyLabel || t.id.slice(0, 8)}</span>
-                        <span className="text-slate-500 ml-2">{t.status}</span>
+                        <span className="text-[var(--muted-foreground)] ml-2">{t.status}</span>
                       </button>
                     </li>
                   ))}
-                  {threads.length === 0 && <li className="text-slate-400">No threads.</li>}
+                  {threads.length === 0 && <li className="text-[var(--muted-foreground)]">No threads.</li>}
                 </ul>
                 {activeThread && (
-                  <div className="mt-3 bg-slate-50 rounded-lg p-2 max-h-56 overflow-auto space-y-2">
+                  <div className="mt-3 bg-[var(--muted)] rounded-lg p-2 max-h-56 overflow-auto space-y-2">
                     {(activeThread.messages || []).map((m) => (
                       <div key={m.id} className="text-[10.5px]">
                         <span className="font-semibold">{m.direction}</span> · {m.status}
@@ -288,18 +288,18 @@ function CommsChannelPage({ channel }: { channel: Channel }) {
                   </div>
                 )}
               </section>
-              <section className="bg-white rounded-xl border border-slate-200 p-4">
+              <section className="bg-white rounded-xl border border-[var(--border)] p-4">
                 <h2 className="text-[12px] font-bold mb-2">Delivery history</h2>
                 <ul className="space-y-2 text-[11px]">
                   {delivery.map((m) => (
-                    <li key={m.id} className="border-b border-slate-50 pb-2 flex justify-between gap-2">
+                    <li key={m.id} className="border-b border-[var(--border)] pb-2 flex justify-between gap-2">
                       <span>
                         {m.status} · {m.provider || "—"}
                       </span>
-                      <span className="text-slate-400">{new Date(m.createdAt).toLocaleString("en-BD")}</span>
+                      <span className="text-[var(--muted-foreground)]">{new Date(m.createdAt).toLocaleString("en-BD")}</span>
                     </li>
                   ))}
-                  {delivery.length === 0 && <li className="text-slate-400">No deliveries.</li>}
+                  {delivery.length === 0 && <li className="text-[var(--muted-foreground)]">No deliveries.</li>}
                 </ul>
               </section>
             </div>

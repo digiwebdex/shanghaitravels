@@ -34,3 +34,14 @@ export const radius = {
   lg: "16px",
   xl: "24px",
 } as const;
+
+/** Soft enterprise elevation — prefer CSS `shadow-[var(--shadow-card)]` in className. */
+export const shadow = {
+  card: "0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(20,33,61,0.06)",
+  float: "0 16px 40px rgba(20,33,61,0.14)",
+} as const;
+
+export const easing = {
+  standard: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+  emphasized: "cubic-bezier(0.2, 0, 0, 1)",
+} as const;

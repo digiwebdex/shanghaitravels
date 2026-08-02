@@ -40,7 +40,7 @@ export default function AgentCustomersPage() {
   return (
     <div className="p-5 max-w-5xl space-y-4">
       <h1 className="text-[16px] font-bold">Customers</h1>
-      <p className="text-[11px] text-slate-500">Only customers linked to your bookings.</p>
+      <p className="text-[11px] text-[var(--muted-foreground)]">Only customers linked to your bookings.</p>
       {error && <p className="text-red-600 text-[11px]">{error}</p>}
       <form onSubmit={create} className="bg-white border rounded-xl p-4 grid md:grid-cols-3 gap-3">
         <input className="border rounded-lg px-3 py-2 text-[12px]" placeholder="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
@@ -54,14 +54,14 @@ export default function AgentCustomersPage() {
         {rows.map((r) => (
           <li key={String(r.id)} className="p-3 flex justify-between">
             <div>
-              <Link className="font-semibold text-amber-700 underline" to={`/portal/agent/customers/${r.id}`}>
+              <Link className="font-semibold text-[var(--accent)] underline" to={`/portal/agent/customers/${r.id}`}>
                 {String(r.fullName)}
               </Link>
-              <div className="text-slate-500">
+              <div className="text-[var(--muted-foreground)]">
                 {String(r.phone || "")} · {String(r.email || "")}
               </div>
             </div>
-            <span className="text-slate-400">{String(r.code)}</span>
+            <span className="text-[var(--muted-foreground)]">{String(r.code)}</span>
           </li>
         ))}
       </ul>

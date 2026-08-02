@@ -71,11 +71,11 @@ export default function SalesReportsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Quotation status</h2>
               <ul className="space-y-1 text-[11px]">
                 {quoteStatus.map((r) => (
-                  <li key={r.status} className="flex justify-between border-b border-slate-50 pb-1">
+                  <li key={r.status} className="flex justify-between border-b border-[var(--border)] pb-1">
                     <span>
                       {r.status} · {r.count}
                     </span>
@@ -84,7 +84,7 @@ export default function SalesReportsPage() {
                 ))}
               </ul>
             </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Win / loss</h2>
               <p className="text-[11px]">
                 Won {winLoss?.won ?? 0} · Lost {winLoss?.lost ?? 0} · Open {winLoss?.open ?? 0} · Win rate{" "}
@@ -100,11 +100,11 @@ export default function SalesReportsPage() {
                 {forecast?.accuracyPct == null ? "—" : `${forecast.accuracyPct}%`}
               </p>
             </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Sales funnel</h2>
               <ul className="space-y-1 text-[11px]">
                 {funnel.map((r) => (
-                  <li key={r.stage} className="flex justify-between border-b border-slate-50 pb-1">
+                  <li key={r.stage} className="flex justify-between border-b border-[var(--border)] pb-1">
                     <span>
                       {r.name} · {r.count}
                     </span>
@@ -113,9 +113,9 @@ export default function SalesReportsPage() {
                 ))}
               </ul>
             </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Sales by executive</h2>
-              <pre className="text-[10px] bg-slate-50 p-2 rounded-lg overflow-auto max-h-56">{JSON.stringify(byExec, null, 2)}</pre>
+              <pre className="text-[10px] bg-[var(--muted)] p-2 rounded-lg overflow-auto max-h-56">{JSON.stringify(byExec, null, 2)}</pre>
             </section>
           </div>
         )}

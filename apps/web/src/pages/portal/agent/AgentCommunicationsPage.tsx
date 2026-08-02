@@ -58,7 +58,7 @@ export default function AgentCommunicationsPage() {
             {messages.map((m) => (
               <li key={String(m.id)}>
                 <div className="font-semibold">{String(m.subject || m.summary)}</div>
-                <div className="text-slate-500">{new Date(String(m.createdAt)).toLocaleString()}</div>
+                <div className="text-[var(--muted-foreground)]">{new Date(String(m.createdAt)).toLocaleString()}</div>
               </li>
             ))}
           </ul>

@@ -77,7 +77,7 @@ export default function CmsTravelPage() {
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         <Can perm="cms:manage">
-          <form onSubmit={save} className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <form onSubmit={save} className="bg-white border border-[var(--border)] rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className={labelCls}>Service</label>
               <select className={inputCls} value={serviceType} onChange={(e) => setServiceType(e.target.value)}>
@@ -116,8 +116,8 @@ export default function CmsTravelPage() {
             <InlineSpinner />
           </div>
         ) : (
-          <table className="w-full text-[11px] bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <thead className="bg-slate-50 text-slate-500">
+          <table className="w-full text-[11px] bg-white border border-[var(--border)] rounded-xl overflow-hidden">
+            <thead className="bg-[var(--muted)] text-[var(--muted-foreground)]">
               <tr>
                 <th className="text-left p-2">Service</th>
                 <th className="text-left p-2">Title</th>
@@ -127,7 +127,7 @@ export default function CmsTravelPage() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} className="border-t border-slate-100">
+                <tr key={r.id} className="border-t border-[var(--border)]">
                   <td className="p-2">{r.serviceType}</td>
                   <td className="p-2 font-semibold">{r.title}</td>
                   <td className="p-2">{r.destination || "—"}</td>

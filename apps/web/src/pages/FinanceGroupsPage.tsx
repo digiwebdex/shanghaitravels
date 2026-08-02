@@ -65,7 +65,7 @@ export default function FinanceGroupsPage() {
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         <Can perm="gl:manage">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
             <div>
               <label className={labelCls}>Code *</label>
               <input className={inputCls} value={code} onChange={(e) => setCode(e.target.value)} required />
@@ -91,7 +91,7 @@ export default function FinanceGroupsPage() {
             </div>
           </form>
         </Can>
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-xl border border-[var(--border)] overflow-hidden">
           {loading ? (
             <div className="flex justify-center py-12">
               <InlineSpinner />
@@ -101,7 +101,7 @@ export default function FinanceGroupsPage() {
           ) : (
             <table className="w-full text-left">
               <thead>
-                <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b border-[var(--border)]">
                   <th className="px-4 py-2 font-bold">Code</th>
                   <th className="px-4 py-2 font-bold">Name</th>
                   <th className="px-4 py-2 font-bold">Type</th>
@@ -110,7 +110,7 @@ export default function FinanceGroupsPage() {
               </thead>
               <tbody>
                 {rows.map((g) => (
-                  <tr key={g.id} className="border-b border-slate-50 text-[11px]">
+                  <tr key={g.id} className="border-b border-[var(--border)] text-[11px]">
                     <td className="px-4 py-2.5 font-semibold">{g.code}</td>
                     <td className="px-4 py-2.5">{g.name}</td>
                     <td className="px-4 py-2.5">{g.type}</td>

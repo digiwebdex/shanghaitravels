@@ -86,18 +86,18 @@ export default function FinanceCustomerLedgerPage() {
           />
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[11.5px]">
-              <thead className="bg-slate-50 text-[9.5px] uppercase tracking-wider text-slate-500">
+              <thead className="bg-[var(--muted)] text-[9.5px] uppercase tracking-wider text-[var(--muted-foreground)]">
                 <tr>
                   <th className="px-4 py-2">Entry</th>
                 </tr>
               </thead>
               <tbody>
                 {entries.length === 0 ? (
-                  <tr><td className="px-4 py-10 text-center text-slate-400">No ledger entries</td></tr>
+                  <tr><td className="px-4 py-10 text-center text-[var(--muted-foreground)]">No ledger entries</td></tr>
                 ) : (
                   entries.map((e, i) => (
-                    <tr key={i} className="border-t border-slate-100">
-                      <td className="px-4 py-2 font-mono text-[10.5px] text-slate-600">{JSON.stringify(e)}</td>
+                    <tr key={i} className="border-t border-[var(--border)]">
+                      <td className="px-4 py-2 font-mono text-[10.5px] text-[var(--muted-foreground)]">{JSON.stringify(e)}</td>
                     </tr>
                   ))
                 )}

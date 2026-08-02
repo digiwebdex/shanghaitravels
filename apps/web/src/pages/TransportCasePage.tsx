@@ -130,7 +130,7 @@ export default function TransportCasePage() {
     return (
       <div className="p-5">
         <ErrorBanner message={error || "Case not found"} />
-        <Link to="/transport" className="text-[11px] text-amber-600 font-semibold">
+        <Link to="/transport" className="text-[11px] text-[var(--accent)] font-semibold">
           ← Transport
         </Link>
       </div>
@@ -141,7 +141,7 @@ export default function TransportCasePage() {
     return (
       <div className="p-5">
         <ErrorBanner message={`This case is serviceType=${app.serviceType}, not transport.`} />
-        <Link to="/transport" className="text-[11px] text-amber-600 font-semibold">
+        <Link to="/transport" className="text-[11px] text-[var(--accent)] font-semibold">
           ← Transport
         </Link>
       </div>
@@ -167,23 +167,23 @@ export default function TransportCasePage() {
       <ErrorBanner message={error} />
       <SuccessBanner message={ok} />
 
-        <section className="bg-white rounded-xl border border-slate-200 p-4">
-          <h2 className="text-[12px] font-bold text-slate-800 mb-3">Workflow stages</h2>
+        <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+          <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">Workflow stages</h2>
           <CaseTimeline stages={timelineStages} currentStage={currentIdx} variant="staff" />
           <ul className="mt-4 space-y-1.5">
             {stages.map((s) => (
-              <li key={s.id} className="flex items-center gap-2 text-[11px] text-slate-600">
+              <li key={s.id} className="flex items-center gap-2 text-[11px] text-[var(--muted-foreground)]">
                 {s.status === "done" ? (
                   <CheckCircle2 size={14} className="text-emerald-500" />
                 ) : s.status === "active" ? (
                   <Circle size={14} className="text-amber-500" />
                 ) : (
-                  <Circle size={14} className="text-slate-300" />
+                  <Circle size={14} className="text-[var(--navy-200)]" />
                 )}
                 <span className="font-semibold">
                   {s.stageNo}. {s.name}
                 </span>
-                <span className="text-slate-400">{s.status}</span>
+                <span className="text-[var(--muted-foreground)]">{s.status}</span>
               </li>
             ))}
           </ul>
@@ -204,7 +204,7 @@ export default function TransportCasePage() {
                 onClick={() =>
                   run(() => applicationsApi.note(app.id, note.trim()), "Note saved", true)
                 }
-                className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold disabled:opacity-50"
+                className="px-3 py-1.5 rounded-lg border border-[var(--border)] text-[10.5px] font-semibold disabled:opacity-50"
               >
                 Add note
               </button>
@@ -246,7 +246,7 @@ export default function TransportCasePage() {
                     "Case marked completed",
                   )
                 }
-                className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold disabled:opacity-50"
+                className="px-3 py-1.5 rounded-lg border border-[var(--border)] text-[10.5px] font-semibold disabled:opacity-50"
               >
                 Mark delivered / archive
               </button>
@@ -293,17 +293,17 @@ export default function TransportCasePage() {
           defaultDescription={`${app.title || "Transport"} — transport fee`}
         />
 
-        <section className="bg-white rounded-xl border border-slate-200 p-4">
-          <h2 className="text-[12px] font-bold text-slate-800 mb-3">History</h2>
+        <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+          <h2 className="text-[12px] font-bold text-[var(--primary)] mb-3">History</h2>
           {(journey?.events || app.events || []).length === 0 ? (
-            <p className="text-[11px] text-slate-400">No events yet.</p>
+            <p className="text-[11px] text-[var(--muted-foreground)]">No events yet.</p>
           ) : (
             <ul className="space-y-2 max-h-64 overflow-y-auto">
               {(journey?.events || app.events || []).map((ev) => (
-                <li key={ev.id} className="text-[11px] border-b border-slate-50 pb-2">
-                  <span className="font-bold text-slate-700">{ev.type}</span>
-                  <span className="text-slate-400 ml-2">{new Date(ev.createdAt).toLocaleString("en-BD")}</span>
-                  <p className="text-slate-600 mt-0.5">{ev.message}</p>
+                <li key={ev.id} className="text-[11px] border-b border-[var(--border)] pb-2">
+                  <span className="font-bold text-[var(--primary)]">{ev.type}</span>
+                  <span className="text-[var(--muted-foreground)] ml-2">{new Date(ev.createdAt).toLocaleString("en-BD")}</span>
+                  <p className="text-[var(--muted-foreground)] mt-0.5">{ev.message}</p>
                 </li>
               ))}
             </ul>

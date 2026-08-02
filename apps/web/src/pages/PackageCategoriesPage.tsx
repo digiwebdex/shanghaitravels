@@ -87,7 +87,7 @@ export default function PackageCategoriesPage() {
         <SuccessBanner message={ok} />
 
         <Can perm="application:write">
-          <form onSubmit={(e) => void save(e)} className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <form onSubmit={(e) => void save(e)} className="bg-white border border-[var(--border)] rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
               <label className={labelCls}>Code *</label>
               <input className={inputCls} value={code} onChange={(e) => setCode(e.target.value)} required />
@@ -125,8 +125,8 @@ export default function PackageCategoriesPage() {
         ) : !rows.length ? (
           <EmptyState title="No categories" hint="Add categories to organize packages." />
         ) : (
-          <table className="w-full text-[11px] bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <thead className="bg-slate-50 text-slate-500">
+          <table className="w-full text-[11px] bg-white border border-[var(--border)] rounded-xl overflow-hidden">
+            <thead className="bg-[var(--muted)] text-[var(--muted-foreground)]">
               <tr>
                 <th className="text-left p-2">Code</th>
                 <th className="text-left p-2">Name</th>
@@ -136,12 +136,12 @@ export default function PackageCategoriesPage() {
             </thead>
             <tbody>
               {rows.map((c) => (
-                <tr key={c.id} className="border-t border-slate-100">
+                <tr key={c.id} className="border-t border-[var(--border)]">
                   <td className="p-2 font-mono">{c.code}</td>
                   <td className="p-2">{c.name}</td>
                   <td className="p-2">{c.slug}</td>
                   <td className="p-2">
-                    <button type="button" onClick={() => void toggle(c)} className="text-amber-700 font-semibold">
+                    <button type="button" onClick={() => void toggle(c)} className="text-[var(--accent)] font-semibold">
                       {c.active !== false ? "Yes" : "No"}
                     </button>
                   </td>

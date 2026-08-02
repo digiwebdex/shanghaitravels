@@ -71,7 +71,7 @@ export default function AgentsPage() {
 
   const columns: Column<Agent>[] = [
     { key: "code", header: "Code", className: "font-mono font-semibold", render: (r) => r.code },
-    { key: "name", header: "Name", render: (r) => <span className="font-semibold text-slate-800">{r.name}</span> },
+    { key: "name", header: "Name", render: (r) => <span className="font-semibold text-[var(--primary)]">{r.name}</span> },
     { key: "phone", header: "Phone", render: (r) => r.phone || "—" },
     { key: "email", header: "Email", render: (r) => r.email || "—" },
     {
@@ -156,7 +156,7 @@ export default function AgentsPage() {
           title={`${rows.length} agent${rows.length === 1 ? "" : "s"}`}
           action={
             <input
-              className="w-44 rounded-lg border border-slate-200 px-3 py-1.5 text-[11.5px] sm:w-60"
+              className="w-44 rounded-lg border border-[var(--border)] px-3 py-1.5 text-[11.5px] sm:w-60"
               placeholder="Search agents…"
               value={q}
               onChange={(e) => setQ(e.target.value)}

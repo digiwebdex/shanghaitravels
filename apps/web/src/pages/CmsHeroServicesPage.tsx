@@ -176,17 +176,17 @@ export default function CmsHeroServicesPage() {
             <button
               type="button"
               onClick={() => void seedDefaults()}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-[11px] font-semibold text-slate-700 hover:border-slate-300"
+              className="px-3 py-1.5 rounded-lg border border-[var(--border)] bg-white text-[11px] font-semibold text-[var(--primary)] hover:border-slate-300"
             >
               Seed default 4 services
             </button>
-            <span className="text-[11px] text-slate-500 self-center">
+            <span className="text-[11px] text-[var(--muted-foreground)] self-center">
               Enabled: {publishedCount}/{HERO_SERVICE_MAX}
             </span>
           </div>
 
-          <form onSubmit={save} className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="md:col-span-2 text-[11px] font-semibold text-slate-700">
+          <form onSubmit={save} className="bg-white border border-[var(--border)] rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="md:col-span-2 text-[11px] font-semibold text-[var(--primary)]">
               {editingId ? "Edit service" : "Add service"}
             </div>
             <div>
@@ -247,7 +247,7 @@ export default function CmsHeroServicesPage() {
               />
             </div>
             <div className="flex items-end gap-3">
-              <label className="inline-flex items-center gap-2 text-[11px] font-semibold text-slate-700">
+              <label className="inline-flex items-center gap-2 text-[11px] font-semibold text-[var(--primary)]">
                 <input
                   type="checkbox"
                   checked={form.enabled}
@@ -264,7 +264,7 @@ export default function CmsHeroServicesPage() {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-[11px] font-semibold"
+                  className="px-3 py-1.5 rounded-lg border border-[var(--border)] text-[11px] font-semibold"
                 >
                   Cancel
                 </button>
@@ -285,23 +285,23 @@ export default function CmsHeroServicesPage() {
               .map((row) => {
                 const item = parseHeroServiceFromCms(row as CmsContent & { coverUrl?: string | null; meta?: unknown; sortOrder?: number });
                 return (
-                  <li key={row.id} className="bg-white border border-slate-200 rounded-xl p-3 flex flex-wrap items-start justify-between gap-3">
+                  <li key={row.id} className="bg-white border border-[var(--border)] rounded-xl p-3 flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="text-[12px] font-bold text-slate-800">
+                      <div className="text-[12px] font-bold text-[var(--primary)]">
                         {item.title}{" "}
-                        <span className="text-slate-400 font-medium">
+                        <span className="text-[var(--muted-foreground)] font-medium">
                           · {item.icon} · order {item.sortOrder}
                         </span>
                       </div>
-                      <div className="text-[11px] text-slate-600 mt-0.5">{item.description}</div>
-                      <div className="text-[10px] text-slate-500 mt-1">
+                      <div className="text-[11px] text-[var(--muted-foreground)] mt-0.5">{item.description}</div>
+                      <div className="text-[10px] text-[var(--muted-foreground)] mt-1">
                         {item.buttonText} → {item.url}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span
                         className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          item.enabled ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
+                          item.enabled ? "bg-emerald-50 text-emerald-700" : "bg-[var(--background)] text-[var(--muted-foreground)]"
                         }`}
                       >
                         {item.enabled ? "Enabled" : "Disabled"}
@@ -310,14 +310,14 @@ export default function CmsHeroServicesPage() {
                         <button
                           type="button"
                           onClick={() => editRow(row)}
-                          className="px-2 py-1 rounded-md border border-slate-200 text-[10px] font-semibold"
+                          className="px-2 py-1 rounded-md border border-[var(--border)] text-[10px] font-semibold"
                         >
                           Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => void toggle(row)}
-                          className="px-2 py-1 rounded-md border border-slate-200 text-[10px] font-semibold"
+                          className="px-2 py-1 rounded-md border border-[var(--border)] text-[10px] font-semibold"
                         >
                           {item.enabled ? "Disable" : "Enable"}
                         </button>
@@ -327,7 +327,7 @@ export default function CmsHeroServicesPage() {
                 );
               })}
             {!rows.length && (
-              <li className="text-[12px] text-slate-500 py-8 text-center border border-dashed border-slate-200 rounded-xl">
+              <li className="text-[12px] text-[var(--muted-foreground)] py-8 text-center border border-dashed border-[var(--border)] rounded-xl">
                 No hero services yet. Seed defaults or add a service above.
               </li>
             )}

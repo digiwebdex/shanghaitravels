@@ -7,11 +7,11 @@ import type { Account, AppDocument, Application, Invoice, Journey, StaffUser } f
 import { Can } from "@/auth/Can";
 import { useAuth } from "@/auth/AuthProvider";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
-import { InlineSpinner } from "@/components/FullPageSpinner";
 import {
   KpiCard,
   PageHeader,
   PageShell,
+  SkeletonRows,
   StatStrip,
   Surface,
   btnGhost,
@@ -19,7 +19,7 @@ import {
   btnPrimaryStyle,
 } from "@/components/enterprise/Page";
 import { EntityTabPanel, EntityTabs } from "@/components/workflow/EntityTabs";
-import { MasterJourneyStrip, NextStepBanner } from "@/components/workflow/MasterJourney";
+import { JourneyContinuity, NextStepBanner } from "@/components/workflow/MasterJourney";
 import { CaseAssignCard } from "@/components/cases/CaseAssignCard";
 import { CaseDocumentsCard } from "@/components/cases/CaseDocumentsCard";
 import { CaseFinanceCard } from "@/components/cases/CaseFinanceCard";
@@ -172,10 +172,8 @@ export default function BookingWorkspacePage() {
 
   if (loading) {
     return (
-      <PageShell>
-        <div className="flex justify-center py-20">
-          <InlineSpinner />
-        </div>
+      <PageShell wide>
+        <SkeletonRows rows={8} />
       </PageShell>
     );
   }
@@ -218,7 +216,17 @@ export default function BookingWorkspacePage() {
         }
       />
 
-      <MasterJourneyStrip active={master} />
+      <JourneyContinuity
+        active={master}
+        previousHint={docs.length ? "Documents / OCR in progress" : "Booking created"}
+        nextHint={
+          !docs.length
+            ? "Upload & OCR traveler documents"
+            : !invoices.length
+              ? "Invoice from this booking"
+              : "Complete operations → travel"
+        }
+      />
 
       <BookingLifecycleStrip status={app.status} hasDocs={docs.length > 0} hasInvoice={invoices.length > 0} />
 
@@ -232,7 +240,7 @@ export default function BookingWorkspacePage() {
                 ? "Advance operations on the service desk"
                 : "Capture after-sales feedback on the customer"
         }
-        body="Documents → OCR → verify → operate → invoice → payment. Stay in Booking 360; deep service actions open the existing desk without leaving the journey."
+        body="Everything for this booking stays here. Deep visa/ticket/hotel processing opens the service desk — same journey, not another module."
         actions={
           !docs.length
             ? [
@@ -427,10 +435,10 @@ export default function BookingWorkspacePage() {
           <CaseTimeline stages={timelineStages} currentStage={currentIdx} variant="staff" showSublabel compact />
           <ul className="mt-4 max-h-64 space-y-2 overflow-y-auto">
             {(journey?.events || app.events || []).map((ev) => (
-              <li key={ev.id} className="border-b border-slate-50 pb-2 text-[11px]">
-                <span className="font-bold text-slate-700">{ev.type}</span>
-                <span className="ml-2 text-slate-400">{new Date(ev.createdAt).toLocaleString("en-BD")}</span>
-                <p className="text-slate-600">{ev.message}</p>
+              <li key={ev.id} className="border-b border-[var(--border)] pb-2 text-[11px]">
+                <span className="font-bold text-[var(--primary)]">{ev.type}</span>
+                <span className="ml-2 text-[var(--muted-foreground)]">{new Date(ev.createdAt).toLocaleString("en-BD")}</span>
+                <p className="text-[var(--muted-foreground)]">{ev.message}</p>
               </li>
             ))}
           </ul>
@@ -462,7 +470,7 @@ export default function BookingWorkspacePage() {
           <ul className="max-h-80 space-y-2 overflow-y-auto">
             {(journey?.events || app.events || []).map((ev) => (
               <li key={ev.id} className="rounded-xl border border-[var(--border)] px-3 py-2 text-[11px]">
-                <span className="font-mono text-[10px] text-slate-400">{ev.createdAt}</span>
+                <span className="font-mono text-[10px] text-[var(--muted-foreground)]">{ev.createdAt}</span>
                 <p className="font-bold">{ev.type}</p>
                 <p>{ev.message}</p>
               </li>
@@ -502,7 +510,7 @@ function BookingLifecycleStrip({
           className={`rounded-full border px-2 py-1 text-[10px] font-bold ${
             i <= idx
               ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-              : "border-slate-200 bg-white text-slate-400"
+              : "border-[var(--border)] bg-white text-[var(--muted-foreground)]"
           }`}
         >
           {s.label}

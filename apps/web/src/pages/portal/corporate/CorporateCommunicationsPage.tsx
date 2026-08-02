@@ -60,10 +60,10 @@ export default function CorporateCommunicationsPage() {
             {messages.map((m) => (
               <li key={String(m.id)}>
                 <div className="font-semibold">{String(m.subject || m.summary)}</div>
-                <div className="text-slate-500">{new Date(String(m.createdAt)).toLocaleString()}</div>
+                <div className="text-[var(--muted-foreground)]">{new Date(String(m.createdAt)).toLocaleString()}</div>
               </li>
             ))}
-            {!messages.length && <li className="text-slate-400">No messages</li>}
+            {!messages.length && <li className="text-[var(--muted-foreground)]">No messages</li>}
           </ul>
         </section>
         <section className="bg-white border rounded-xl p-4">
@@ -74,7 +74,7 @@ export default function CorporateCommunicationsPage() {
                 {String(s.subject)} · {String(s.status)}
               </li>
             ))}
-            {!support.length && <li className="text-slate-400">No tickets</li>}
+            {!support.length && <li className="text-[var(--muted-foreground)]">No tickets</li>}
           </ul>
         </section>
         <section className="bg-white border rounded-xl p-4">
@@ -83,10 +83,10 @@ export default function CorporateCommunicationsPage() {
             {announcements.map((a) => (
               <li key={String(a.id)}>
                 <div className="font-semibold">{String(a.title || a.subject)}</div>
-                <div className="text-slate-500">{String(a.body || a.summary || "").slice(0, 80)}</div>
+                <div className="text-[var(--muted-foreground)]">{String(a.body || a.summary || "").slice(0, 80)}</div>
               </li>
             ))}
-            {!announcements.length && <li className="text-slate-400">No announcements</li>}
+            {!announcements.length && <li className="text-[var(--muted-foreground)]">No announcements</li>}
           </ul>
         </section>
       </div>

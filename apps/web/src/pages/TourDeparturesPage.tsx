@@ -94,10 +94,10 @@ export default function TourDeparturesPage() {
         <Can perm="settings:manage">
           <form
             onSubmit={(e) => void create(e)}
-            className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-3 gap-2"
+            className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-3 gap-2"
           >
             <div className="sm:col-span-3">
-              <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Add departure</p>
+              <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase mb-1">Add departure</p>
             </div>
             <div className="sm:col-span-2">
               <label className={labelCls} htmlFor="dep-pkg">
@@ -186,7 +186,7 @@ export default function TourDeparturesPage() {
           </form>
         </Can>
 
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-xl border border-[var(--border)] overflow-hidden">
           {loading ? (
             <div className="flex justify-center py-12">
               <InlineSpinner />
@@ -197,7 +197,7 @@ export default function TourDeparturesPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                  <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b border-[var(--border)]">
                     <th className="px-4 py-2 font-bold">Package</th>
                     <th className="px-4 py-2 font-bold">Depart</th>
                     <th className="px-4 py-2 font-bold">Return</th>
@@ -208,15 +208,15 @@ export default function TourDeparturesPage() {
                 </thead>
                 <tbody>
                   {rows.map((d) => (
-                    <tr key={d.id} className="border-b border-slate-50 text-[11px]">
-                      <td className="px-4 py-2.5 font-semibold text-slate-800">
+                    <tr key={d.id} className="border-b border-[var(--border)] text-[11px]">
+                      <td className="px-4 py-2.5 font-semibold text-[var(--primary)]">
                         {d.package ? `${d.package.code} · ${d.package.name}` : d.packageId.slice(0, 8)}
                       </td>
-                      <td className="px-4 py-2.5 text-slate-600">{toDateInput(d.departAt) || "—"}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{toDateInput(d.returnAt) || "—"}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{d.seats ?? "—"}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{d.status}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{d.notes || "—"}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{toDateInput(d.departAt) || "—"}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{toDateInput(d.returnAt) || "—"}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{d.seats ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{d.status}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{d.notes || "—"}</td>
                     </tr>
                   ))}
                 </tbody>

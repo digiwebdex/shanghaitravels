@@ -66,11 +66,11 @@ export default function FinanceApDetailPage() {
   return (
     <div>
       <div className="p-5 max-w-[1100px] space-y-4">
-        <Link to="/finance/ap" className="text-[10px] font-semibold text-amber-600 hover:underline">
+        <Link to="/finance/ap" className="text-[10px] font-semibold text-[var(--accent)] hover:underline">
           ← AP
         </Link>
-        <h1 className="text-[16px] font-bold text-slate-800">{doc.docNo}</h1>
-        <p className="text-[11px] text-slate-500">
+        <h1 className="text-[16px] font-bold text-[var(--primary)]">{doc.docNo}</h1>
+        <p className="text-[11px] text-[var(--muted-foreground)]">
           {doc.type} · {doc.status} · {doc.supplier?.name} · {formatBdt(doc.totalPoisha)}
           {doc.journal ? ` · GL ${doc.journal.journalNo}` : ""}
           {doc.application ? ` · Case ${doc.application.referenceNo}` : ""}
@@ -109,10 +109,10 @@ export default function FinanceApDetailPage() {
           </div>
         </Can>
 
-        <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+        <div className="bg-white rounded-xl border border-[var(--border)] overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="text-[10px] uppercase text-slate-500 border-b">
+              <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b">
                 <th className="px-3 py-2">#</th>
                 <th className="px-3 py-2">Description</th>
                 <th className="px-3 py-2">Amount</th>
@@ -120,7 +120,7 @@ export default function FinanceApDetailPage() {
             </thead>
             <tbody>
               {(doc.lines || []).map((l) => (
-                <tr key={l.lineNo} className="border-b border-slate-50 text-[11px]">
+                <tr key={l.lineNo} className="border-b border-[var(--border)] text-[11px]">
                   <td className="px-3 py-2">{l.lineNo}</td>
                   <td className="px-3 py-2">{l.description}</td>
                   <td className="px-3 py-2">{formatBdt(l.amountPoisha)}</td>
@@ -129,7 +129,7 @@ export default function FinanceApDetailPage() {
             </tbody>
           </table>
         </div>
-        <p className="text-[11px] text-slate-500">Open balance: {formatBdt(doc.balancePoisha)}</p>
+        <p className="text-[11px] text-[var(--muted-foreground)]">Open balance: {formatBdt(doc.balancePoisha)}</p>
       </div>
     </div>
   );

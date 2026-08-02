@@ -96,7 +96,7 @@ export default function PackageAvailabilityPage() {
         <PackagePicker value={packageId} onChange={(id) => setPackageId(id)} label="Select package" required />
 
         {packageId && (
-          <form onSubmit={(e) => void addSlot(e)} className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+          <form onSubmit={(e) => void addSlot(e)} className="bg-white border border-[var(--border)] rounded-xl p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
             <div>
               <label className={labelCls}>Depart date *</label>
               <input type="date" className={inputCls} value={departDate} onChange={(e) => setDepartDate(e.target.value)} required />
@@ -128,8 +128,8 @@ export default function PackageAvailabilityPage() {
         ) : !slots.length ? (
           <EmptyState title="No slots" hint="Add availability slots for this package." />
         ) : (
-          <table className="w-full text-[11px] bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <thead className="bg-slate-50 text-slate-500">
+          <table className="w-full text-[11px] bg-white border border-[var(--border)] rounded-xl overflow-hidden">
+            <thead className="bg-[var(--muted)] text-[var(--muted-foreground)]">
               <tr>
                 <th className="text-left p-2">Depart</th>
                 <th className="text-left p-2">Return</th>
@@ -141,7 +141,7 @@ export default function PackageAvailabilityPage() {
             </thead>
             <tbody>
               {slots.map((s) => (
-                <tr key={s.id} className="border-t border-slate-100">
+                <tr key={s.id} className="border-t border-[var(--border)]">
                   <td className="p-2">{s.departDate.slice(0, 10)}</td>
                   <td className="p-2">{s.returnDate?.slice(0, 10) || "—"}</td>
                   <td className="p-2">

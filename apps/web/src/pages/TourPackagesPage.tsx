@@ -222,9 +222,9 @@ export default function TourPackagesPage() {
         <Can perm="settings:manage">
           <form
             onSubmit={(e) => void create(e)}
-            className="bg-white rounded-xl border border-slate-200 p-4 space-y-3"
+            className="bg-white rounded-xl border border-[var(--border)] p-4 space-y-3"
           >
-            <p className="text-[10px] font-bold text-slate-500 uppercase">Add package product</p>
+            <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase">Add package product</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
                 <label className={labelCls} htmlFor="pkg-code">
@@ -322,10 +322,10 @@ export default function TourPackagesPage() {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <p className="text-[10px] font-bold text-slate-500 uppercase">Day-by-day itinerary</p>
+                <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase">Day-by-day itinerary</p>
                 <button
                   type="button"
-                  className="text-[10px] font-semibold text-amber-700"
+                  className="text-[10px] font-semibold text-[var(--accent)]"
                   onClick={() => setDays((d) => [...d, { day: d.length + 1, title: "", body: "" }])}
                 >
                   + Add day
@@ -333,7 +333,7 @@ export default function TourPackagesPage() {
               </div>
               <div className="space-y-2">
                 {days.map((d, i) => (
-                  <div key={i} className="grid grid-cols-1 sm:grid-cols-4 gap-2 border border-slate-100 rounded-lg p-2">
+                  <div key={i} className="grid grid-cols-1 sm:grid-cols-4 gap-2 border border-[var(--border)] rounded-lg p-2">
                     <div>
                       <label className={labelCls}>Day</label>
                       <input
@@ -432,7 +432,7 @@ export default function TourPackagesPage() {
                   onChange={(e) => setSellingPriceBdt(e.target.value)}
                 />
               </div>
-              <div className="sm:col-span-2 text-[11px] text-slate-600">
+              <div className="sm:col-span-2 text-[11px] text-[var(--muted-foreground)]">
                 Margin: {margin == null ? "—" : `৳${margin.toFixed(2)}`}
               </div>
               <div className="sm:col-span-2">
@@ -453,10 +453,10 @@ export default function TourPackagesPage() {
           </form>
         </Can>
 
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-slate-100 flex gap-2">
+        <div className="bg-white rounded-xl border border-[var(--border)] overflow-hidden">
+          <div className="px-4 py-3 border-b border-[var(--border)] flex gap-2">
             <input
-              className="flex-1 max-w-sm px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
+              className="flex-1 max-w-sm px-3 py-2 border border-[var(--border)] rounded-lg text-[11px]"
               placeholder="Search code / name / destination…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -466,7 +466,7 @@ export default function TourPackagesPage() {
             <button
               type="button"
               onClick={() => void load()}
-              className="px-3 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold"
+              className="px-3 py-2 rounded-lg border border-[var(--border)] text-[11px] font-semibold"
             >
               Refresh
             </button>
@@ -481,7 +481,7 @@ export default function TourPackagesPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                  <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b border-[var(--border)]">
                     <th className="px-4 py-2 font-bold">Code</th>
                     <th className="px-4 py-2 font-bold">Name</th>
                     <th className="px-4 py-2 font-bold">Type</th>
@@ -494,22 +494,22 @@ export default function TourPackagesPage() {
                 </thead>
                 <tbody>
                   {rows.map((p) => (
-                    <tr key={p.id} className="border-b border-slate-50 text-[11px]">
-                      <td className="px-4 py-2.5 font-semibold text-slate-800">{p.code}</td>
-                      <td className="px-4 py-2.5 text-slate-700">{p.name}</td>
-                      <td className="px-4 py-2.5 text-slate-600">
+                    <tr key={p.id} className="border-b border-[var(--border)] text-[11px]">
+                      <td className="px-4 py-2.5 font-semibold text-[var(--primary)]">{p.code}</td>
+                      <td className="px-4 py-2.5 text-[var(--primary)]">{p.name}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">
                         {PACKAGE_TYPE_LABELS[p.packageType as keyof typeof PACKAGE_TYPE_LABELS] || p.packageType}
                       </td>
-                      <td className="px-4 py-2.5 text-slate-600">{p.category}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{p.destination || "—"}</td>
-                      <td className="px-4 py-2.5 text-slate-600">
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{p.category}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{p.destination || "—"}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">
                         {p.sellingPricePoisha != null ? fromPoisha(p.sellingPricePoisha) : "—"}
                       </td>
-                      <td className="px-4 py-2.5 text-slate-600">{p.isActive === false ? "no" : "yes"}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{p.isActive === false ? "no" : "yes"}</td>
                       <td className="px-4 py-2.5 text-right space-x-2">
                         <button
                           type="button"
-                          className="text-[10px] font-semibold text-amber-700"
+                          className="text-[10px] font-semibold text-[var(--accent)]"
                           onClick={() => loadIntoForm(p)}
                         >
                           Load
@@ -517,7 +517,7 @@ export default function TourPackagesPage() {
                         <Can perm="settings:manage">
                           <button
                             type="button"
-                            className="text-[10px] font-semibold text-slate-600"
+                            className="text-[10px] font-semibold text-[var(--muted-foreground)]"
                             onClick={() => void toggleActive(p)}
                           >
                             {p.isActive === false ? "Activate" : "Deactivate"}

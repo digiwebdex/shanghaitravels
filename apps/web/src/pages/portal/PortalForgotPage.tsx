@@ -34,7 +34,7 @@ export default function PortalForgotPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--background)] p-4">
       <form onSubmit={step === "request" ? request : reset} className="w-full max-w-sm bg-white border rounded-xl p-5 space-y-3">
         <h1 className="text-[16px] font-bold">Password reset</h1>
         <input className="w-full border rounded-lg px-3 py-2 text-[12px]" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
@@ -49,7 +49,7 @@ export default function PortalForgotPage() {
         <button type="submit" className="w-full py-2 rounded-lg bg-amber-600 text-white text-[12px] font-bold">
           {step === "request" ? "Send code" : "Reset password"}
         </button>
-        <Link className="text-[11px] text-amber-700 underline" to="/portal/customer/login">Login</Link>
+        <Link className="text-[11px] text-[var(--accent)] underline" to="/portal/customer/login">Login</Link>
       </form>
     </div>
   );

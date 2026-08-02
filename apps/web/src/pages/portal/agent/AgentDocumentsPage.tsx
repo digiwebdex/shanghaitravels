@@ -35,7 +35,7 @@ export default function AgentDocumentsPage() {
       {ok && <p className="text-[11px] text-emerald-700">{ok}</p>}
 
       <div className="rounded-xl border bg-white p-4">
-        <label className="mb-1 block text-[10px] font-bold uppercase text-slate-500">Booking</label>
+        <label className="mb-1 block text-[10px] font-bold uppercase text-[var(--muted-foreground)]">Booking</label>
         <select
           className="mb-3 w-full rounded-lg border px-3 py-2 text-[12px]"
           value={applicationId}
@@ -81,12 +81,12 @@ export default function AgentDocumentsPage() {
         {rows.map((r) => (
           <li key={String(r.id)} className="flex justify-between px-3 py-2">
             <span>{String(r.category || r.fileName || r.id)}</span>
-            <a className="font-semibold text-amber-700" href={agentPortalApi.downloadUrl(String(r.id))}>
+            <a className="font-semibold text-[var(--accent)]" href={agentPortalApi.downloadUrl(String(r.id))}>
               Download
             </a>
           </li>
         ))}
-        {!rows.length && <li className="px-3 py-4 text-slate-400">No documents yet.</li>}
+        {!rows.length && <li className="px-3 py-4 text-[var(--muted-foreground)]">No documents yet.</li>}
       </ul>
     </div>
   );

@@ -34,7 +34,7 @@ export default function CorporateRequestDetailPage() {
 
   return (
     <div className="p-5 max-w-3xl space-y-4">
-      <Link className="text-[11px] text-teal-700 underline" to="/portal/corporate/requests">
+      <Link className="text-[11px] text-[var(--accent)] underline" to="/portal/corporate/requests">
         ← Requests
       </Link>
       {error && <p className="text-red-600 text-[12px]">{error}</p>}
@@ -46,7 +46,7 @@ export default function CorporateRequestDetailPage() {
               <h1 className="text-[16px] font-bold">
                 {req.referenceNo || req.reference} · {req.serviceType}
               </h1>
-              <p className="text-[12px] text-slate-600">
+              <p className="text-[12px] text-[var(--muted-foreground)]">
                 {req.employee?.fullName || req.employeeName} · {req.status}
               </p>
             </div>
@@ -58,11 +58,11 @@ export default function CorporateRequestDetailPage() {
           </div>
           <section className="bg-white border rounded-xl p-4 text-[11px] space-y-1">
             <p>
-              <span className="text-slate-500">Purpose:</span> {String(req.purpose || "—")}
+              <span className="text-[var(--muted-foreground)]">Purpose:</span> {String(req.purpose || "—")}
             </p>
             {req.notes && (
               <p>
-                <span className="text-slate-500">Notes:</span> {String(req.notes)}
+                <span className="text-[var(--muted-foreground)]">Notes:</span> {String(req.notes)}
               </p>
             )}
           </section>

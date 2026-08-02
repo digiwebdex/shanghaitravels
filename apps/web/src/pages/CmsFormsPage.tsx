@@ -47,8 +47,8 @@ export default function CmsFormsPage() {
             <InlineSpinner />
           </div>
         ) : (
-          <table className="w-full text-[11px] bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <thead className="bg-slate-50 text-slate-500">
+          <table className="w-full text-[11px] bg-white border border-[var(--border)] rounded-xl overflow-hidden">
+            <thead className="bg-[var(--muted)] text-[var(--muted-foreground)]">
               <tr>
                 <th className="text-left p-2">When</th>
                 <th className="text-left p-2">Type</th>
@@ -60,7 +60,7 @@ export default function CmsFormsPage() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} className="border-t border-slate-100">
+                <tr key={r.id} className="border-t border-[var(--border)]">
                   <td className="p-2">{new Date(r.createdAt).toLocaleString()}</td>
                   <td className="p-2">{r.formType}</td>
                   <td className="p-2 font-semibold">{r.name}</td>
@@ -72,13 +72,13 @@ export default function CmsFormsPage() {
                   <td className="p-2">{r.pageSlug || "—"}</td>
                   <td className="p-2">
                     {r.leadId ? (
-                      <Link className="text-amber-700 underline" to="/crm">
+                      <Link className="text-[var(--accent)] underline" to="/crm">
                         Lead
                       </Link>
                     ) : createsCrmLead(r.formType) ? (
                       "—"
                     ) : (
-                      <span className="text-slate-400">n/a</span>
+                      <span className="text-[var(--muted-foreground)]">n/a</span>
                     )}
                   </td>
                 </tr>

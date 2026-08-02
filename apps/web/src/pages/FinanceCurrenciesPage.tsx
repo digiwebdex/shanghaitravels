@@ -93,8 +93,8 @@ export default function FinanceCurrenciesPage() {
         ) : (
           <>
             <Can perm="fx:manage">
-              <form onSubmit={(e) => void createCurrency(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
-                <div className="sm:col-span-4 text-[10px] font-bold text-slate-500 uppercase">Add currency</div>
+              <form onSubmit={(e) => void createCurrency(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+                <div className="sm:col-span-4 text-[10px] font-bold text-[var(--muted-foreground)] uppercase">Add currency</div>
                 <div>
                   <label className={labelCls}>Code *</label>
                   <input className={inputCls} value={code} onChange={(e) => setCode(e.target.value)} required />
@@ -113,8 +113,8 @@ export default function FinanceCurrenciesPage() {
                   </button>
                 </div>
               </form>
-              <form onSubmit={(e) => void createRate(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-5 gap-2">
-                <div className="sm:col-span-5 text-[10px] font-bold text-slate-500 uppercase">Add exchange rate</div>
+              <form onSubmit={(e) => void createRate(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-5 gap-2">
+                <div className="sm:col-span-5 text-[10px] font-bold text-[var(--muted-foreground)] uppercase">Add exchange rate</div>
                 <div>
                   <label className={labelCls}>From</label>
                   <input className={inputCls} value={fromCode} onChange={(e) => setFromCode(e.target.value.toUpperCase())} />
@@ -132,20 +132,20 @@ export default function FinanceCurrenciesPage() {
                   <input type="date" className={inputCls} value={rateDate} onChange={(e) => setRateDate(e.target.value)} />
                 </div>
                 <div className="flex items-end">
-                  <button type="submit" className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold">
+                  <button type="submit" className="px-3 py-1.5 rounded-lg border border-[var(--border)] text-[10.5px] font-semibold">
                     Save rate
                   </button>
                 </div>
               </form>
             </Can>
-            <section className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-              <h2 className="text-[12px] font-bold px-4 py-3 border-b border-slate-100">Currencies</h2>
+            <section className="bg-white rounded-xl border border-[var(--border)] overflow-hidden">
+              <h2 className="text-[12px] font-bold px-4 py-3 border-b border-[var(--border)]">Currencies</h2>
               {currencies.length === 0 ? (
                 <EmptyState title="No currencies" hint="Bootstrap foundation to seed BDT." />
               ) : (
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                    <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b border-[var(--border)]">
                       <th className="px-4 py-2 font-bold">Code</th>
                       <th className="px-4 py-2 font-bold">Name</th>
                       <th className="px-4 py-2 font-bold">Base</th>
@@ -153,7 +153,7 @@ export default function FinanceCurrenciesPage() {
                   </thead>
                   <tbody>
                     {currencies.map((c) => (
-                      <tr key={c.id} className="border-b border-slate-50 text-[11px]">
+                      <tr key={c.id} className="border-b border-[var(--border)] text-[11px]">
                         <td className="px-4 py-2.5 font-semibold">{c.code}</td>
                         <td className="px-4 py-2.5">{c.name}</td>
                         <td className="px-4 py-2.5">{c.isBase ? "yes" : "no"}</td>
@@ -163,14 +163,14 @@ export default function FinanceCurrenciesPage() {
                 </table>
               )}
             </section>
-            <section className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-              <h2 className="text-[12px] font-bold px-4 py-3 border-b border-slate-100">Exchange rates</h2>
+            <section className="bg-white rounded-xl border border-[var(--border)] overflow-hidden">
+              <h2 className="text-[12px] font-bold px-4 py-3 border-b border-[var(--border)]">Exchange rates</h2>
               {rates.length === 0 ? (
-                <p className="text-[11px] text-slate-400 px-4 py-6">No FX rates yet.</p>
+                <p className="text-[11px] text-[var(--muted-foreground)] px-4 py-6">No FX rates yet.</p>
               ) : (
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                    <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b border-[var(--border)]">
                       <th className="px-4 py-2 font-bold">Pair</th>
                       <th className="px-4 py-2 font-bold">Rate</th>
                       <th className="px-4 py-2 font-bold">Date</th>
@@ -178,7 +178,7 @@ export default function FinanceCurrenciesPage() {
                   </thead>
                   <tbody>
                     {rates.map((r) => (
-                      <tr key={r.id} className="border-b border-slate-50 text-[11px]">
+                      <tr key={r.id} className="border-b border-[var(--border)] text-[11px]">
                         <td className="px-4 py-2.5 font-semibold">
                           {r.fromCode}/{r.toCode}
                         </td>

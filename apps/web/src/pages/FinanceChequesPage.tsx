@@ -92,7 +92,7 @@ export default function FinanceChequesPage() {
         <SuccessBanner message={ok} />
 
         <Can perm="cheque:manage">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div>
               <label className={labelCls}>Bank account</label>
               <select className={inputCls} value={bankAccountId} onChange={(e) => setBankAccountId(e.target.value)} required>
@@ -137,10 +137,10 @@ export default function FinanceChequesPage() {
         ) : rows.length === 0 ? (
           <EmptyState title="No cheques" hint="Register an outgoing or incoming cheque." />
         ) : (
-          <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+          <div className="bg-white rounded-xl border border-[var(--border)] overflow-x-auto">
             <table className="w-full text-left text-[11px]">
               <thead>
-                <tr className="text-[10px] uppercase text-slate-500 border-b">
+                <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b">
                   <th className="px-3 py-2">No</th>
                   <th className="px-3 py-2">Dir</th>
                   <th className="px-3 py-2">Bank</th>
@@ -152,7 +152,7 @@ export default function FinanceChequesPage() {
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr key={r.id} className="border-b border-slate-50">
+                  <tr key={r.id} className="border-b border-[var(--border)]">
                     <td className="px-3 py-2 font-semibold">{r.chequeNo}</td>
                     <td className="px-3 py-2">{r.direction}</td>
                     <td className="px-3 py-2">{r.bankAccount?.name}</td>
@@ -162,7 +162,7 @@ export default function FinanceChequesPage() {
                     <td className="px-3 py-2">
                       <Can perm="cheque:manage">
                         {r.direction === "outgoing" && r.status !== "printed" && r.status !== "cleared" && (
-                          <button type="button" onClick={() => void print(r.id)} className="text-amber-700 font-semibold hover:underline">
+                          <button type="button" onClick={() => void print(r.id)} className="text-[var(--accent)] font-semibold hover:underline">
                             Print
                           </button>
                         )}

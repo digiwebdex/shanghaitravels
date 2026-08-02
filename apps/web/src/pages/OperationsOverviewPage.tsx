@@ -20,14 +20,20 @@ import {
 import { applicationsApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import type { Application } from "@/lib/types";
-import { PageHeader, PageShell, Surface, btnGhost } from "@/components/enterprise/Page";
+import {
+  EmptyPanel,
+  PageHeader,
+  PageShell,
+  SkeletonRows,
+  Surface,
+  btnGhost,
+} from "@/components/enterprise/Page";
 import { WorkspaceTabsCompact } from "@/workspaces/WorkspaceTabs";
 import { workspaceById } from "@/workspaces/registry";
 import { OcrOpsWidget } from "@/components/ocr/OcrOpsWidget";
 import { EntityTabs } from "@/components/workflow/EntityTabs";
-import { MasterJourneyStrip, NextStepBanner } from "@/components/workflow/MasterJourney";
+import { JourneyContinuity, NextStepBanner } from "@/components/workflow/MasterJourney";
 import { bookingWorkspaceHref, serviceCaseHref, serviceLabel } from "@/lib/workflow";
-import { InlineSpinner } from "@/components/FullPageSpinner";
 
 const QUEUE_TABS = [
   { id: "queue", label: "Queue" },
@@ -122,7 +128,11 @@ export default function OperationsOverviewPage() {
           </button>
         }
       />
-      <MasterJourneyStrip active="operations" compact />
+      <JourneyContinuity
+        active="operations"
+        previousHint="Booking created · documents in OCR"
+        nextHint="Invoice → collect → mark travel ready"
+      />
       <WorkspaceTabsCompact workspace={workspace} />
 
       <NextStepBanner
@@ -144,11 +154,9 @@ export default function OperationsOverviewPage() {
       <Surface padded className="mt-3">
         {error && <p className="mb-2 text-[11px] text-[var(--error)]">{error}</p>}
         {loading ? (
-          <div className="flex justify-center py-10">
-            <InlineSpinner />
-          </div>
+          <SkeletonRows rows={6} />
         ) : !filtered.length ? (
-          <p className="py-8 text-center text-[12px] text-[var(--muted-foreground)]">No cases in this queue.</p>
+          <EmptyPanel title="No cases in this queue" hint="Switch tabs or start a booking from the unified wizard." />
         ) : (
           <ul className="divide-y divide-[var(--border)]">
             {filtered.slice(0, 40).map((a) => (
@@ -163,7 +171,7 @@ export default function OperationsOverviewPage() {
                       {serviceLabel(a.serviceType)} · {a.status}
                     </span>
                     {(a.priority === "urgent" || a.priority === "high") && (
-                      <span className="ml-2 inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-700">
+                      <span className="ml-2 inline-flex items-center gap-0.5 text-[10px] font-bold text-[var(--accent)]">
                         <AlertTriangle size={10} /> {a.priority}
                       </span>
                     )}
@@ -174,7 +182,10 @@ export default function OperationsOverviewPage() {
                   <Link to={bookingWorkspaceHref(a.id)} className="text-[11px] font-bold text-[var(--accent)]">
                     Booking 360
                   </Link>
-                  <Link to={serviceCaseHref(a.serviceType, a.id)} className="text-[11px] font-semibold text-slate-500">
+                  <Link
+                    to={serviceCaseHref(a.serviceType, a.id)}
+                    className="text-[11px] font-semibold text-[var(--muted-foreground)]"
+                  >
                     Desk →
                   </Link>
                 </div>
@@ -189,10 +200,10 @@ export default function OperationsOverviewPage() {
           <Link
             key={c.to}
             to={c.to}
-            className="rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-amber-300 hover:shadow-sm"
+            className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-[var(--shadow-sm)] transition-all hover:border-[var(--accent)] hover:shadow-[var(--shadow-md)]"
           >
-            <c.icon size={18} className="text-amber-600" />
-            <p className="mt-3 text-[14px] font-bold text-slate-900">{c.label}</p>
+            <c.icon size={18} className="text-[var(--accent)]" />
+            <p className="mt-3 text-[14px] font-bold text-[var(--primary)]">{c.label}</p>
           </Link>
         ))}
       </div>
@@ -201,7 +212,7 @@ export default function OperationsOverviewPage() {
 }
 
 function ServiceIcon({ type }: { type: string }) {
-  const cls = "mt-0.5 text-slate-400";
+  const cls = "mt-0.5 text-[var(--muted-foreground)]";
   if (type === "visa") return <FileCheck size={14} className={cls} />;
   if (type === "air_ticket") return <Plane size={14} className={cls} />;
   if (type === "hotel") return <Hotel size={14} className={cls} />;

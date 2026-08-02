@@ -72,25 +72,25 @@ export default function CmsSeoPage() {
       <CmsModuleNav />
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
-        <div className="bg-white border border-slate-200 rounded-xl p-4 text-[11px] space-y-1">
+        <div className="bg-white border border-[var(--border)] rounded-xl p-4 text-[11px] space-y-1">
           <div>
             Sitemap:{" "}
-            <a className="text-amber-700 underline" href={`${ERP}/site/sitemap.xml`} target="_blank" rel="noreferrer">
+            <a className="text-[var(--accent)] underline" href={`${ERP}/site/sitemap.xml`} target="_blank" rel="noreferrer">
               {ERP}/site/sitemap.xml
             </a>
           </div>
           <div>
             Robots:{" "}
-            <a className="text-amber-700 underline" href={`${ERP}/site/robots.txt`} target="_blank" rel="noreferrer">
+            <a className="text-[var(--accent)] underline" href={`${ERP}/site/robots.txt`} target="_blank" rel="noreferrer">
               {ERP}/site/robots.txt
             </a>
           </div>
-          <p className="text-slate-500 mt-2">
+          <p className="text-[var(--muted-foreground)] mt-2">
             Page SEO fields (canonical, Open Graph, structured data) are edited on each CMS page.
           </p>
         </div>
         <Can perm="cms:manage">
-          <form onSubmit={save} className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <form onSubmit={save} className="bg-white border border-[var(--border)] rounded-xl p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className={labelCls}>From path</label>
               <input className={inputCls} value={fromPath} onChange={(e) => setFromPath(e.target.value)} placeholder="/p/old" />
@@ -120,7 +120,7 @@ export default function CmsSeoPage() {
         ) : (
           <ul className="space-y-1 text-[11px]">
             {rows.map((r) => (
-              <li key={r.id} className="bg-white border border-slate-200 rounded-lg px-3 py-2">
+              <li key={r.id} className="bg-white border border-[var(--border)] rounded-lg px-3 py-2">
                 {r.statusCode} {r.fromPath} → {r.toPath} {r.isActive ? "" : "(inactive)"}
               </li>
             ))}

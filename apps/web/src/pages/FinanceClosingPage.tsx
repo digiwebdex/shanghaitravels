@@ -119,20 +119,20 @@ export default function FinanceClosingPage() {
           </div>
         ) : (
           <>
-            <section className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
-              <h2 className="text-[12px] font-bold text-slate-800">Fiscal years</h2>
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4 space-y-3">
+              <h2 className="text-[12px] font-bold text-[var(--primary)]">Fiscal years</h2>
               {years.map((y) => (
-                <div key={y.id} className="border-b border-slate-50 pb-3">
+                <div key={y.id} className="border-b border-[var(--border)] pb-3">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span className="text-[12px] font-bold text-slate-800">
+                    <span className="text-[12px] font-bold text-[var(--primary)]">
                       {y.code} · {y.name}
                     </span>
-                    <span className="text-[10px] text-slate-500">{y.status}</span>
+                    <span className="text-[10px] text-[var(--muted-foreground)]">{y.status}</span>
                     <Can perm="period:close">
                       {y.status !== "closed" && (
                         <button
                           type="button"
-                          className="px-2 py-1 rounded-lg border border-slate-200 text-[10px] font-semibold"
+                          className="px-2 py-1 rounded-lg border border-[var(--border)] text-[10px] font-semibold"
                           onClick={() => void yearEnd(y.id)}
                         >
                           Year-end close
@@ -153,12 +153,12 @@ export default function FinanceClosingPage() {
                     {(y.periods || []).map((p) => (
                       <li key={p.id} className="text-[11px] flex flex-wrap gap-2 items-center">
                         <span className="font-semibold w-20">{p.code}</span>
-                        <span className="text-slate-500">{p.status}</span>
+                        <span className="text-[var(--muted-foreground)]">{p.status}</span>
                         <Can perm="period:lock">
                           {p.status === "closed" && (
                             <button
                               type="button"
-                              className="text-[10px] font-semibold text-amber-700"
+                              className="text-[10px] font-semibold text-[var(--accent)]"
                               onClick={() => void lock(p.id)}
                             >
                               Lock
@@ -168,7 +168,7 @@ export default function FinanceClosingPage() {
                         {(p.status === "closed" || p.status === "locked") && (
                           <button
                             type="button"
-                            className="text-[10px] text-slate-500"
+                            className="text-[10px] text-[var(--muted-foreground)]"
                             onClick={() => setTargetPeriod(p.id)}
                           >
                             Request reopen
@@ -182,7 +182,7 @@ export default function FinanceClosingPage() {
             </section>
 
             <Can perm="period:close">
-              <form onSubmit={(e) => void requestReopen(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <form onSubmit={(e) => void requestReopen(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <div>
                   <label className={labelCls}>Period ID</label>
                   <input className={inputCls} value={targetPeriod} onChange={(e) => setTargetPeriod(e.target.value)} required />
@@ -200,18 +200,18 @@ export default function FinanceClosingPage() {
             </Can>
 
             <Can perm="period:reopen-approve">
-              <section className="bg-white rounded-xl border border-slate-200 p-4">
-                <h2 className="text-[12px] font-bold text-slate-800 mb-2">Pending reopen approvals</h2>
+              <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+                <h2 className="text-[12px] font-bold text-[var(--primary)] mb-2">Pending reopen approvals</h2>
                 {requests.filter((r) => r.status === "pending").length === 0 ? (
-                  <p className="text-[11px] text-slate-400">No pending requests.</p>
+                  <p className="text-[11px] text-[var(--muted-foreground)]">No pending requests.</p>
                 ) : (
                   <ul className="space-y-2">
                     {requests
                       .filter((r) => r.status === "pending")
                       .map((r) => (
-                        <li key={r.id} className="text-[11px] flex flex-wrap gap-2 items-center border-b border-slate-50 pb-2">
+                        <li key={r.id} className="text-[11px] flex flex-wrap gap-2 items-center border-b border-[var(--border)] pb-2">
                           <span className="font-semibold">{r.period?.code || r.periodId}</span>
-                          <span className="text-slate-600">{r.reason}</span>
+                          <span className="text-[var(--muted-foreground)]">{r.reason}</span>
                           <button
                             type="button"
                             className="text-emerald-700 font-semibold"
@@ -243,12 +243,12 @@ export default function FinanceClosingPage() {
               </section>
             </Can>
 
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
-              <h2 className="text-[12px] font-bold text-slate-800 mb-2">Closing runs</h2>
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
+              <h2 className="text-[12px] font-bold text-[var(--primary)] mb-2">Closing runs</h2>
               {runs.length === 0 ? (
-                <p className="text-[11px] text-slate-400">None yet.</p>
+                <p className="text-[11px] text-[var(--muted-foreground)]">None yet.</p>
               ) : (
-                <pre className="text-[10px] bg-slate-50 p-3 rounded-lg overflow-auto max-h-64">{JSON.stringify(runs, null, 2)}</pre>
+                <pre className="text-[10px] bg-[var(--muted)] p-3 rounded-lg overflow-auto max-h-64">{JSON.stringify(runs, null, 2)}</pre>
               )}
             </section>
           </>

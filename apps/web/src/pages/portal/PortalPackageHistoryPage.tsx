@@ -35,10 +35,10 @@ export default function PortalPackageHistoryPage() {
           {rows.map((r, i) => (
             <li key={String(r.id || i)} className="bg-white border rounded-lg p-3">
               <span className="font-semibold">{String(r.packageName || r.action || "Event")}</span>
-              <span className="text-slate-500 block">{String(r.createdAt || r.date || "")}</span>
+              <span className="text-[var(--muted-foreground)] block">{String(r.createdAt || r.date || "")}</span>
             </li>
           ))}
-          {!rows.length && <li className="text-slate-400">No history yet.</li>}
+          {!rows.length && <li className="text-[var(--muted-foreground)]">No history yet.</li>}
         </ul>
       )}
     </div>

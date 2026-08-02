@@ -110,14 +110,14 @@ export default function FinanceReconciliationPage() {
                   ))}
                 </select>
               </div>
-              <form onSubmit={(e) => void importCsv(e)} className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
-                <p className="text-[10px] font-bold text-slate-500 uppercase">Import CSV</p>
+              <form onSubmit={(e) => void importCsv(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 space-y-2">
+                <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase">Import CSV</p>
                 <textarea className={inputCls + " min-h-[120px] font-mono text-[10px]"} value={csv} onChange={(e) => setCsv(e.target.value)} />
                 <button type="submit" className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#F97316,#C2410C)" }}>
                   Import statement
                 </button>
               </form>
-              <form onSubmit={(e) => void startRecon(e)} className="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap gap-2 items-end">
+              <form onSubmit={(e) => void startRecon(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 flex flex-wrap gap-2 items-end">
                 <div>
                   <label className={labelCls}>Statement balance (৳)</label>
                   <input className={inputCls} value={statementBalance} onChange={(e) => setStatementBalance(e.target.value)} required />
@@ -132,11 +132,11 @@ export default function FinanceReconciliationPage() {
                 )}
               </form>
               {lastStatement?.lines && (
-                <div className="bg-white rounded-xl border border-slate-200 p-4">
+                <div className="bg-white rounded-xl border border-[var(--border)] p-4">
                   <p className="text-[11px] font-bold mb-2">Statement lines (matched / unmatched)</p>
                   <ul className="text-[11px] space-y-1">
                     {lastStatement.lines.map((l: any) => (
-                      <li key={l.id} className="flex justify-between border-b border-slate-50 py-1">
+                      <li key={l.id} className="flex justify-between border-b border-[var(--border)] py-1">
                         <span>
                           {l.description} · {l.matchStatus}
                         </span>

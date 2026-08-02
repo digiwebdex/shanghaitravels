@@ -45,7 +45,7 @@ export default function CorporateEmployeeDetailPage() {
 
   return (
     <div className="p-5 max-w-3xl space-y-4">
-      <Link className="text-[11px] text-teal-700 underline" to="/portal/corporate/employees">
+      <Link className="text-[11px] text-[var(--accent)] underline" to="/portal/corporate/employees">
         ← Employees
       </Link>
       {error && <p className="text-red-600 text-[11px]">{error}</p>}
@@ -53,7 +53,7 @@ export default function CorporateEmployeeDetailPage() {
       {emp && (
         <>
           <h1 className="text-[16px] font-bold">{String(emp.fullName)}</h1>
-          <p className="text-[12px] text-slate-600">
+          <p className="text-[12px] text-[var(--muted-foreground)]">
             {String(emp.department || "—")} · {String(emp.designation || "—")} · {String(emp.phone || "—")}
           </p>
           <section className="bg-white border rounded-xl p-4 text-[11px]">
@@ -69,14 +69,14 @@ export default function CorporateEmployeeDetailPage() {
                 </li>
               ))}
               {!data?.emergencyContacts?.length && !emp.emergencyContacts?.length && (
-                <li className="text-slate-400">No emergency contacts</li>
+                <li className="text-[var(--muted-foreground)]">No emergency contacts</li>
               )}
             </ul>
             <form onSubmit={addEmergency} className="grid md:grid-cols-3 gap-2">
               <input className="border rounded px-2 py-1 text-[11px]" value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Contact name" />
               <input className="border rounded px-2 py-1 text-[11px]" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="Phone" />
               <input className="border rounded px-2 py-1 text-[11px]" value={relationship} onChange={(e) => setRelationship(e.target.value)} placeholder="Relationship" />
-              <button type="submit" className="text-[11px] text-teal-700 font-semibold w-fit">
+              <button type="submit" className="text-[11px] text-[var(--accent)] font-semibold w-fit">
                 Add contact
               </button>
             </form>

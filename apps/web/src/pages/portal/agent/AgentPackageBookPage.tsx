@@ -52,15 +52,15 @@ export default function AgentPackageBookPage() {
 
   return (
     <div className="p-6 max-w-lg space-y-4">
-      <Link to="/portal/agent/packages" className="text-[12px] text-amber-700">
+      <Link to="/portal/agent/packages" className="text-[12px] text-[var(--accent)]">
         ← Packages
       </Link>
       <h1 className="text-[18px] font-bold">Book for customer</h1>
       {pkg && (
-        <div className="p-3 rounded-xl border bg-slate-50 text-[12px]">
+        <div className="p-3 rounded-xl border bg-[var(--muted)] text-[12px]">
           <p className="font-bold">{pkg.name}</p>
           <p>{formatPrice(displayPricePoisha(pkg))}</p>
-          <p className="text-[10px] font-mono text-slate-500">PackageID locked: {pkg.id}</p>
+          <p className="text-[10px] font-mono text-[var(--muted-foreground)]">PackageID locked: {pkg.id}</p>
         </div>
       )}
       <ErrorBanner message={error} />

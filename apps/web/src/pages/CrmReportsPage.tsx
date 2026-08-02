@@ -63,26 +63,26 @@ export default function CrmReportsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Lead sources</h2>
               <ul className="space-y-1 text-[11px]">
                 {sources.map((r) => (
-                  <li key={r.source} className="flex justify-between border-b border-slate-50 pb-1">
+                  <li key={r.source} className="flex justify-between border-b border-[var(--border)] pb-1">
                     <span>{r.source}</span>
                     <span className="font-semibold">{r.count}</span>
                   </li>
                 ))}
               </ul>
             </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Conversion</h2>
-              <pre className="text-[10px] bg-slate-50 p-2 rounded-lg overflow-auto">{JSON.stringify(conversion, null, 2)}</pre>
+              <pre className="text-[10px] bg-[var(--muted)] p-2 rounded-lg overflow-auto">{JSON.stringify(conversion, null, 2)}</pre>
             </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Sales pipeline</h2>
               <ul className="space-y-1 text-[11px]">
                 {pipeline.map((r) => (
-                  <li key={r.stage} className="flex justify-between border-b border-slate-50 pb-1">
+                  <li key={r.stage} className="flex justify-between border-b border-[var(--border)] pb-1">
                     <span>
                       {r.stage} · {r.count}
                     </span>
@@ -91,14 +91,14 @@ export default function CrmReportsPage() {
                 ))}
               </ul>
             </section>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Revenue forecast</h2>
               <p className="text-[11px]">
                 Weighted {formatBdt(Number(forecast?.weightedRevenuePoisha) || 0)} · Unweighted{" "}
                 {formatBdt(Number(forecast?.unweightedRevenuePoisha) || 0)} · Open {String(forecast?.openCount ?? 0)}
               </p>
               <h2 className="text-[12px] font-bold mb-2 mt-4">Team</h2>
-              <pre className="text-[10px] bg-slate-50 p-2 rounded-lg overflow-auto max-h-48">{JSON.stringify(team, null, 2)}</pre>
+              <pre className="text-[10px] bg-[var(--muted)] p-2 rounded-lg overflow-auto max-h-48">{JSON.stringify(team, null, 2)}</pre>
             </section>
           </div>
         )}

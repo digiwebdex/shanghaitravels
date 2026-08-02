@@ -160,8 +160,8 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
         </div>
 
         <Can perm="application:write">
-          <form onSubmit={(e) => void save(e)} className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
-            <p className="text-[10px] font-bold text-slate-500 uppercase">
+          <form onSubmit={(e) => void save(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 space-y-3">
+            <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase">
               {editId ? "Edit package" : "Create package"}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -243,7 +243,7 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
                     </option>
                   ))}
                 </select>
-                <p className="mt-0.5 text-[10px] text-slate-400">
+                <p className="mt-0.5 text-[10px] text-[var(--muted-foreground)]">
                   From{" "}
                   <Link to="/partners/suppliers" className="font-semibold text-orange-700 hover:underline">
                     Supplier Center
@@ -321,7 +321,7 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase">Itinerary</p>
+                    <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase">Itinerary</p>
                     <button
                       type="button"
                       className="text-[10px] font-semibold text-orange-700"
@@ -332,7 +332,7 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
                   </div>
                   <div className="space-y-2">
                     {days.map((d, i) => (
-                      <div key={i} className="grid grid-cols-1 sm:grid-cols-4 gap-2 border border-slate-100 rounded-lg p-2">
+                      <div key={i} className="grid grid-cols-1 sm:grid-cols-4 gap-2 border border-[var(--border)] rounded-lg p-2">
                         <input
                           className={inputCls}
                           type="number"
@@ -371,7 +371,7 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
                 {editId ? "Update package" : "Create package"}
               </button>
               {editId && (
-                <button type="button" onClick={resetForm} className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10.5px] font-semibold">
+                <button type="button" onClick={resetForm} className="px-3 py-1.5 rounded-lg border border-[var(--border)] text-[10.5px] font-semibold">
                   Cancel edit
                 </button>
               )}
@@ -386,9 +386,9 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
         ) : !rows.length ? (
           <EmptyState title="No packages yet" hint="Create your first package product above." />
         ) : (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-x-auto">
+          <div className="bg-white border border-[var(--border)] rounded-xl overflow-x-auto">
             <table className="w-full text-[11px]">
-              <thead className="bg-slate-50 text-slate-500">
+              <thead className="bg-[var(--muted)] text-[var(--muted-foreground)]">
                 <tr>
                   <th className="text-left p-2">Code</th>
                   <th className="text-left p-2">Name</th>
@@ -402,7 +402,7 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
               </thead>
               <tbody>
                 {rows.map((p) => (
-                  <tr key={p.id} className="border-t border-slate-100 hover:bg-slate-50/50">
+                  <tr key={p.id} className="border-t border-[var(--border)] hover:bg-[var(--muted)]/50">
                     <td className="p-2 font-mono">{p.code}</td>
                     <td className="p-2">{p.name}</td>
                     <td className="p-2">
@@ -411,11 +411,11 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
                           {p.supplier.name}
                         </Link>
                       ) : (
-                        <span className="text-slate-300">—</span>
+                        <span className="text-[var(--navy-200)]">—</span>
                       )}
                     </td>
                     <td className="p-2">
-                      <span className="px-1.5 py-0.5 rounded bg-slate-100">{p.status}</span>
+                      <span className="px-1.5 py-0.5 rounded bg-[var(--background)]">{p.status}</span>
                     </td>
                     <td className="p-2">{formatPrice(displayPricePoisha(p))}</td>
                     <td className="p-2">{p.seatsAvailable ?? p.totalSeats ?? "—"}</td>
@@ -430,10 +430,10 @@ export default function PackagesListPage({ pricingFocus = false }: Props) {
                         <button type="button" className="text-emerald-700" onClick={() => void act(p.id, "publish")}>
                           Publish
                         </button>
-                        <button type="button" className="text-slate-600" onClick={() => void act(p.id, "unpublish")}>
+                        <button type="button" className="text-[var(--muted-foreground)]" onClick={() => void act(p.id, "unpublish")}>
                           Unpublish
                         </button>
-                        <button type="button" className="text-slate-600" onClick={() => void act(p.id, "archive")}>
+                        <button type="button" className="text-[var(--muted-foreground)]" onClick={() => void act(p.id, "archive")}>
                           Archive
                         </button>
                         <button type="button" className="text-blue-700" onClick={() => void act(p.id, "clone")}>

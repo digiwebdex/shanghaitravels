@@ -64,7 +64,7 @@ export default function CorporateReportsPage() {
           )}
           {!data.travel && !data.approvals && !data.finance && !data.bookings && (
             <section className="bg-white border rounded-xl p-4 text-[11px] col-span-2">
-              <pre className="text-[10px] bg-slate-50 p-2 rounded-lg overflow-auto">{JSON.stringify(data, null, 2)}</pre>
+              <pre className="text-[10px] bg-[var(--muted)] p-2 rounded-lg overflow-auto">{JSON.stringify(data, null, 2)}</pre>
             </section>
           )}
         </div>

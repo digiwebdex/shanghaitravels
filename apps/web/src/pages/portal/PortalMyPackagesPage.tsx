@@ -33,7 +33,7 @@ export default function PortalMyPackagesPage() {
         <InlineSpinner />
       ) : (
         <table className="w-full text-[12px] bg-white border rounded-xl overflow-hidden">
-          <thead className="bg-slate-50">
+          <thead className="bg-[var(--muted)]">
             <tr>
               <th className="text-left p-2">Reference</th>
               <th className="text-left p-2">Package</th>
@@ -44,7 +44,7 @@ export default function PortalMyPackagesPage() {
             {rows.map((r) => (
               <tr key={String(r.id)} className="border-t">
                 <td className="p-2">
-                  <Link to={`/portal/customer/applications/${r.id}`} className="text-amber-700 font-semibold">
+                  <Link to={`/portal/customer/applications/${r.id}`} className="text-[var(--accent)] font-semibold">
                     {String(r.referenceNo || r.id)}
                   </Link>
                 </td>
@@ -54,7 +54,7 @@ export default function PortalMyPackagesPage() {
             ))}
             {!rows.length && (
               <tr>
-                <td colSpan={3} className="p-4 text-slate-400">
+                <td colSpan={3} className="p-4 text-[var(--muted-foreground)]">
                   No package applications yet.
                 </td>
               </tr>

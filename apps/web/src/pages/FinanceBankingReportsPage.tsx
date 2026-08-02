@@ -54,12 +54,12 @@ export default function FinanceBankingReportsPage() {
           </div>
         ) : (
           <>
-            <section className="bg-white rounded-xl border border-slate-200 p-4">
+            <section className="bg-white rounded-xl border border-[var(--border)] p-4">
               <h2 className="text-[12px] font-bold mb-2">Daily cash position</h2>
-              <p className="text-[11px] text-slate-500 mb-3">As of {position?.asOf ? new Date(position.asOf).toLocaleString() : "—"}</p>
+              <p className="text-[11px] text-[var(--muted-foreground)] mb-3">As of {position?.asOf ? new Date(position.asOf).toLocaleString() : "—"}</p>
               <table className="w-full text-left text-[11px]">
                 <thead>
-                  <tr className="text-[10px] uppercase text-slate-500 border-b">
+                  <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b">
                     <th className="px-2 py-2">Account</th>
                     <th className="px-2 py-2">Kind</th>
                     <th className="px-2 py-2">Balance</th>
@@ -67,7 +67,7 @@ export default function FinanceBankingReportsPage() {
                 </thead>
                 <tbody>
                   {(position?.rows || []).map((r) => (
-                    <tr key={r.id} className="border-b border-slate-50">
+                    <tr key={r.id} className="border-b border-[var(--border)]">
                       <td className="px-2 py-2 font-semibold">{r.name}</td>
                       <td className="px-2 py-2">{r.kind}</td>
                       <td className="px-2 py-2">{formatBdt(r.balancePoisha)}</td>
@@ -78,15 +78,15 @@ export default function FinanceBankingReportsPage() {
               <p className="text-[11px] font-bold mt-3">Total {formatBdt(position?.totalPoisha || 0)}</p>
             </section>
             {flow?.summary && (
-              <section className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
+              <section className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-[11px]">
                 {Object.entries(flow.summary as Record<string, number>).map(([k, v]) => (
                   <div key={k}>
-                    <p className="text-slate-500">{k}</p>
+                    <p className="text-[var(--muted-foreground)]">{k}</p>
                     <p className="font-bold">{formatBdt(v)}</p>
                   </div>
                 ))}
                 <div>
-                  <p className="text-slate-500">net</p>
+                  <p className="text-[var(--muted-foreground)]">net</p>
                   <p className="font-bold">{formatBdt(flow.netPoisha || 0)}</p>
                 </div>
               </section>

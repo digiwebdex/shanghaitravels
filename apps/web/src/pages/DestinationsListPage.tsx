@@ -139,8 +139,8 @@ export default function DestinationsListPage() {
         </div>
 
         <Can perm="application:write">
-          <form onSubmit={(e) => void save(e)} className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
-            <p className="text-[10px] font-bold text-slate-500 uppercase">
+          <form onSubmit={(e) => void save(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 space-y-3">
+            <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase">
               {editId ? "Edit destination" : "Create destination"}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -221,7 +221,7 @@ export default function DestinationsListPage() {
                 {editId ? "Update" : "Create"}
               </button>
               {editId && (
-                <button type="button" onClick={resetForm} className="px-4 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold">
+                <button type="button" onClick={resetForm} className="px-4 py-2 rounded-lg border border-[var(--border)] text-[11px] font-semibold">
                   Cancel edit
                 </button>
               )}
@@ -234,8 +234,8 @@ export default function DestinationsListPage() {
         ) : rows.length === 0 ? (
           <EmptyState title="No destinations yet" hint="Create a destination master record above." />
         ) : (
-          <table className="w-full text-[11px] bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <thead className="bg-slate-50 text-slate-500">
+          <table className="w-full text-[11px] bg-white border border-[var(--border)] rounded-xl overflow-hidden">
+            <thead className="bg-[var(--muted)] text-[var(--muted-foreground)]">
               <tr>
                 <th className="text-left p-2">Destination</th>
                 <th className="text-left p-2">Region</th>
@@ -247,23 +247,23 @@ export default function DestinationsListPage() {
             </thead>
             <tbody>
               {rows.map((d) => (
-                <tr key={d.id} className="border-t border-slate-100">
+                <tr key={d.id} className="border-t border-[var(--border)]">
                   <td className="p-2">
                     <span className="font-semibold">{d.name}</span>
-                    <span className="text-slate-400 block font-mono text-[10px]">{d.code}</span>
+                    <span className="text-[var(--muted-foreground)] block font-mono text-[10px]">{d.code}</span>
                   </td>
                   <td className="p-2">{d.region || "—"}</td>
                   <td className="p-2">{d.packageCount ?? 0}</td>
                   <td className="p-2">{d.status}</td>
                   <td className="p-2 text-[10px]">
-                    {d.homepageFeatured && <span className="text-amber-700">Home </span>}
+                    {d.homepageFeatured && <span className="text-[var(--accent)]">Home </span>}
                     {d.popular && <span className="text-orange-700">Popular </span>}
                     {d.featured && <span className="text-emerald-700">Featured</span>}
                   </td>
                   <td className="p-2">
                     <Can perm="application:write">
                       <div className="flex flex-wrap gap-1">
-                        <button type="button" className="text-amber-700" onClick={() => loadEdit(d)}>
+                        <button type="button" className="text-[var(--accent)]" onClick={() => loadEdit(d)}>
                           Edit
                         </button>
                         {d.status !== "published" && (
@@ -272,7 +272,7 @@ export default function DestinationsListPage() {
                           </button>
                         )}
                         {d.status === "published" && (
-                          <button type="button" className="text-slate-600" onClick={() => void act(d.id, "unpublish")}>
+                          <button type="button" className="text-[var(--muted-foreground)]" onClick={() => void act(d.id, "unpublish")}>
                             Unpublish
                           </button>
                         )}

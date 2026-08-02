@@ -77,7 +77,7 @@ export default function CrmActivitiesPage() {
         <ErrorBanner message={error} />
         <SuccessBanner message={ok} />
         <Can perm="communication:manage">
-          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
+          <form onSubmit={(e) => void create(e)} className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-4 gap-2">
             <div>
               <label className={labelCls}>Type</label>
               <select className={inputCls} value={type} onChange={(e) => setType(e.target.value)}>
@@ -118,12 +118,12 @@ export default function CrmActivitiesPage() {
             <InlineSpinner />
           </div>
         ) : (
-          <ul className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
+          <ul className="bg-white rounded-xl border border-[var(--border)] p-4 space-y-2">
             {rows.map((a) => (
-              <li key={a.id} className="text-[11px] flex flex-wrap gap-2 items-center border-b border-slate-50 pb-2">
+              <li key={a.id} className="text-[11px] flex flex-wrap gap-2 items-center border-b border-[var(--border)] pb-2">
                 <span className="font-semibold text-amber-800">{a.type}</span>
-                <span className="font-bold text-slate-800">{a.subject}</span>
-                <span className="text-slate-500">{a.status}</span>
+                <span className="font-bold text-[var(--primary)]">{a.subject}</span>
+                <span className="text-[var(--muted-foreground)]">{a.status}</span>
                 {a.status === "open" && (
                   <Can perm="communication:manage">
                     <button
@@ -142,7 +142,7 @@ export default function CrmActivitiesPage() {
                 )}
               </li>
             ))}
-            {rows.length === 0 && <p className="text-[11px] text-slate-400">No activities.</p>}
+            {rows.length === 0 && <p className="text-[11px] text-[var(--muted-foreground)]">No activities.</p>}
           </ul>
         )}
     </PageShell>

@@ -87,10 +87,10 @@ export default function TransportSuppliersPage() {
         <Can perm="supplier:manage">
           <form
             onSubmit={(e) => void create(e)}
-            className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-2 gap-2"
+            className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-2 gap-2"
           >
             <div className="sm:col-span-2">
-              <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Add supplier</p>
+              <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase mb-1">Add supplier</p>
             </div>
             <div>
               <label className={labelCls} htmlFor="sup-name">
@@ -139,10 +139,10 @@ export default function TransportSuppliersPage() {
           </form>
         </Can>
 
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-slate-100 flex gap-2">
+        <div className="bg-white rounded-xl border border-[var(--border)] overflow-hidden">
+          <div className="px-4 py-3 border-b border-[var(--border)] flex gap-2">
             <input
-              className="flex-1 max-w-sm px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
+              className="flex-1 max-w-sm px-3 py-2 border border-[var(--border)] rounded-lg text-[11px]"
               placeholder="Search suppliers…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -152,7 +152,7 @@ export default function TransportSuppliersPage() {
             <button
               type="button"
               onClick={() => void load()}
-              className="px-3 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold"
+              className="px-3 py-2 rounded-lg border border-[var(--border)] text-[11px] font-semibold"
             >
               Refresh
             </button>
@@ -167,7 +167,7 @@ export default function TransportSuppliersPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                  <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b border-[var(--border)]">
                     <th className="px-4 py-2 font-bold">Code</th>
                     <th className="px-4 py-2 font-bold">Name</th>
                     <th className="px-4 py-2 font-bold">Contact</th>
@@ -177,12 +177,12 @@ export default function TransportSuppliersPage() {
                 </thead>
                 <tbody>
                   {rows.map((s) => (
-                    <tr key={s.id} className="border-b border-slate-50 text-[11px]">
-                      <td className="px-4 py-2.5 font-semibold text-slate-800">{s.code}</td>
-                      <td className="px-4 py-2.5 text-slate-700">{s.name}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{s.contactName || "—"}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{s.phone || "—"}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{s.email || "—"}</td>
+                    <tr key={s.id} className="border-b border-[var(--border)] text-[11px]">
+                      <td className="px-4 py-2.5 font-semibold text-[var(--primary)]">{s.code}</td>
+                      <td className="px-4 py-2.5 text-[var(--primary)]">{s.name}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{s.contactName || "—"}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{s.phone || "—"}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{s.email || "—"}</td>
                     </tr>
                   ))}
                 </tbody>

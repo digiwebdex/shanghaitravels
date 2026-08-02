@@ -100,10 +100,10 @@ export default function HotelCatalogPage() {
         <Can perm="settings:manage">
           <form
             onSubmit={(e) => void create(e)}
-            className="bg-white rounded-xl border border-slate-200 p-4 grid grid-cols-1 sm:grid-cols-3 gap-2"
+            className="bg-white rounded-xl border border-[var(--border)] p-4 grid grid-cols-1 sm:grid-cols-3 gap-2"
           >
             <div className="sm:col-span-3">
-              <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Add property</p>
+              <p className="text-[10px] font-bold text-[var(--muted-foreground)] uppercase mb-1">Add property</p>
             </div>
             <div>
               <label className={labelCls} htmlFor="cat-name">
@@ -161,10 +161,10 @@ export default function HotelCatalogPage() {
           </form>
         </Can>
 
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-slate-100 flex gap-2">
+        <div className="bg-white rounded-xl border border-[var(--border)] overflow-hidden">
+          <div className="px-4 py-3 border-b border-[var(--border)] flex gap-2">
             <input
-              className="flex-1 max-w-sm px-3 py-2 border border-slate-200 rounded-lg text-[11px]"
+              className="flex-1 max-w-sm px-3 py-2 border border-[var(--border)] rounded-lg text-[11px]"
               placeholder="Search name / city…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -174,7 +174,7 @@ export default function HotelCatalogPage() {
             <button
               type="button"
               onClick={() => void load()}
-              className="px-3 py-2 rounded-lg border border-slate-200 text-[11px] font-semibold"
+              className="px-3 py-2 rounded-lg border border-[var(--border)] text-[11px] font-semibold"
             >
               Refresh
             </button>
@@ -189,7 +189,7 @@ export default function HotelCatalogPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                  <tr className="text-[10px] uppercase text-[var(--muted-foreground)] border-b border-[var(--border)]">
                     <th className="px-4 py-2 font-bold">Name</th>
                     <th className="px-4 py-2 font-bold">City</th>
                     <th className="px-4 py-2 font-bold">Country</th>
@@ -200,17 +200,17 @@ export default function HotelCatalogPage() {
                 </thead>
                 <tbody>
                   {rows.map((h) => (
-                    <tr key={h.id} className="border-b border-slate-50 text-[11px]">
-                      <td className="px-4 py-2.5 font-semibold text-slate-800">{h.name}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{h.city || "—"}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{h.country || "—"}</td>
-                      <td className="px-4 py-2.5 text-slate-600">{h.stars ?? "—"}</td>
+                    <tr key={h.id} className="border-b border-[var(--border)] text-[11px]">
+                      <td className="px-4 py-2.5 font-semibold text-[var(--primary)]">{h.name}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{h.city || "—"}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{h.country || "—"}</td>
+                      <td className="px-4 py-2.5 text-[var(--muted-foreground)]">{h.stars ?? "—"}</td>
                       <td className="px-4 py-2.5">{h.isActive === false ? "no" : "yes"}</td>
                       <td className="px-4 py-2.5 text-right">
                         <Can perm="settings:manage">
                           <button
                             type="button"
-                            className="text-[10.5px] font-semibold text-amber-700 hover:underline"
+                            className="text-[10.5px] font-semibold text-[var(--accent)] hover:underline"
                             onClick={() => void toggleActive(h)}
                           >
                             {h.isActive === false ? "Activate" : "Deactivate"}

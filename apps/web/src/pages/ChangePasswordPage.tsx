@@ -37,9 +37,9 @@ export default function ChangePasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F0F2F5] px-4">
-      <div className="w-full max-w-md bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-        <h1 className="text-[18px] font-bold text-slate-800 mb-1">Change password</h1>
-        <p className="text-[11px] text-slate-500 mb-5">
+      <div className="w-full max-w-md bg-white rounded-xl border border-[var(--border)] shadow-sm p-6">
+        <h1 className="text-[18px] font-bold text-[var(--primary)] mb-1">Change password</h1>
+        <p className="text-[11px] text-[var(--muted-foreground)] mb-5">
           {user?.mustChangePassword
             ? "You must set a new password before continuing."
             : "Update your staff account password."}

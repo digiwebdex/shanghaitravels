@@ -47,7 +47,7 @@ export default function CorporateEmployeesPage() {
   return (
     <div className="p-5 max-w-5xl space-y-4">
       <h1 className="text-[16px] font-bold">Employees</h1>
-      <p className="text-[11px] text-slate-500">Corporate employee directory for travel requests.</p>
+      <p className="text-[11px] text-[var(--muted-foreground)]">Corporate employee directory for travel requests.</p>
       {error && <p className="text-red-600 text-[11px]">{error}</p>}
       {ok && <p className="text-emerald-700 text-[11px]">{ok}</p>}
       <form onSubmit={create} className="bg-white border rounded-xl p-4 grid md:grid-cols-3 gap-3">
@@ -76,17 +76,17 @@ export default function CorporateEmployeesPage() {
         {rows.map((r) => (
           <li key={String(r.id)} className="p-3 flex justify-between">
             <div>
-              <Link className="font-semibold text-teal-700 underline" to={`/portal/corporate/employees/${r.id}`}>
+              <Link className="font-semibold text-[var(--accent)] underline" to={`/portal/corporate/employees/${r.id}`}>
                 {String(r.fullName)}
               </Link>
-              <div className="text-slate-500">
+              <div className="text-[var(--muted-foreground)]">
                 {String(r.department || "")} · {String(r.designation || "")} · {String(r.phone || "")}
               </div>
             </div>
-            <span className="text-slate-400">{String(r.passportNo || "—")}</span>
+            <span className="text-[var(--muted-foreground)]">{String(r.passportNo || "—")}</span>
           </li>
         ))}
-        {!rows.length && <li className="p-3 text-slate-400">No employees yet</li>}
+        {!rows.length && <li className="p-3 text-[var(--muted-foreground)]">No employees yet</li>}
       </ul>
     </div>
   );

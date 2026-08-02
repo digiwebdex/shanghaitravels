@@ -91,7 +91,7 @@ export default function CorporateClientsPage() {
     {
       key: "name",
       header: "Company",
-      render: (r) => <span className="font-semibold text-slate-800">{r.companyName}</span>,
+      render: (r) => <span className="font-semibold text-[var(--primary)]">{r.companyName}</span>,
     },
     { key: "contact", header: "Contact", render: (r) => r.contactPerson || "—" },
     { key: "phone", header: "Phone", render: (r) => r.phone || "—" },
@@ -187,7 +187,7 @@ export default function CorporateClientsPage() {
           title={`${rows.length} client${rows.length === 1 ? "" : "s"}`}
           action={
             <input
-              className="w-44 rounded-lg border border-slate-200 px-3 py-1.5 text-[11.5px] sm:w-60"
+              className="w-44 rounded-lg border border-[var(--border)] px-3 py-1.5 text-[11.5px] sm:w-60"
               placeholder="Search companies…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
