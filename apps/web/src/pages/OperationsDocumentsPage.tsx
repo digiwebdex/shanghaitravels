@@ -16,7 +16,7 @@ type PassportDoc = {
 };
 
 export default function OperationsDocumentsPage() {
-  const workspace = workspaceById("operations")!;
+  const workspace = workspaceById("doc-intel")!;
   const [rows, setRows] = useState<PassportDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

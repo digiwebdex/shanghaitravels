@@ -38,12 +38,25 @@ function readExpanded(): Record<string, boolean> {
   }
 }
 
+function leafIsActive(item: NavLeaf, pathname: string, search: string, routerActive: boolean): boolean {
+  const [path, qs] = item.to.split("?");
+  if (!qs) return routerActive;
+  const want = new URLSearchParams(qs);
+  const have = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+  const pathOk = item.end ? pathname === path : pathname === path || pathname.startsWith(`${path}/`);
+  return pathOk && [...want.entries()].every(([k, v]) => have.get(k) === v);
+}
+
 const SidebarLeaf = memo(function SidebarLeaf({
   item,
   onNavigate,
+  pathname,
+  search,
 }: {
   item: NavLeaf;
   onNavigate: () => void;
+  pathname: string;
+  search: string;
 }) {
   const Icon = item.icon;
   return (
@@ -51,23 +64,27 @@ const SidebarLeaf = memo(function SidebarLeaf({
       to={item.to}
       end={item.end}
       onClick={onNavigate}
-      className={({ isActive }) =>
-        `group relative flex items-center gap-2.5 rounded-lg pl-8 pr-2.5 py-[7px] text-[11.5px] font-medium transition-colors duration-100 ${
-          isActive
+      className={({ isActive }) => {
+        const on = leafIsActive(item, pathname, search, isActive);
+        return `group relative flex items-center gap-2.5 rounded-lg pl-8 pr-2.5 py-[7px] text-[11.5px] font-medium transition-colors duration-100 ${
+          on
             ? "bg-orange-500/[0.14] text-orange-100"
             : "text-white/45 hover:bg-white/[0.05] hover:text-white/80"
-        }`
-      }
+        }`;
+      }}
     >
-      {({ isActive }) => (
-        <>
-          {isActive && (
-            <span className="absolute left-[13px] top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-orange-400" />
-          )}
-          <Icon size={13} className={`flex-shrink-0 ${isActive ? "text-orange-400" : "text-white/35"}`} />
-          <span className="flex-1 truncate">{item.label}</span>
-        </>
-      )}
+      {({ isActive }) => {
+        const on = leafIsActive(item, pathname, search, isActive);
+        return (
+          <>
+            {on && (
+              <span className="absolute left-[13px] top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-orange-400" />
+            )}
+            <Icon size={13} className={`flex-shrink-0 ${on ? "text-orange-400" : "text-white/35"}`} />
+            <span className="flex-1 truncate">{item.label}</span>
+          </>
+        );
+      }}
     </NavLink>
   );
 });
@@ -79,6 +96,8 @@ function SidebarSection({
   expanded,
   onToggle,
   onNavigate,
+  pathname,
+  search,
 }: {
   section: NavSection;
   items: NavLeaf[];
@@ -86,6 +105,8 @@ function SidebarSection({
   expanded: boolean;
   onToggle: () => void;
   onNavigate: () => void;
+  pathname: string;
+  search: string;
 }) {
   const Icon = section.icon;
 
@@ -146,7 +167,13 @@ function SidebarSection({
       {expanded && (
         <div className="mt-[2px] space-y-[1px] pb-1">
           {items.map((item) => (
-            <SidebarLeaf key={item.id} item={item} onNavigate={onNavigate} />
+            <SidebarLeaf
+              key={item.id}
+              item={item}
+              onNavigate={onNavigate}
+              pathname={pathname}
+              search={search}
+            />
           ))}
         </div>
       )}
@@ -157,7 +184,7 @@ function SidebarSection({
 export default function AdminLayout() {
   const { user, logout, can } = useAuth();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
 
   const [collapsed, setCollapsed] = useState(() => {
     try {
@@ -293,6 +320,8 @@ export default function AdminLayout() {
               toggleSection(section.id);
             }}
             onNavigate={closeMobile}
+            pathname={pathname}
+            search={search}
           />
         ))}
       </nav>

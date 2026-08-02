@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
-import { Link } from "react-router";
+import { useMemo, type ReactNode } from "react";
+import { Link, useLocation } from "react-router";
 import { ChevronRight, Inbox, type LucideIcon } from "lucide-react";
+import { buildNavBreadcrumb } from "@/config/nav";
 import { gradient } from "@/styles/tokens";
 import { ErrorBanner } from "@/components/Feedback";
 
@@ -23,19 +24,28 @@ export function PageHeader({
   icon: Icon,
   breadcrumb,
   actions,
+  /** When false, use breadcrumb trail as-is (default merges Dashboard › Module › …). */
+  autoNavBreadcrumb = true,
 }: {
   title: string;
   subtitle?: string;
   icon?: LucideIcon;
   breadcrumb?: { label: string; to?: string }[];
   actions?: ReactNode;
+  autoNavBreadcrumb?: boolean;
 }) {
+  const { pathname } = useLocation();
+  const crumbs = useMemo(
+    () => (autoNavBreadcrumb ? buildNavBreadcrumb(pathname, breadcrumb) : breadcrumb || []),
+    [autoNavBreadcrumb, pathname, breadcrumb],
+  );
+
   return (
     <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
-        {breadcrumb && breadcrumb.length > 0 && (
+        {crumbs.length > 0 && (
           <nav aria-label="Breadcrumb" className="mb-1.5 flex flex-wrap items-center gap-1 text-[10.5px] text-[var(--muted-foreground)]">
-            {breadcrumb.map((c, i) => (
+            {crumbs.map((c, i) => (
               <span key={`${c.label}-${i}`} className="flex items-center gap-1">
                 {i > 0 && <ChevronRight size={10} className="opacity-50" />}
                 {c.to ? (

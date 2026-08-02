@@ -19,40 +19,25 @@ const PassportsPage = lazy(() => import("@/pages/PassportsPage"));
 const CaseJourneyPage = lazy(() => import("@/pages/CaseJourneyPage"));
 const TicketingListPage = lazy(() => import("@/pages/TicketingListPage"));
 const TicketingCasePage = lazy(() => import("@/pages/TicketingCasePage"));
-const NewTicketingCasePage = lazy(() =>
-  import("@/pages/TicketingListPage").then((m) => ({ default: m.NewTicketingCasePage })),
-);
 const HotelsListPage = lazy(() => import("@/pages/HotelsListPage"));
 const HotelsCasePage = lazy(() => import("@/pages/HotelsCasePage"));
-const NewHotelCasePage = lazy(() =>
-  import("@/pages/HotelsListPage").then((m) => ({ default: m.NewHotelCasePage })),
-);
 const HotelCatalogPage = lazy(() => import("@/pages/HotelCatalogPage"));
 const HotelSuppliersPage = lazy(() => import("@/pages/HotelSuppliersPage"));
 const HotelReportsPage = lazy(() => import("@/pages/HotelReportsPage"));
 const TransportListPage = lazy(() => import("@/pages/TransportListPage"));
 const TransportCasePage = lazy(() => import("@/pages/TransportCasePage"));
-const NewTransportCasePage = lazy(() =>
-  import("@/pages/TransportListPage").then((m) => ({ default: m.NewTransportCasePage })),
-);
 const TransportVehiclesPage = lazy(() => import("@/pages/TransportVehiclesPage"));
 const TransportRoutesPage = lazy(() => import("@/pages/TransportRoutesPage"));
 const TransportSuppliersPage = lazy(() => import("@/pages/TransportSuppliersPage"));
 const TransportReportsPage = lazy(() => import("@/pages/TransportReportsPage"));
 const TourListPage = lazy(() => import("@/pages/TourListPage"));
 const TourCasePage = lazy(() => import("@/pages/TourCasePage"));
-const NewTourCasePage = lazy(() =>
-  import("@/pages/TourListPage").then((m) => ({ default: m.NewTourCasePage })),
-);
 const TourPackagesPage = lazy(() => import("@/pages/TourPackagesPage"));
 const TourDeparturesPage = lazy(() => import("@/pages/TourDeparturesPage"));
 const TourDestinationsPage = lazy(() => import("@/pages/TourDestinationsPage"));
 const TourReportsPage = lazy(() => import("@/pages/TourReportsPage"));
 const HajjListPage = lazy(() => import("@/pages/HajjListPage"));
 const HajjCasePage = lazy(() => import("@/pages/HajjCasePage"));
-const NewHajjCasePage = lazy(() =>
-  import("@/pages/HajjListPage").then((m) => ({ default: m.NewHajjCasePage })),
-);
 const HajjPackagesPage = lazy(() => import("@/pages/HajjPackagesPage"));
 const HajjPilgrimsPage = lazy(() => import("@/pages/HajjPilgrimsPage"));
 const HajjGroupsPage = lazy(() => import("@/pages/HajjGroupsPage"));
@@ -214,10 +199,6 @@ function Lazy({ children }: { children: React.ReactNode }) {
 }
 
 // NewVisaCase is named export from VisaListPage — load via same chunk
-const NewVisaCasePage = lazy(() =>
-  import("@/pages/VisaListPage").then((m) => ({ default: m.NewVisaCasePage })),
-);
-
 /**
  * HashRouter so /erp/ works without nginx SPA fallback changes.
  * visa-admin and public site remain untouched.
@@ -761,11 +742,7 @@ export const router = createHashRouter([
           },
           {
             path: "visa/new",
-            element: (
-              <Lazy>
-                <NewVisaCasePage />
-              </Lazy>
-            ),
+            element: <Navigate to="/bookings/new?service=visa" replace />,
           },
           {
             path: "visa/:id",
@@ -785,11 +762,7 @@ export const router = createHashRouter([
           },
           {
             path: "ticketing/new",
-            element: (
-              <Lazy>
-                <NewTicketingCasePage />
-              </Lazy>
-            ),
+            element: <Navigate to="/bookings/new?service=air_ticket" replace />,
           },
           {
             path: "ticketing/:id",
@@ -809,11 +782,7 @@ export const router = createHashRouter([
           },
           {
             path: "hotels/new",
-            element: (
-              <Lazy>
-                <NewHotelCasePage />
-              </Lazy>
-            ),
+            element: <Navigate to="/bookings/new?service=hotel" replace />,
           },
           {
             path: "hotels/catalog",
@@ -857,11 +826,7 @@ export const router = createHashRouter([
           },
           {
             path: "transport/new",
-            element: (
-              <Lazy>
-                <NewTransportCasePage />
-              </Lazy>
-            ),
+            element: <Navigate to="/bookings/new?service=transport" replace />,
           },
           {
             path: "transport/vehicles",
@@ -913,11 +878,7 @@ export const router = createHashRouter([
           },
           {
             path: "tours/new",
-            element: (
-              <Lazy>
-                <NewTourCasePage />
-              </Lazy>
-            ),
+            element: <Navigate to="/bookings/new?service=tour" replace />,
           },
           {
             path: "tours/packages",
@@ -1025,11 +986,7 @@ export const router = createHashRouter([
           },
           {
             path: "hajj/new",
-            element: (
-              <Lazy>
-                <NewHajjCasePage />
-              </Lazy>
-            ),
+            element: <Navigate to="/bookings/new?service=hajj" replace />,
           },
           {
             path: "hajj/packages",

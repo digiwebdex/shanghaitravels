@@ -1,4 +1,4 @@
-import { NavLink } from "react-router";
+import { NavLink, useLocation } from "react-router";
 import { useAuth } from "@/auth/AuthProvider";
 import { TAB_ORDER, type Workspace, type WorkspaceTabKind } from "./types";
 
@@ -10,12 +10,30 @@ const KIND_LABEL: Record<WorkspaceTabKind, string> = {
   settings: "Settings",
 };
 
+function pathBase(to: string): string {
+  return to.split("?")[0] || to;
+}
+
+function tabActive(pathname: string, search: string, to: string, end?: boolean): boolean {
+  const [path, qs] = to.split("?");
+  const pathOk = end ? pathname === path : pathname === path || pathname.startsWith(`${path}/`);
+  if (!pathOk) return false;
+  if (!qs) return true;
+  const want = new URLSearchParams(qs);
+  const have = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+  for (const [k, v] of want.entries()) {
+    if (have.get(k) !== v) return false;
+  }
+  return true;
+}
+
 /**
  * Fixed five-group tab bar for every workspace.
  * Renders only tabs the user can reach; groups with zero tabs are hidden.
  */
 export function WorkspaceTabs({ workspace }: { workspace: Workspace }) {
   const { can } = useAuth();
+  const { pathname, search } = useLocation();
   const visible = workspace.tabs.filter((t) => !t.soon && (!t.perm || can(t.perm)));
 
   return (
@@ -25,7 +43,7 @@ export function WorkspaceTabs({ workspace }: { workspace: Workspace }) {
         if (tabs.length === 0) return null;
         return (
           <div key={kind}>
-            <p className="mb-1 px-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-slate-400">
+            <p className="mb-1 px-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--muted-foreground)]">
               {KIND_LABEL[kind]}
             </p>
             <div className="flex flex-wrap gap-1">
@@ -34,13 +52,14 @@ export function WorkspaceTabs({ workspace }: { workspace: Workspace }) {
                   key={`${t.kind}-${t.to}-${t.label}`}
                   to={t.to}
                   end={!!t.end}
-                  className={({ isActive }) =>
-                    `inline-flex items-center gap-1.5 rounded-2xl border px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${
-                      isActive
-                        ? "border-orange-300 bg-orange-50 text-orange-800"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
-                    }`
-                  }
+                  className={() => {
+                    const on = tabActive(pathname, search, t.to, t.end);
+                    return `inline-flex items-center gap-1.5 rounded-2xl border px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${
+                      on
+                        ? "border-[var(--accent)] bg-[var(--orange-50)] text-[var(--accent)]"
+                        : "border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:border-[var(--navy-200)]"
+                    }`;
+                  }}
                 >
                   {t.label}
                 </NavLink>
@@ -53,37 +72,41 @@ export function WorkspaceTabs({ workspace }: { workspace: Workspace }) {
   );
 }
 
-/** Compact single-row variant used inside list pages. */
+/**
+ * Compact bar — exactly Overview · Work · Reports · Calendar · Settings
+ * (first reachable tab per kind).
+ */
 export function WorkspaceTabsCompact({ workspace }: { workspace: Workspace }) {
   const { can } = useAuth();
+  const { pathname, search } = useLocation();
   const visible = workspace.tabs.filter((t) => !t.soon && (!t.perm || can(t.perm)));
-  // Deduplicate by path so Overview/Work aliases don't double up
-  const seen = new Set<string>();
-  const unique = visible.filter((t) => {
-    const key = `${t.to}:${t.end ? "end" : ""}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
 
   return (
     <nav className="flex flex-wrap gap-1" aria-label={`${workspace.label} workspace`}>
-      {unique.map((t) => (
-        <NavLink
-          key={`${t.to}-${t.label}`}
-          to={t.to}
-          end={!!t.end}
-          className={({ isActive }) =>
-            `inline-flex items-center gap-1.5 rounded-2xl border px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${
-              isActive
-                ? "border-orange-300 bg-orange-50 text-orange-800"
-                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
-            }`
-          }
-        >
-          {t.label}
-        </NavLink>
-      ))}
+      {TAB_ORDER.map((kind) => {
+        const first = visible.find((t) => t.kind === kind);
+        if (!first) return null;
+        const kindTabs = visible.filter((t) => t.kind === kind);
+        const on = kindTabs.some((t) => tabActive(pathname, search, t.to, t.end));
+        return (
+          <NavLink
+            key={kind}
+            to={first.to}
+            end={!!first.end}
+            className={() =>
+              `inline-flex items-center gap-1.5 rounded-2xl border px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${
+                on
+                  ? "border-[var(--accent)] bg-[var(--orange-50)] text-[var(--accent)]"
+                  : "border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:border-[var(--navy-200)]"
+              }`
+            }
+          >
+            {KIND_LABEL[kind]}
+          </NavLink>
+        );
+      })}
     </nav>
   );
 }
+
+export { pathBase };
