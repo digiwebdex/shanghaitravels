@@ -11,6 +11,7 @@ import {
   Package,
 } from "lucide-react";
 import { agentPortalApi } from "@/lib/agentPortalApi";
+import { agentPortalSearchHits } from "@/lib/portalSmartSearch";
 import { PortalPasswordGate, PortalShell } from "@/layouts/portalChrome";
 
 const NAV = [
@@ -83,6 +84,8 @@ export default function AgentPortalLayout() {
       userMeta={code}
       journey="Packages → Commission → Customer → OCR → Booking request → Admin approval → Payment"
       onLogout={() => void logout()}
+      searchHits={agentPortalSearchHits}
+      searchPlaceholder="Search your customers, cases, passport…"
     >
       <Outlet />
     </PortalShell>

@@ -73,6 +73,140 @@ export const authApi = {
     apiFetch("/auth/change-password", { method: "POST", body: { currentPassword, newPassword } }),
 };
 
+export type IntelligenceHit = {
+  kind:
+    | "passport"
+    | "nid"
+    | "customer_id"
+    | "booking"
+    | "visa_file"
+    | "mobile"
+    | "email"
+    | "customer_name"
+    | "agent"
+    | "corporate";
+  priority: number;
+  customerId?: string;
+  applicationId?: string;
+  agentId?: string;
+  corporateId?: string;
+  label: string;
+  subtitle: string;
+  matchedField: string;
+  matchValue: string;
+  duplicateHint?: boolean;
+};
+
+export type IntelligenceProfile = {
+  customer: {
+    id: string;
+    code: string;
+    fullName: string;
+    passportNo: string | null;
+    nationality?: string | null;
+    dob?: string | null;
+    gender?: string | null;
+    mobile?: string | null;
+    whatsapp?: string | null;
+    email?: string | null;
+    address?: string | null;
+    status?: string | null;
+    tier: string;
+    type?: string | null;
+    photoDocumentId?: string | null;
+    passports?: Passport[];
+  };
+  bookings: {
+    total: number;
+    current: {
+      id: string;
+      referenceNo: string;
+      status: string;
+      serviceType: string;
+      currentStage?: number | null;
+      totalStages?: number | null;
+      assignedTo?: string | null;
+    } | null;
+    visaStatus: string | null;
+    ticketStatus: string | null;
+    hotelStatus: string | null;
+    tourStatus: string | null;
+    transportStatus: string | null;
+    hajjStatus: string | null;
+    studentStatus: string | null;
+    manpowerStatus: string | null;
+    upcoming: { id: string; referenceNo: string; serviceType: string; status: string }[];
+    history: { id: string; referenceNo: string; serviceType: string; status: string }[];
+    list: {
+      id: string;
+      referenceNo: string;
+      serviceType: string;
+      status: string;
+      currentStage?: number | null;
+      totalStages?: number | null;
+    }[];
+  };
+  finance: {
+    outstandingDue: number;
+    paidAmount: number;
+    refundAmount: number;
+    invoices: { id: string; invoiceNo: string; status: string; total: number; dueAt?: string | null }[];
+    payments: { id: string; amount: number; kind?: string | null; method?: string | null; receivedAt: string }[];
+  } | null;
+  documents: {
+    items: {
+      id: string;
+      category?: string | null;
+      fileName?: string | null;
+      status?: string | null;
+      isPassport?: boolean;
+      createdAt: string;
+    }[];
+    ocr: {
+      id: string;
+      docType?: string | null;
+      status?: string | null;
+      confidence?: number | null;
+      createdAt: string;
+      appliedAt?: string | null;
+    }[];
+  } | null;
+  crm: {
+    leads: { id: string; name?: string | null; status?: string | null; priority?: string | null; assignedTo?: string | null; updatedAt?: string }[];
+    opportunities: { id: string; title?: string; stage?: string; assignedTo?: string | null }[];
+    salesExecutive?: string | null;
+    lastContact?: string | null;
+  } | null;
+  operations: {
+    currentStage?: number | null;
+    stageName?: string | null;
+    assignedOfficer?: string | null;
+    pendingTasks: { id: string; title: string; priority?: string; applicationId: string; referenceNo: string; dueAt?: string | null }[];
+    urgent?: boolean;
+    workflow: { stageNo: number; name: string; status?: string }[];
+  };
+  agent: {
+    id: string;
+    name: string;
+    code?: string | null;
+    commissionRateBps?: number | null;
+    branchId?: string | null;
+    phone?: string | null;
+    email?: string | null;
+  } | null;
+  corporate: {
+    id: string;
+    companyName: string;
+    contactPerson?: string | null;
+    phone?: string | null;
+    email?: string | null;
+  } | null;
+  communications: { id: string; channel?: string; summary?: string | null; createdAt: string; status?: string | null }[];
+  timeline: { at: string; type: string; title: string; meta?: string }[];
+  permissions: { finance: boolean; applications: boolean; crm: boolean; documents: boolean };
+  duplicate: { passportExists: boolean; passportCount: number; bookingCount: number; documentCount: number };
+};
+
 export const customersApi = {
   list: (q?: { page?: number; limit?: number; q?: string }) => {
     const p = new URLSearchParams();
@@ -87,6 +221,22 @@ export const customersApi = {
   update: (id: string, body: Partial<Customer>) =>
     apiFetch<Customer>(`/customers/${id}`, { method: "PATCH", body }),
   remove: (id: string) => apiFetch(`/customers/${id}`, { method: "DELETE" }),
+  /** Priority-ranked global intelligence search (passport → NID → booking → …). */
+  intelligenceSearch: (q: string) =>
+    apiFetch<{ query: string; hits: IntelligenceHit[]; tookMs: number }>(
+      `/customers/intelligence/search?q=${encodeURIComponent(q)}`,
+    ),
+  /** 360° profile for search result dashboard. */
+  intelligenceProfile: (id: string) => apiFetch<IntelligenceProfile>(`/customers/${id}/intelligence`),
+  intelligenceReports: () =>
+    apiFetch<{
+      duplicatePassports: { passportNo: string; count: number; customers: { id: string; name: string; code: string }[] }[];
+      expiredPassports: { passportNo: string; expiryDate: string; customerId: string; customerName: string; code: string }[];
+      expiringSoonPassports: { passportNo: string; expiryDate: string; customerId: string; customerName: string; code: string }[];
+      pendingPassports: number;
+      pendingOcrScans: number;
+      totals: { passportsIndexed: number; duplicateGroups: number; expired: number; expiringSoon: number };
+    }>("/customers/intelligence/reports"),
 };
 
 export const applicationsApi = {

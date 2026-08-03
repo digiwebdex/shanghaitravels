@@ -13,6 +13,7 @@ import {
   Package,
 } from "lucide-react";
 import { corporatePortalApi } from "@/lib/corporatePortalApi";
+import { corporatePortalSearchHits } from "@/lib/portalSmartSearch";
 import { PortalPasswordGate, PortalShell } from "@/layouts/portalChrome";
 
 const NAV = [
@@ -87,6 +88,8 @@ export default function CorporatePortalLayout() {
       userMeta={companyName}
       journey="Company → Employee → Request → Approval → Booking → Invoice → Payment → Reports"
       onLogout={() => void logout()}
+      searchHits={corporatePortalSearchHits}
+      searchPlaceholder="Search employees, bookings, passport…"
     >
       <Outlet />
     </PortalShell>

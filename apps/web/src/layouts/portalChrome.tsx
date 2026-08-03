@@ -1,8 +1,13 @@
-import type { ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { NavLink } from "react-router";
 import { LogOut, type LucideIcon } from "lucide-react";
 import { gradient } from "@/styles/tokens";
 import { SkeletonRows } from "@/components/enterprise/Page";
+import {
+  PortalSearchTrigger,
+  PortalSmartSearch,
+  type PortalSearchHit,
+} from "@/components/search/PortalSmartSearch";
 
 export type PortalNavItem = {
   to: string;
@@ -21,6 +26,8 @@ export function PortalShell({
   journey,
   onLogout,
   children,
+  searchHits,
+  searchPlaceholder,
 }: {
   brandTitle: string;
   brandSubtitle: string;
@@ -30,7 +37,28 @@ export function PortalShell({
   journey: string;
   onLogout: () => void;
   children: ReactNode;
+  /** Portal-scoped smart search (own records only). */
+  searchHits?: (q: string) => Promise<PortalSearchHit[]>;
+  searchPlaceholder?: string;
 }) {
+  const [searchOpen, setSearchOpen] = useState(false);
+  const loadHits = useCallback(
+    (q: string) => (searchHits ? searchHits(q) : Promise.resolve([])),
+    [searchHits],
+  );
+
+  useEffect(() => {
+    if (!searchHits) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [searchHits]);
+
   return (
     <div className="flex min-h-screen bg-[var(--background)]">
       <aside className="flex w-56 flex-col text-white" style={{ background: gradient.primary }}>
@@ -72,11 +100,22 @@ export function PortalShell({
         </div>
       </aside>
       <main className="flex-1 overflow-auto">
-        <div className="border-b border-[var(--border)] bg-[var(--orange-50)] px-5 py-2.5 text-[11px] text-[var(--primary)]">
-          <span className="font-bold text-[var(--accent)]">Your journey:</span> {journey}
+        <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--orange-50)] px-5 py-2.5 text-[11px] text-[var(--primary)]">
+          <div className="min-w-0 flex-1 truncate">
+            <span className="font-bold text-[var(--accent)]">Your journey:</span> {journey}
+          </div>
+          {searchHits && <PortalSearchTrigger onClick={() => setSearchOpen(true)} />}
         </div>
         <div className="p-4 sm:p-6">{children}</div>
       </main>
+      {searchHits && (
+        <PortalSmartSearch
+          open={searchOpen}
+          onClose={() => setSearchOpen(false)}
+          loadHits={loadHits}
+          placeholder={searchPlaceholder}
+        />
+      )}
     </div>
   );
 }
