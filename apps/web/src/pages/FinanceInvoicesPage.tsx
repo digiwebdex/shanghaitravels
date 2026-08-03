@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router";
+import { useAgentFilter } from "@/lib/useAgentFilter";
 import { Receipt, RefreshCw } from "lucide-react";
 import { financeApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
@@ -18,18 +19,20 @@ export default function FinanceInvoicesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const { agentId } = useAgentFilter();
+
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const r = await financeApi.listInvoices({ limit: 100 });
+      const r = await financeApi.listInvoices({ limit: 100, agentId });
       setRows(listOf<Inv>(r));
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to load invoices");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [agentId]);
 
   useEffect(() => {
     void load();

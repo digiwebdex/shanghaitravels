@@ -208,11 +208,12 @@ export type IntelligenceProfile = {
 };
 
 export const customersApi = {
-  list: (q?: { page?: number; limit?: number; q?: string }) => {
+  list: (q?: { page?: number; limit?: number; q?: string; agentId?: string }) => {
     const p = new URLSearchParams();
     if (q?.page) p.set("page", String(q.page));
     if (q?.limit) p.set("limit", String(q.limit));
     if (q?.q) p.set("q", q.q);
+    if (q?.agentId) p.set("agentId", q.agentId);
     const qs = p.toString();
     return apiFetch<Paginated<Customer> | Customer[]>(`/customers${qs ? `?${qs}` : ""}`);
   },
@@ -240,13 +241,14 @@ export const customersApi = {
 };
 
 export const applicationsApi = {
-  list: (q?: { page?: number; limit?: number; q?: string; serviceType?: string; status?: string }) => {
+  list: (q?: { page?: number; limit?: number; q?: string; serviceType?: string; status?: string; agentId?: string }) => {
     const p = new URLSearchParams();
     if (q?.page) p.set("page", String(q.page));
     if (q?.limit) p.set("limit", String(q.limit));
     if (q?.q) p.set("q", q.q);
     if (q?.serviceType) p.set("serviceType", q.serviceType);
     if (q?.status) p.set("status", q.status);
+    if (q?.agentId) p.set("agentId", q.agentId);
     const qs = p.toString();
     return apiFetch<Paginated<Application> | Application[]>(`/applications${qs ? `?${qs}` : ""}`);
   },
@@ -360,9 +362,10 @@ export const ocrApi = {
 };
 
 export const financeApi = {
-  listInvoices: (q?: { applicationId?: string; customerId?: string; limit?: number }) => {
+  listInvoices: (q?: { applicationId?: string; customerId?: string; limit?: number; agentId?: string }) => {
     const p = new URLSearchParams();
     if (q?.customerId) p.set("customerId", q.customerId);
+    if (q?.agentId) p.set("agentId", q.agentId);
     if (q?.limit) p.set("limit", String(q.limit ?? 50));
     const qs = p.toString();
     return apiFetch<Paginated<Invoice> | Invoice[]>(`/invoices${qs ? `?${qs}` : ""}`);

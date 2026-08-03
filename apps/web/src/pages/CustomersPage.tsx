@@ -1,5 +1,6 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { useAgentFilter } from "@/lib/useAgentFilter";
 import { Plus, RefreshCw, Search, Users } from "lucide-react";
 import { customersApi } from "@/lib/services";
 import { listOf, ApiError } from "@/lib/api";
@@ -37,11 +38,13 @@ export default function CustomersPage() {
   const [ok, setOk] = useState("");
   const [showCreate, setShowCreate] = useState(false);
 
+  const { agentId } = useAgentFilter();
+
   const load = useCallback(async (search?: string) => {
     setLoading(true);
     setError("");
     try {
-      const r = await customersApi.list({ limit: 100, q: search || undefined });
+      const r = await customersApi.list({ limit: 100, q: search || undefined, agentId });
       const data = listOf<Customer>(r);
       setRows(data);
       setTotal(r && typeof r === "object" && "total" in r ? (r as { total: number }).total : data.length);
@@ -50,7 +53,7 @@ export default function CustomersPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [agentId]);
 
   useEffect(() => {
     void load();

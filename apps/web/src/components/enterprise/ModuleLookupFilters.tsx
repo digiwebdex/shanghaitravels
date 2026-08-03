@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
-import { Check, ChevronDown, IdCard, Users } from "lucide-react";
+import { useNavigate } from "react-router";
+import { Check, ChevronDown, IdCard, Users, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
@@ -13,6 +13,7 @@ import {
 import { agentsApi, customersApi, type Agent, type IntelligenceHit } from "@/lib/services";
 import { listOf } from "@/lib/api";
 import { listSearchHistory, recordSearch, type SearchHistoryItem } from "@/lib/smartSearchHistory";
+import { useAgentFilter } from "@/lib/useAgentFilter";
 
 /**
  * TravelOS V4.5.2 — module-level lookup filters that sit in the module filter
@@ -45,7 +46,7 @@ function useDebounced<T>(value: T, ms: number): T {
 }
 
 function AgentLookup({ onAgentSelect }: { onAgentSelect?: (agent: Agent) => void }) {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { setAgent } = useAgentFilter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const debounced = useDebounced(query, 250);
@@ -84,23 +85,16 @@ function AgentLookup({ onAgentSelect }: { onAgentSelect?: (agent: Agent) => void
     };
   }, [open, debounced]);
 
-  function applyParam(agentId: string | null) {
-    const next = new URLSearchParams(searchParams);
-    if (agentId) next.set("agent", agentId);
-    else next.delete("agent");
-    setSearchParams(next, { replace: true });
-  }
-
   function choose(agent: Agent) {
     setSelected(agent);
     setOpen(false);
-    applyParam(agent.id);
+    setAgent(agent.id);
     onAgentSelect?.(agent);
   }
 
   function clearSelection() {
     setSelected(null);
-    applyParam(null);
+    setAgent(null);
     setOpen(false);
   }
 
@@ -262,9 +256,50 @@ function PassportLookup() {
   );
 }
 
+/** Always-visible active-agent chip (hydrated from the URL) + one-click clear. */
+function AgentFilterChip() {
+  const { agentId, clearAgent } = useAgentFilter();
+  const [agent, setAgentState] = useState<Agent | null>(null);
+  useEffect(() => {
+    if (!agentId) {
+      setAgentState(null);
+      return;
+    }
+    let alive = true;
+    agentsApi
+      .get(agentId)
+      .then((a) => {
+        if (alive) setAgentState(a);
+      })
+      .catch(() => {
+        if (alive) setAgentState(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [agentId]);
+  if (!agentId) return null;
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--accent)] bg-[var(--orange-50)] px-3 py-1 text-[11.5px] font-semibold text-[var(--accent)]">
+      <Users size={12} className="flex-shrink-0" />
+      <span className="max-w-[220px] truncate">Agent: {agent ? `${agent.name} · ${agent.code}` : "…"}</span>
+      <button
+        type="button"
+        onClick={clearAgent}
+        className="ml-0.5 rounded-full p-0.5 transition-colors hover:bg-[var(--orange-100)]"
+        aria-label="Clear agent filter"
+      >
+        <X size={12} />
+      </button>
+    </span>
+  );
+}
+
 /**
  * The two module lookup controls as one enterprise filter row (16px gap, tokenized).
  * Drop inside a Surface (list card) — it renders its own bordered toolbar row.
+ * The active-agent chip appears here whenever ?agent= is set, on every page that
+ * mounts this component, so the filter state is always visible and clearable.
  */
 export function ModuleLookupFilters({
   className = "",
@@ -277,6 +312,7 @@ export function ModuleLookupFilters({
     <div className={`flex flex-wrap items-center gap-4 border-b border-[var(--border)] px-5 py-3.5 sm:px-6 ${className}`}>
       <AgentLookup onAgentSelect={onAgentSelect} />
       <PassportLookup />
+      <AgentFilterChip />
     </div>
   );
 }

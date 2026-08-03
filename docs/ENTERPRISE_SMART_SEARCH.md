@@ -153,8 +153,58 @@ required); results virtualize via cmdk's list.
   Booking 360, search ranking, keyboard shortcuts, or existing search behavior.
 - **No backend / API / schema / RBAC / workflow changes.**
 
-## Known limitation
+## Known limitation (resolved in V4.5.3 — see below)
 The Agent control records its selection (`?agent=<id>`) and is ready to drive server-side
 list filtering, but **does not yet reduce the module list** — that needs a backend `agentId`
 filter on the list endpoints (out of scope here; a follow-up). The Passport control is fully
 functional end-to-end.
+
+---
+
+# TravelOS V4.5.3 — Backend Agent Filter
+
+Selecting an agent now **filters the module records server-side** (resolving the V4.5.2 limitation
+above), persists through refresh, and is reflected in the URL (`?agent=<uuid>`). Additive only —
+**no schema change, no new endpoints, no RBAC/workflow/OCR change.** Every affected model was
+already agent-filterable via existing columns/relations.
+
+## Backend (source-of-truth `/opt/shanghai-erp-api/src`, additive `where` clauses)
+Each reuses the existing guarded `if (q.x) where.x = …` pattern; the frontend sends `?agentId=<uuid>`.
+
+| Endpoint | File · method | Filter added | Covers |
+|---|---|---|---|
+| `GET /applications` | `applications/applications.service.ts` · `list()` | `where.agentId = q.agentId` (direct column) | Visa, Ticketing, Hotels, Transport, Tour, Hajj, Bookings |
+| `GET /customers` | `customers/customers.service.ts` · `list()` | `where.applications = { some: { agentId, deletedAt: null } }` | CRM Customers |
+| `GET /invoices` | `finance/finance.service.ts` · `listInvoices()` | `where.application = { agentId }` | Finance Invoices |
+
+Verified on staging (`:4201`): applications 226→1, customers 108→1, invoices 0 — each matches the
+DB, and combines additively with `serviceType`/`status`/`q`.
+
+*(Also fixed a pre-existing, unrelated `nest build` type error in `customers.service.ts`
+`intelligenceProfile()`: `this.get(id, user)` passed `AuthedUser` (branchId `string|null`) to a
+param wanting `string|undefined`; normalized null→undefined. Not an agent-filter change.)*
+
+## Frontend (`apps/web`)
+- **`lib/useAgentFilter.ts`** — single reader/writer over the URL: `{ agentId, setAgent, clearAgent }`.
+- **`lib/services.ts`** — `agentId?` added to `applicationsApi.list`, `customersApi.list`, `financeApi.listInvoices`.
+- **Pages wired** (read `agentId`, forward to the list call, add to `load` deps so a changed `?agent=`
+  refetches; no numeric page cursor, so "reset pagination" = re-run load): Visa, Ticketing, Hotels,
+  Transport, Tour, Hajj, Customers, Finance › Invoices.
+- **`ModuleLookupFilters.tsx`** — agent combobox writes via `useAgentFilter`; an always-visible
+  **active-agent chip** (hydrated from the URL via `agentsApi.get`) with **one-click clear**.
+
+## Deliberately out of scope (documented, not silently dropped)
+- **Customer Payments** — no `GET /payments` list endpoint exists (record/refund only).
+- **Supplier / AP payments** — `Expense`/`ApDocument` are supplier-scoped, no agent linkage.
+- **Analytics / Reports** — needs agent plumbing across application/invoice/payment/customer wheres, and
+  `Opportunity`/`Lead` have no agent column → would be partially incorrect; deferred as a follow-up.
+- **Student / Manpower** — no dedicated list page (route to the create wizard; appear in the Operations queue).
+
+## Performance
+Additive `where` clauses only (no new N+1). Filter/join columns (`Application.agentId`,
+`Invoice.applicationId`) are unindexed; `@@index([agentId])` on `Application` would help at scale but is
+an optional migration, left out to honor "no schema change."
+
+## Deployment
+Built + verified on **staging `:4201`**; **not deployed to prod** (prod is behind on migrations; stops
+after commit). Frontend committed, not pushed.

@@ -1,5 +1,6 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { useAgentFilter } from "@/lib/useAgentFilter";
 import { Building2, Plus, RefreshCw, Search } from "lucide-react";
 import { applicationsApi, customersApi } from "@/lib/services";
 import { listOf, ApiError } from "@/lib/api";
@@ -45,6 +46,8 @@ export default function HotelsListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const { agentId } = useAgentFilter();
+
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -54,6 +57,7 @@ export default function HotelsListPage() {
         limit: 100,
         q: q || undefined,
         status: status || undefined,
+        agentId,
       });
       const data = listOf<Application>(r);
       setRows(data);
@@ -63,7 +67,7 @@ export default function HotelsListPage() {
     } finally {
       setLoading(false);
     }
-  }, [q, status]);
+  }, [q, status, agentId]);
 
   useEffect(() => {
     void load();
