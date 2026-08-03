@@ -107,6 +107,7 @@ export default function HotelsListPage() {
 
   return (
     <ListPageShell
+      lookupFilters
       wide
       icon={Building2}
       title="Hotels"

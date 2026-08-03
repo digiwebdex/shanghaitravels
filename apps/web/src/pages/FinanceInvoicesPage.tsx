@@ -8,6 +8,7 @@ import { ErrorBanner } from "@/components/Feedback";
 import { FinanceModuleNav } from "@/components/finance/FinanceModuleNav";
 import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
 import { PageHeader, PageShell, Surface, SurfaceHeader, btnGhost } from "@/components/enterprise/Page";
+import { ModuleLookupFilters } from "@/components/enterprise/ModuleLookupFilters";
 import { fmtBDTPlain } from "@/lib/money";
 
 type Inv = Invoice & { customer?: { fullName?: string; code?: string } };
@@ -74,6 +75,7 @@ export default function FinanceInvoicesPage() {
       <FinanceModuleNav />
       <ErrorBanner message={error} />
       <Surface>
+        <ModuleLookupFilters />
         <SurfaceHeader title={`${rows.length} invoice${rows.length === 1 ? "" : "s"}`} />
         <DataTable rows={rows} columns={columns} rowKey={(r) => r.id} loading={loading} emptyTitle="No invoices" />
       </Surface>

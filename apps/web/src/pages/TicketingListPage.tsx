@@ -108,6 +108,7 @@ export default function TicketingListPage() {
 
   return (
     <ListPageShell
+      lookupFilters
       wide
       icon={Plane}
       title="Air Ticketing"

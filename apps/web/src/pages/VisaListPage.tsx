@@ -102,6 +102,7 @@ export default function VisaListPage() {
 
   return (
     <ListPageShell
+      lookupFilters
       wide
       icon={FileCheck}
       title="Visa Services"

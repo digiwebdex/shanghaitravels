@@ -4,6 +4,7 @@ import { ChevronRight, Inbox, type LucideIcon } from "lucide-react";
 import { buildNavBreadcrumb } from "@/config/nav";
 import { gradient } from "@/styles/tokens";
 import { ErrorBanner } from "@/components/Feedback";
+import { ModuleLookupFilters } from "@/components/enterprise/ModuleLookupFilters";
 
 /**
  * TravelOS V4.2 enterprise furniture — same brand language as the public site:
@@ -175,6 +176,7 @@ export function ListPageShell({
   moduleNav,
   stats,
   toolbar,
+  lookupFilters,
   error,
   wide,
   loading,
@@ -189,6 +191,8 @@ export function ListPageShell({
   moduleNav?: ReactNode;
   stats?: ReactNode;
   toolbar?: ReactNode;
+  /** Show the module Agent/Passport lookup row (below the global header search). */
+  lookupFilters?: boolean;
   error?: string;
   wide?: boolean;
   loading?: boolean;
@@ -202,6 +206,7 @@ export function ListPageShell({
       {stats}
       <ErrorBanner message={error || ""} />
       <Surface>
+        {lookupFilters && <ModuleLookupFilters />}
         {toolbar}
         {loading ? <SkeletonRows /> : empty ? empty : children}
       </Surface>

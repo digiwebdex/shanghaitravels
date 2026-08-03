@@ -120,6 +120,7 @@ export default function HajjListPage() {
 
   return (
     <ListPageShell
+      lookupFilters
       wide
       icon={Moon}
       title="Hajj & Umrah"

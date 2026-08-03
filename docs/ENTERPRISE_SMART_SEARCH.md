@@ -97,3 +97,64 @@ Passport hits may include `duplicateHint`. Profile banner shows existing passpor
 ## Portals
 
 `PortalShell` exposes ⌘K + search trigger. Loaders in `portalSmartSearch.ts` filter **only** portal-owned records.
+
+---
+
+# TravelOS V4.5.2 — Module Lookup Filters (Agent / Passport)
+
+Two enterprise **Combobox** controls that live in the **module filter area** — inside the
+list card, below the global header search — **not** in the global header. The global
+`GlobalSmartSearch` / `CommandPalette` / ⌘K are **unchanged**.
+
+## Layout
+
+```
+┌ Global header ────────────────────────────────────────────────┐
+│  [ Global Smart Search (⌘K) ]              (unchanged)         │
+└───────────────────────────────────────────────────────────────┘
+   Module page card (Surface)
+   ┌───────────────────────────────────────────────────────────┐
+   │  [ Agent Name / Reference ]   [ Passport Number ]         │  ← ModuleLookupFilters row (16px gap)
+   │  [ existing module search / filters ]                     │
+   │  [ DataTable … ]                                           │
+   └───────────────────────────────────────────────────────────┘
+```
+
+## Component
+
+`apps/web/src/components/enterprise/ModuleLookupFilters.tsx` — one row, two comboboxes,
+composed from the existing `ui/popover` + `ui/command` (cmdk) primitives and design tokens.
+cmdk supplies arrow / Enter / Escape navigation; 250ms debounce; open-on-click (no typing
+required); results virtualize via cmdk's list.
+
+### Agent lookup
+- **API:** `agentsApi.list({ q, limit })` — recent/available on open, debounced type-ahead.
+- **Shows:** Agent Name · Agent Code · Phone (fields that exist on `Agent`).
+- **On select:** records the agent filter in the URL (`?agent=<id>`) and fires `onAgentSelect`.
+- **Width:** ~280px.
+
+### Passport lookup
+- **API:** `customersApi.intelligenceSearch(q)` (passport-first ranking) — the **same**
+  endpoint the Global Smart Search uses; recent lookups first from `smartSearchHistory`.
+- **Shows:** Customer Name · Passport Number · context subtitle (only what the API returns).
+- **On select:** opens **Customer Intelligence (Customer 360)** — `navigate('/customers/:id')`.
+- **Width:** ~260px.
+
+## Placement
+- Shared scaffold: `ListPageShell` gained an optional `lookupFilters` prop → renders the row
+  at the top of the card. Enabled on **Visa, Ticketing, Hotels, Tour, Hajj**.
+- Non-scaffold pages: dropped directly into **Customers, Finance › Invoices, CRM › Directory**.
+- Other modules adopt it with one line (`lookupFilters` prop, or `<ModuleLookupFilters />`).
+
+## Reuse strategy (no duplication)
+- **No new search logic / APIs / hooks.** Reuses `agentsApi.list`, `customersApi.intelligenceSearch`,
+  `smartSearchHistory`, and the existing `popover`/`command` primitives + tokens.
+- **No changes** to GlobalSmartSearch, CommandPalette, CustomerIntelligencePanel, Customer 360,
+  Booking 360, search ranking, keyboard shortcuts, or existing search behavior.
+- **No backend / API / schema / RBAC / workflow changes.**
+
+## Known limitation
+The Agent control records its selection (`?agent=<id>`) and is ready to drive server-side
+list filtering, but **does not yet reduce the module list** — that needs a backend `agentId`
+filter on the list endpoints (out of scope here; a follow-up). The Passport control is fully
+functional end-to-end.

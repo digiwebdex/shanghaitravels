@@ -1,7 +1,8 @@
 import { Link } from "react-router";
 import { Building2, Contact } from "lucide-react";
-import { PageHeader, PageShell } from "@/components/enterprise/Page";
+import { PageHeader, PageShell, Surface } from "@/components/enterprise/Page";
 import { ModuleNavFromWorkspace } from "@/workspaces/ModuleNavFromWorkspace";
+import { ModuleLookupFilters } from "@/components/enterprise/ModuleLookupFilters";
 
 const ITEMS = [
   {
@@ -28,6 +29,9 @@ export default function CrmDirectoryPage() {
         breadcrumb={[{ label: "CRM & Sales", to: "/crm" }, { label: "Directory" }]}
       />
       <ModuleNavFromWorkspace workspaceId="crm" />
+      <Surface>
+        <ModuleLookupFilters />
+      </Surface>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {ITEMS.map((item) => (
           <Link

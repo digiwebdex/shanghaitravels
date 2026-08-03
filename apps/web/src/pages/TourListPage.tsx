@@ -108,6 +108,7 @@ export default function TourListPage() {
 
   return (
     <ListPageShell
+      lookupFilters
       wide
       icon={Map}
       title="Tour Packages"

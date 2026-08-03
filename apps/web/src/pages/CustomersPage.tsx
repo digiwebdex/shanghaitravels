@@ -24,6 +24,7 @@ import {
   searchInputClassName,
 } from "@/components/enterprise/Page";
 import { ScanDocumentPanel, ocrFullName, ocrGenderToForm } from "@/components/ocr/ScanDocumentPanel";
+import { ModuleLookupFilters } from "@/components/enterprise/ModuleLookupFilters";
 
 export default function CustomersPage() {
   const navigate = useNavigate();
@@ -129,6 +130,7 @@ export default function CustomersPage() {
       )}
 
       <Surface>
+        <ModuleLookupFilters />
         <ListToolbar>
           <div className="relative flex-1">
             <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
