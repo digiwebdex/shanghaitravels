@@ -113,6 +113,7 @@ const CorporateClientsPage = lazy(() => import("@/pages/CorporateClientsPage"));
 const PartnersOverviewPage = lazy(() => import("@/pages/PartnersOverviewPage"));
 const FinanceDashboardPage = lazy(() => import("@/pages/FinanceDashboardPage"));
 const FinanceInvoicesPage = lazy(() => import("@/pages/FinanceInvoicesPage"));
+const FinanceInvoiceDetailPage = lazy(() => import("@/pages/FinanceInvoiceDetailPage"));
 const FinancePaymentsPage = lazy(() => import("@/pages/FinancePaymentsPage"));
 const FinanceExpensesPage = lazy(() => import("@/pages/FinanceExpensesPage"));
 const FinanceCashPage = lazy(() => import("@/pages/FinanceCashPage"));
@@ -1589,6 +1590,14 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <FinanceInvoicesPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/invoices/:id",
+            element: (
+              <Lazy>
+                <FinanceInvoiceDetailPage />
               </Lazy>
             ),
           },

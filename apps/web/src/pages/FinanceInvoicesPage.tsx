@@ -43,7 +43,7 @@ export default function FinanceInvoicesPage() {
       key: "no",
       header: "Invoice",
       render: (r) => (
-        <Link to={`/finance/ar`} className="font-mono font-bold text-[var(--accent)] hover:underline">
+        <Link to={`/finance/invoices/${r.id}`} className="font-mono font-bold text-[var(--accent)] hover:underline">
           {r.invoiceNo}
         </Link>
       ),
@@ -58,6 +58,15 @@ export default function FinanceInvoicesPage() {
       className: "text-right tabular-nums font-semibold",
       render: (r) => (
         <span className={(r.due ?? 0) > 0 ? "text-red-600" : "text-[var(--muted-foreground)]"}>{fmtBDTPlain(r.due ?? 0)}</span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (r) => (
+        <Link to={`/finance/invoices/${r.id}`} className="text-[11px] font-semibold text-[var(--accent)] hover:underline">
+          View
+        </Link>
       ),
     },
   ];
