@@ -30,6 +30,7 @@ import {
   labelCls,
 } from "@/components/enterprise/Page";
 import { fmtBDTPlain } from "@/lib/money";
+import { ERP } from "@/config/env";
 
 // getInvoice returns more than the shared Invoice type declares — widen locally (read-only).
 type InvoiceDetail = Invoice & {
@@ -333,6 +334,18 @@ export default function FinanceInvoiceDetailPage() {
     { key: "method", header: "Method", render: (r) => r.method },
     { key: "kind", header: "Kind", render: (r) => <Pill value={r.kind} tone={r.kind === "refund" ? "amber" : "green"} /> },
     { key: "ref", header: "Reference", render: (r) => r.reference || "—" },
+    {
+      key: "receipt",
+      header: "Receipt",
+      render: (r) =>
+        r.kind === "payment" ? (
+          <a href={`${ERP}/payments/${r.id}/receipt?download=1`} className="text-[11px] font-semibold text-[var(--accent)] hover:underline">
+            Download
+          </a>
+        ) : (
+          <span className="text-[var(--muted-foreground)]">—</span>
+        ),
+    },
   ];
 
   const tabs: EntityTab[] = [
@@ -364,6 +377,12 @@ export default function FinanceInvoiceDetailPage() {
                 Booking 360
               </Link>
             )}
+            <a href={`${ERP}/invoices/${id}/pdf?download=1`} className={btnGhost}>
+              Download PDF
+            </a>
+            <a href={`${ERP}/invoices/${id}/pdf`} target="_blank" rel="noopener" className={btnGhost}>
+              Preview / Print
+            </a>
             <button type="button" className={btnGhost} onClick={() => void load()}>
               <RefreshCw size={12} /> Refresh
             </button>

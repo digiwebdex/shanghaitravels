@@ -114,6 +114,7 @@ const PartnersOverviewPage = lazy(() => import("@/pages/PartnersOverviewPage"));
 const FinanceDashboardPage = lazy(() => import("@/pages/FinanceDashboardPage"));
 const FinanceInvoicesPage = lazy(() => import("@/pages/FinanceInvoicesPage"));
 const FinanceInvoiceDetailPage = lazy(() => import("@/pages/FinanceInvoiceDetailPage"));
+const VerifyPage = lazy(() => import("@/pages/VerifyPage"));
 const FinancePaymentsPage = lazy(() => import("@/pages/FinancePaymentsPage"));
 const FinanceExpensesPage = lazy(() => import("@/pages/FinanceExpensesPage"));
 const FinanceCashPage = lazy(() => import("@/pages/FinanceCashPage"));
@@ -206,6 +207,14 @@ function Lazy({ children }: { children: React.ReactNode }) {
  */
 export const router = createHashRouter([
   { path: "/login", element: <LoginPage /> },
+  {
+    path: "/verify/:no",
+    element: (
+      <Lazy>
+        <VerifyPage />
+      </Lazy>
+    ),
+  },
   {
     path: "/site",
     element: (
