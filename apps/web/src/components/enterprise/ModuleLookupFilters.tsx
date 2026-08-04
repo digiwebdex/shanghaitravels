@@ -228,7 +228,7 @@ function PassportLookup() {
                 Start typing a passport number to search.
               </div>
             )}
-            {typing && !loading && hits.length === 0 && <CommandEmpty>No matches found.</CommandEmpty>}
+            {typing && !loading && hits.length === 0 && <CommandEmpty>No passport found.</CommandEmpty>}
             {typing && hits.length > 0 && (
               <CommandGroup heading="Results">
                 {hits.map((h, i) => (
