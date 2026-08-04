@@ -45,6 +45,8 @@ type InvoiceDetail = Invoice & {
 const PAYMENT_METHODS = ["cash", "bank_transfer", "bkash", "nagad", "card", "cheque", "other"];
 const fmtDate = (s?: string | null) => (s ? new Date(s).toLocaleDateString() : "—");
 const fmtDateTime = (s?: string | null) => (s ? new Date(s).toLocaleString() : "—");
+const ACTION_BTN =
+  "inline-flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-[11px] font-semibold text-[var(--primary)] transition-colors hover:bg-[var(--navy-50)]";
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -72,6 +74,7 @@ export default function FinanceInvoiceDetailPage() {
   const [agentName, setAgentName] = useState("");
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [comms, setComms] = useState<CommTimelineItem[]>([]);
+  const [audit, setAudit] = useState<Awaited<ReturnType<typeof financeApi.invoiceAudit>>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
@@ -95,6 +98,7 @@ export default function FinanceInvoiceDetailPage() {
           .timeline("invoice", id)
           .then((r) => setComms(r.items || []))
           .catch(() => setComms([])),
+        financeApi.invoiceAudit(id).then(setAudit).catch(() => setAudit([])),
       ];
       if (i.customerId) jobs.push(customersApi.get(i.customerId).then(setCustomer).catch(() => setCustomer(null)));
       if (i.applicationId) {
@@ -161,6 +165,18 @@ export default function FinanceInvoiceDetailPage() {
     }
   }
 
+  async function run(fn: () => Promise<unknown>, msg: string) {
+    setError("");
+    setOk("");
+    try {
+      await fn();
+      setOk(msg);
+      await load();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Action failed");
+    }
+  }
+
   const payments = useMemo<Payment[]>(() => inv?.payments || [], [inv]);
 
   // Timeline composed from existing sources (invoice lifecycle stamps + payments + communications).
@@ -198,6 +214,10 @@ export default function FinanceInvoiceDetailPage() {
       </PageShell>
     );
   }
+
+  const s = inv.status;
+  const terminal = ["void", "cancelled", "refunded"].includes(s);
+  const paidAny = (inv.paid ?? 0) > 0;
 
   const itemCols: Column<NonNullable<InvoiceDetail["items"]>[number]>[] = [
     { key: "d", header: "Description", render: (r) => r.description },
@@ -250,6 +270,48 @@ export default function FinanceInvoiceDetailPage() {
       />
       <ErrorBanner message={error} />
       <SuccessBanner message={ok} />
+
+      <Can perm="invoice:manage">
+        <div className="flex flex-wrap gap-2">
+          {s === "draft" && (
+            <button type="button" className={ACTION_BTN} onClick={() => run(() => financeApi.issueInvoice(id), "Invoice issued")}>
+              Issue
+            </button>
+          )}
+          {!terminal && s !== "paid" && s !== "approved" && s !== "sent" && (
+            <button type="button" className={ACTION_BTN} onClick={() => run(() => financeApi.approveInvoice(id), "Invoice approved")}>
+              Approve
+            </button>
+          )}
+          {!terminal && ["issued", "generated", "approved", "viewed"].includes(s) && (
+            <button type="button" className={ACTION_BTN} onClick={() => run(() => financeApi.sendInvoice(id), "Marked as sent")}>
+              Send
+            </button>
+          )}
+          {s === "sent" && (
+            <button type="button" className={ACTION_BTN} onClick={() => run(() => financeApi.markInvoiceViewed(id), "Marked as viewed")}>
+              Mark viewed
+            </button>
+          )}
+          {!terminal && s !== "paid" && !paidAny && (
+            <button type="button" className={ACTION_BTN} onClick={() => run(() => financeApi.cancelInvoice(id), "Invoice cancelled")}>
+              Cancel
+            </button>
+          )}
+          {s !== "void" && s !== "refunded" && (
+            <button type="button" className={ACTION_BTN} onClick={() => run(() => financeApi.voidInvoice(id), "Invoice voided")}>
+              Void
+            </button>
+          )}
+          <Can perm="payment:refund">
+            {s !== "refunded" && (
+              <button type="button" className={ACTION_BTN} onClick={() => run(() => financeApi.markInvoiceRefunded(id), "Marked refunded")}>
+                Mark refunded
+              </button>
+            )}
+          </Can>
+        </div>
+      </Can>
 
       <EntityTabs tabs={tabs} active={tab} onChange={setTab} />
 
@@ -420,7 +482,24 @@ export default function FinanceInvoiceDetailPage() {
 
       <EntityTabPanel when="audit" active={tab}>
         <Surface padded>
-          <EmptyState title="Audit trail" hint="Per-invoice audit entries begin once finance audit logging is enabled (V5 Phase 2)." />
+          {audit.length === 0 ? (
+            <EmptyState title="No audit entries yet" hint="Lifecycle actions (issue, approve, send, payments, cancel/void) are recorded here." />
+          ) : (
+            <ol className="space-y-2">
+              {audit.map((a) => (
+                <li
+                  key={a.id}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2 text-[11.5px]"
+                >
+                  <span className="font-semibold text-[var(--foreground)]">{a.action}</span>
+                  <span className="flex items-center gap-2 text-[10.5px] text-[var(--muted-foreground)]">
+                    <span>by {a.userId.slice(0, 8)}</span>
+                    <span>{fmtDateTime(a.createdAt)}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
         </Surface>
       </EntityTabPanel>
 

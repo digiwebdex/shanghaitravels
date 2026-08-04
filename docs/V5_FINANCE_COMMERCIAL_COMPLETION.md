@@ -1,6 +1,6 @@
 # V5 — Enterprise Commercial Finance & Invoice Lifecycle
 
-**Status: Architecture review + phased completion plan (awaiting schema sign-off before migration).**
+**Status: Phase 1 (invoice detail page + list Actions) and Phase 2 (lifecycle states + approve/send/viewed/cancel/void/refunded transitions + per-invoice audit; additive migration 030 applied to staging, verified) — DONE. Phases 3–6 (send/templates → PDF → automation → reports/portals) pending.**
 This is a completion program, not a redesign. Everything below extends existing architecture; no
 navigation / theme / tokens / workflow / booking-engine / OCR / CRM / RBAC / auth changes.
 

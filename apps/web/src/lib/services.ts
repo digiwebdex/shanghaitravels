@@ -374,6 +374,16 @@ export const financeApi = {
   createInvoice: (body: Record<string, unknown>) =>
     apiFetch<Invoice>("/invoices", { method: "POST", body }),
   issueInvoice: (id: string) => apiFetch<Invoice>(`/invoices/${id}/issue`, { method: "POST" }),
+  approveInvoice: (id: string) => apiFetch<Invoice>(`/invoices/${id}/approve`, { method: "POST" }),
+  sendInvoice: (id: string) => apiFetch<Invoice>(`/invoices/${id}/send`, { method: "POST" }),
+  markInvoiceViewed: (id: string) => apiFetch<Invoice>(`/invoices/${id}/viewed`, { method: "POST" }),
+  cancelInvoice: (id: string) => apiFetch<Invoice>(`/invoices/${id}/cancel`, { method: "POST" }),
+  voidInvoice: (id: string) => apiFetch<Invoice>(`/invoices/${id}/void`, { method: "POST" }),
+  markInvoiceRefunded: (id: string) => apiFetch<Invoice>(`/invoices/${id}/refunded`, { method: "POST" }),
+  invoiceAudit: (id: string) =>
+    apiFetch<{ id: string; action: string; userId: string; before?: unknown; after?: unknown; createdAt: string }[]>(
+      `/invoices/${id}/audit`,
+    ),
   recordPayment: (body: Record<string, unknown>) =>
     apiFetch<{ id: string }>("/payments", { method: "POST", body }),
   /** Separate permission: payment:refund */
