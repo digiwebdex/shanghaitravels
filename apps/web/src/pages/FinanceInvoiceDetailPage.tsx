@@ -7,6 +7,7 @@ import {
   commsApi,
   customersApi,
   financeApi,
+  type CommTemplate,
   type CommTimelineItem,
 } from "@/lib/services";
 import { ApiError } from "@/lib/api";
@@ -75,6 +76,12 @@ export default function FinanceInvoiceDetailPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [comms, setComms] = useState<CommTimelineItem[]>([]);
   const [audit, setAudit] = useState<Awaited<ReturnType<typeof financeApi.invoiceAudit>>>([]);
+  // Communication composer (reuses CommsService — no duplicate engine)
+  const [commTemplates, setCommTemplates] = useState<CommTemplate[]>([]);
+  const [sendChannel, setSendChannel] = useState<"email" | "whatsapp" | "sms">("email");
+  const [sendTemplateId, setSendTemplateId] = useState("");
+  const [sendTo, setSendTo] = useState("");
+  const [sendPreview, setSendPreview] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [ok, setOk] = useState("");
@@ -132,6 +139,16 @@ export default function FinanceInvoiceDetailPage() {
     void load();
   }, [load]);
 
+  // Templates for the chosen channel; recipient pre-filled from the customer's contact.
+  useEffect(() => {
+    commsApi.listTemplates({ channel: sendChannel }).then(setCommTemplates).catch(() => setCommTemplates([]));
+    setSendTemplateId("");
+    setSendPreview("");
+  }, [sendChannel]);
+  useEffect(() => {
+    setSendTo(sendChannel === "email" ? customer?.email || "" : customer?.whatsapp || customer?.phone || "");
+  }, [sendChannel, customer]);
+
   async function submitPayment(e: FormEvent) {
     e.preventDefault();
     setError("");
@@ -178,6 +195,91 @@ export default function FinanceInvoiceDetailPage() {
   }
 
   const payments = useMemo<Payment[]>(() => inv?.payments || [], [inv]);
+
+  // Commercial merge vars — only truthful values. paymentLink/trackUrl render blank
+  // until Phase 4 (pay link) / tracking exist (applyMergeFields drops unknown vars).
+  const commVars = useMemo<Record<string, string>>(
+    () => ({
+      customerName: customer?.fullName || inv?.customer?.fullName || "",
+      invoiceNo: inv?.invoiceNo || "",
+      bookingNo: app?.referenceNo || "",
+      amount: fmtBDTPlain(inv?.total ?? 0),
+      dueAmount: fmtBDTPlain(inv?.due ?? 0),
+      portalUrl: "https://shanghaitravels.com.bd/erp/#/portal/customer/login",
+    }),
+    [inv, customer, app],
+  );
+
+  async function pickCommTemplate(tid: string) {
+    setSendTemplateId(tid);
+    if (!tid) {
+      setSendPreview("");
+      return;
+    }
+    try {
+      const r = (await commsApi.renderTemplate(tid, commVars)) as { subject?: string; body?: string };
+      setSendPreview(r.body || "");
+    } catch {
+      setSendPreview("");
+    }
+  }
+  async function reloadComms() {
+    try {
+      const r = await commsApi.timeline("invoice", id);
+      setComms(r.items || []);
+    } catch {
+      /* keep existing */
+    }
+  }
+  async function sendComm() {
+    setError("");
+    setOk("");
+    if (!sendTo.trim()) {
+      setError("Recipient is required");
+      return;
+    }
+    try {
+      await commsApi.send({
+        channel: sendChannel,
+        to: sendTo.trim(),
+        relatedType: "invoice",
+        relatedId: id,
+        templateId: sendTemplateId || undefined,
+        vars: commVars,
+        partyKind: "customer",
+        partyId: inv?.customerId,
+      });
+      setOk(`Message queued via ${sendChannel} (simulation)`);
+      await reloadComms();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Send failed");
+    }
+  }
+  async function retryComm(item: CommTimelineItem) {
+    const to = item.channel === "email" ? customer?.email || "" : customer?.whatsapp || customer?.phone || "";
+    if (!to) {
+      setError("No recipient on file to retry");
+      return;
+    }
+    setError("");
+    setOk("");
+    try {
+      await commsApi.send({
+        channel: item.channel,
+        to,
+        relatedType: "invoice",
+        relatedId: id,
+        body: item.body || undefined,
+        subject: item.subject || undefined,
+        partyKind: "customer",
+        partyId: inv?.customerId,
+      });
+      setOk("Retried");
+      await reloadComms();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Retry failed");
+    }
+  }
 
   // Timeline composed from existing sources (invoice lifecycle stamps + payments + communications).
   const timeline = useMemo(() => {
@@ -419,14 +521,59 @@ export default function FinanceInvoiceDetailPage() {
       </EntityTabPanel>
 
       <EntityTabPanel when="communication" active={tab}>
+        <Can perm="comms:send">
+          <Surface padded>
+            <h3 className="mb-3 text-[12px] font-bold text-[var(--primary)]">Send invoice message</h3>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div>
+                <label className={labelCls}>Channel</label>
+                <select className={inputCls} value={sendChannel} onChange={(e) => setSendChannel(e.target.value as "email" | "whatsapp" | "sms")}>
+                  <option value="email">Email</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="sms">SMS</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>Template</label>
+                <select className={inputCls} value={sendTemplateId} onChange={(e) => void pickCommTemplate(e.target.value)}>
+                  <option value="">— none —</option>
+                  {commTemplates.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name} ({t.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>To</label>
+                <input className={inputCls} value={sendTo} onChange={(e) => setSendTo(e.target.value)} placeholder={sendChannel === "email" ? "email" : "phone / whatsapp"} />
+              </div>
+            </div>
+            {sendPreview && (
+              <div className="mt-3">
+                <label className={labelCls}>Preview</label>
+                <pre className="whitespace-pre-wrap rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-[11.5px] text-[var(--foreground)]">{sendPreview}</pre>
+              </div>
+            )}
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button type="button" className={btnPrimary} style={btnPrimaryStyle} onClick={() => void sendComm()}>
+                Send
+              </button>
+              <span className="text-[10.5px] text-[var(--muted-foreground)]">
+                Delivery is in simulation mode until messaging credentials are configured. PDF attachment activates in Phase 4.
+              </span>
+            </div>
+          </Surface>
+        </Can>
         <Surface padded>
+          <h3 className="mb-3 text-[12px] font-bold text-[var(--primary)]">History</h3>
           {comms.length === 0 ? (
-            <EmptyState title="No communications yet" hint="Invoice email / WhatsApp / SMS history will appear here." />
+            <EmptyState title="No communications yet" hint="Sent invoice email / WhatsApp / SMS appear here with delivery status." />
           ) : (
             <ul className="space-y-2">
               {comms.map((c) => (
                 <li key={c.id} className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2 text-[11.5px]">
-                  <span className="flex items-center gap-2">
+                  <span className="flex min-w-0 items-center gap-2">
                     <Pill value={c.channel} tone="blue" />
                     <span className="text-[var(--muted-foreground)]">{c.direction}</span>
                     <span className="truncate">{c.summary || c.subject || "—"}</span>
@@ -434,6 +581,11 @@ export default function FinanceInvoiceDetailPage() {
                   <span className="flex flex-shrink-0 items-center gap-2">
                     <Pill value={c.status} tone={statusTone(c.status)} />
                     <span className="text-[10.5px] text-[var(--muted-foreground)]">{fmtDateTime(c.createdAt)}</span>
+                    {c.status === "failed" && (
+                      <button type="button" className="text-[10.5px] font-bold text-[var(--accent)] hover:underline" onClick={() => void retryComm(c)}>
+                        Retry
+                      </button>
+                    )}
                   </span>
                 </li>
               ))}
