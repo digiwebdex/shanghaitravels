@@ -124,6 +124,14 @@ export default function PassportsPage() {
 
           {customerId && (
             <>
+              <div className="mb-3 flex justify-end">
+                <Link
+                  to={`/customers/${customerId}`}
+                  className="text-[11px] font-bold text-[var(--accent)] hover:underline"
+                >
+                  Open Customer 360 →
+                </Link>
+              </div>
               <Can perm="ocr:use">
                 <Surface padded className="mb-4">
                   <DocumentUploadFlow

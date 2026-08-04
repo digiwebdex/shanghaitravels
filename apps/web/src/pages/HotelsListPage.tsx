@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router";
 import { useAgentFilter } from "@/lib/useAgentFilter";
 import { Building2, Plus, RefreshCw, Search } from "lucide-react";
 import { applicationsApi, customersApi } from "@/lib/services";
+import { ScanDocumentPanel } from "@/components/ocr/ScanDocumentPanel";
 import { listOf, ApiError } from "@/lib/api";
 import type { Application, Customer } from "@/lib/types";
 import { Can } from "@/auth/Can";
@@ -258,6 +259,22 @@ export function NewHotelCasePage() {
             <Link to="/customers" className="mt-1 inline-block text-[11px] font-semibold text-[var(--accent)]">
               Create customer first →
             </Link>
+            <div className="mt-2">
+              <ScanDocumentPanel
+                customerId={customerId || undefined}
+                defaultDocType="passport"
+                title="Scan passport for guest"
+                savePassportOnConfirm={!!customerId}
+                onAutofill={() => {
+                  /* Passport saved via panel when customer selected; case form has no traveler fields. */
+                }}
+              />
+              {!customerId && (
+                <p className="mt-1 text-[10px] text-[var(--muted-foreground)]">
+                  Select a customer first to save the scanned passport.
+                </p>
+              )}
+            </div>
           </div>
           <div>
             <label className={labelCls} htmlFor="ht-priority">

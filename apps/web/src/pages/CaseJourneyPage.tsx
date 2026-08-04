@@ -115,12 +115,12 @@ export default function CaseJourneyPage() {
           <InlineSpinner />
         </div>
       ) : (
-        <Surface padded className="bg-[#0D1117] ring-slate-800">
+        <Surface padded>
           <CaseTimeline
             stages={stages}
             currentStage={current}
             outcome={outcome}
-            variant="dark"
+            variant="portal"
             showSublabel
           />
         </Surface>

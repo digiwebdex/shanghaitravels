@@ -126,7 +126,7 @@ export default function FinanceReconciliationPage() {
                   Start reconciliation
                 </button>
                 {lastRecon?.id && lastRecon.status !== "completed" && (
-                  <button type="button" onClick={() => void complete()} className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#059669,#047857)" }}>
+                  <button type="button" onClick={() => void complete()} className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "var(--success)" }}>
                     Complete
                   </button>
                 )}

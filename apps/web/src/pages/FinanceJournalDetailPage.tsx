@@ -164,7 +164,7 @@ export default function FinanceJournalDetailPage() {
                 type="button"
                 disabled={busy}
                 className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white disabled:opacity-50"
-                style={{ background: "linear-gradient(135deg,#10B981,#047857)" }}
+                style={{ background: "var(--success)" }}
                 onClick={() => run(() => glApi.postJournal(je.id), "Posted to ledger")}
               >
                 Post

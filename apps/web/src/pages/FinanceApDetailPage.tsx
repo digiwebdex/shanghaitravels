@@ -97,7 +97,7 @@ export default function FinanceApDetailPage() {
               </>
             )}
             {(doc.status === "approved" || doc.status === "draft" || (doc.status === "pending_approval" && doc.approvedBy)) && (
-              <button disabled={busy} type="button" onClick={() => void run(() => apApi.post(doc.id), "Posted to GL")} className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "linear-gradient(135deg,#059669,#047857)" }}>
+              <button disabled={busy} type="button" onClick={() => void run(() => apApi.post(doc.id), "Posted to GL")} className="px-3 py-1.5 rounded-lg text-[10.5px] font-bold text-white" style={{ background: "var(--success)" }}>
                 Post to GL
               </button>
             )}

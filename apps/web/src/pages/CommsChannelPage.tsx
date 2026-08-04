@@ -68,23 +68,21 @@ function CommsChannelPage({ channel }: { channel: Channel }) {
     void load();
   }, [load]);
 
+  // Only merge values we actually have — never fabricate customer data. Any var
+  // without a real source is omitted, so applyMergeFields renders it blank.
+  function buildMergeVars(): Record<string, string> {
+    const lead = leads.find((l) => l.id === leadId);
+    const vars: Record<string, string> = {};
+    if (lead?.name) vars.customerName = lead.name;
+    if (otp.trim()) vars.otp = otp.trim();
+    return vars;
+  }
+
   function pickTemplate(code: string) {
     setTemplateCode(code);
     const t = templates.find((x) => x.code === code);
     if (!t) return;
-    const vars: Record<string, string> = {
-      customerName: leads.find((l) => l.id === leadId)?.name || "Guest",
-      referenceNo: "APP-DEMO",
-      serviceType: "visa",
-      status: "in_progress",
-      quoteNo: "QT-00001",
-      totalAmount: "৳5,000.00",
-      amount: "৳2,000.00",
-      validUntil: "7 days",
-      otp: otp || "123456",
-      minutes: "5",
-      message: "Follow up scheduled",
-    };
+    const vars = buildMergeVars();
     setPreview(applyMergeFields(t.body, vars));
     if (channel === "email" && t.subject) setTplSubject(applyMergeFields(t.subject, vars));
   }
@@ -107,19 +105,7 @@ function CommsChannelPage({ channel }: { channel: Channel }) {
         templateCode: templateCode || undefined,
         body: preview || undefined,
         subject: channel === "email" ? tplSubject || undefined : undefined,
-        vars: {
-          customerName: leads.find((l) => l.id === leadId)?.name || "Guest",
-          referenceNo: "APP-DEMO",
-          otp: otp || "123456",
-          minutes: "5",
-          message: "Follow up scheduled",
-          quoteNo: "QT-00001",
-          totalAmount: "৳5,000.00",
-          amount: "৳2,000.00",
-          validUntil: "7 days",
-          serviceType: "visa",
-          status: "in_progress",
-        },
+        vars: buildMergeVars(),
       });
       setOk(`Sent via ${String(r.delivery.provider || channel)} — status ${r.message.status}`);
       await load();

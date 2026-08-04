@@ -30,12 +30,12 @@ export default function AgentRegisterPage() {
             Apply to become a Shanghai Travels partner. Our sales team creates agent
             accounts after onboarding — then you sign in with the invitation credentials.
           </p>
-          <a
-            href="/contact"
+          <Link
+            to="/site/enquire"
             className="flex w-full items-center justify-center py-2.5 rounded-lg bg-amber-600 text-white text-[12px] font-bold hover:bg-amber-700 transition-colors"
           >
             Contact Sales
-          </a>
+          </Link>
           <Link
             to="/portal/agent/login"
             className="flex w-full items-center justify-center py-2.5 rounded-lg border border-[var(--border)] text-[var(--primary)] text-[12px] font-semibold hover:bg-[var(--muted)] transition-colors"
