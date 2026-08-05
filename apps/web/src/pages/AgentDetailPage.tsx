@@ -7,6 +7,7 @@ import { Can } from "@/auth/Can";
 import { useAuth } from "@/auth/AuthProvider";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { Pill, statusTone } from "@/components/enterprise/DataTable";
+import { AgentWalletCard } from "@/components/agents/AgentWalletCard";
 import {
   PageHeader,
   PageShell,
@@ -237,6 +238,8 @@ export default function AgentDetailPage() {
           </div>
         </Surface>
       </div>
+
+      {status === "active" && <AgentWalletCard agentId={agent.id} />}
 
       <Surface>
         <SurfaceHeader title="Onboarding timeline" hint="Audit trail (reused AuditLog)." />

@@ -1812,6 +1812,12 @@ export const agentsApi = {
     apiFetch<Agent>("/agents", { method: "POST", body }),
   update: (id: string, body: Partial<Agent> & { commissionRateBps?: number }) =>
     apiFetch<Agent>(`/agents/${id}`, { method: "PATCH", body }),
+  // V6 Wave 1 — wallet ledger + funding rails
+  walletLedger: (id: string) => apiFetch<WalletTxnRow[]>(`/agents/${id}/wallet/ledger`),
+  walletReconcile: (id: string) => apiFetch<{ cachedBalance: number; ledgerSum: number; drift: number; reconciled: boolean }>(`/agents/${id}/wallet/reconcile`),
+  walletRequests: (id: string) => apiFetch<{ topups: WalletRequest[]; withdrawals: WalletRequest[] }>(`/agents/${id}/wallet/requests`),
+  walletTopup: (id: string, body: { amount: number; memo?: string }) => apiFetch<WalletRequest>(`/agents/${id}/wallet/topup`, { method: "POST", body }),
+  walletWithdraw: (id: string, body: { amount: number; method?: string; bankRef?: string }) => apiFetch<WalletRequest>(`/agents/${id}/wallet/withdraw`, { method: "POST", body }),
   // V6 Phase 1 — onboarding lifecycle
   timeline: (id: string) => apiFetch<AgentAuditRow[]>(`/agents/${id}/timeline`),
   reviewKyc: (id: string, body: { kycStatus: string; kycNotes?: string }) =>
@@ -1820,6 +1826,31 @@ export const agentsApi = {
   reject: (id: string, body: { reason: string }) => apiFetch<Agent>(`/agents/${id}/reject`, { method: "POST", body }),
   suspend: (id: string) => apiFetch<Agent>(`/agents/${id}/suspend`, { method: "POST" }),
   reinstate: (id: string) => apiFetch<Agent>(`/agents/${id}/reinstate`, { method: "POST" }),
+};
+
+export type WalletTxnRow = {
+  id: string;
+  type: string;
+  amount: number;
+  runningBalance?: number | null;
+  memo?: string | null;
+  createdAt: string;
+};
+export type WalletRequest = {
+  id: string;
+  agentId: string;
+  amount: number;
+  method?: string;
+  bankRef?: string | null;
+  status: string;
+  memo?: string | null;
+  createdAt: string;
+};
+
+export const walletRequestsApi = {
+  list: (status?: string) => apiFetch<{ topups: WalletRequest[]; withdrawals: WalletRequest[] }>(`/wallet-requests${status ? `?status=${status}` : ""}`),
+  decideTopup: (id: string, decision: "approve" | "reject") => apiFetch<WalletRequest>(`/wallet-requests/topup/${id}/${decision}`, { method: "POST" }),
+  decideWithdrawal: (id: string, decision: "approve" | "reject") => apiFetch<WalletRequest>(`/wallet-requests/withdrawal/${id}/${decision}`, { method: "POST" }),
 };
 
 export const agentTiersApi = {
