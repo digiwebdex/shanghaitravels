@@ -25,6 +25,21 @@ export type Customer = {
   notes?: string | null;
   createdAt?: string;
   passports?: Passport[];
+  // V6 Wave 1 — customer ownership
+  primaryAgentId?: string | null;
+  primaryAgent?: { id: string; name: string; code: string } | null;
+  secondaryAgentId?: string | null;
+  secondaryAgent?: { id: string; name: string; code: string } | null;
+};
+
+export type OwnershipAssignment = {
+  id: string;
+  fromAgentId?: string | null;
+  toAgentId?: string | null;
+  role: string;
+  action: string;
+  reason?: string | null;
+  createdAt: string;
 };
 
 export type Passport = {

@@ -89,6 +89,16 @@ export default function CustomersPage() {
     },
     { key: "phone", header: "Phone", render: (c) => c.phone || "—" },
     { key: "email", header: "Email", render: (c) => c.email || "—" },
+    {
+      key: "owner",
+      header: "Owner",
+      render: (c) =>
+        c.primaryAgent ? (
+          <span className="font-medium text-[var(--primary)]" title={c.primaryAgent.code}>{c.primaryAgent.name}</span>
+        ) : (
+          <span className="text-[10.5px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">House</span>
+        ),
+    },
     { key: "nationality", header: "Nationality", render: (c) => c.nationality || "—" },
   ];
 

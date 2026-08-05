@@ -57,6 +57,7 @@ import type {
   GlAccountGroup,
   JournalEntry,
   VisaDetail,
+  OwnershipAssignment,
 } from "@/lib/types";
 
 export const authApi = {
@@ -222,6 +223,14 @@ export const customersApi = {
   update: (id: string, body: Partial<Customer>) =>
     apiFetch<Customer>(`/customers/${id}`, { method: "PATCH", body }),
   remove: (id: string) => apiFetch(`/customers/${id}`, { method: "DELETE" }),
+  // V6 Wave 1 — customer ownership
+  ownershipHistory: (id: string) => apiFetch<OwnershipAssignment[]>(`/customers/${id}/ownership`),
+  assignOwner: (id: string, body: { agentId: string; reason?: string }) =>
+    apiFetch<Customer>(`/customers/${id}/ownership/assign`, { method: "POST", body }),
+  releaseOwner: (id: string, body?: { reason?: string }) =>
+    apiFetch<Customer>(`/customers/${id}/ownership/release`, { method: "POST", body: body ?? {} }),
+  setSecondaryOwner: (id: string, body: { agentId: string | null; reason?: string }) =>
+    apiFetch<Customer>(`/customers/${id}/ownership/secondary`, { method: "POST", body }),
   /** Priority-ranked global intelligence search (passport → NID → booking → …). */
   intelligenceSearch: (q: string) =>
     apiFetch<{ query: string; hits: IntelligenceHit[]; tookMs: number }>(

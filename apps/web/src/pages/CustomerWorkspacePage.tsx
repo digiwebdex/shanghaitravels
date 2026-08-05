@@ -34,6 +34,7 @@ import {
 import { EntityTabPanel, EntityTabs } from "@/components/workflow/EntityTabs";
 import { JourneyContinuity, NextStepBanner } from "@/components/workflow/MasterJourney";
 import { ScanDocumentPanel, ocrFullName, ocrGenderToForm } from "@/components/ocr/ScanDocumentPanel";
+import { CustomerOwnershipCard } from "@/components/customers/CustomerOwnershipCard";
 import { CustomerDocumentTimeline } from "@/components/ocr/OcrOpsWidget";
 import {
   bookingWorkspaceHref,
@@ -345,6 +346,7 @@ export default function CustomerWorkspacePage() {
             </Link>
           </div>
         </Surface>
+        <CustomerOwnershipCard customerId={c.id} owner={c.primaryAgent ?? null} onChange={() => void load()} />
       </EntityTabPanel>
 
       <EntityTabPanel when="timeline" active={tab}>
