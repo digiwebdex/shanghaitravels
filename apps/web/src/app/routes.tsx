@@ -128,6 +128,7 @@ const OperationsCalendarPage = lazy(() => import("@/pages/OperationsCalendarPage
 const OperationsNotificationsPage = lazy(() => import("@/pages/OperationsNotificationsPage"));
 const AdminUsersPage = lazy(() => import("@/pages/AdminUsersPage"));
 const AdminSettingsPage = lazy(() => import("@/pages/AdminSettingsPage"));
+const AutomationDashboardPage = lazy(() => import("@/pages/AutomationDashboardPage"));
 const CmsTypedContentPage = lazy(() => import("@/pages/CmsTypedContentPage"));
 const CmsWebsiteSetupPage = lazy(() => import("@/pages/CmsWebsiteSetupPage"));
 const FinanceAccountingPage = lazy(() => import("@/pages/FinanceAccountingPage"));
@@ -1711,6 +1712,14 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <AdminSettingsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "admin/automation",
+            element: (
+              <Lazy>
+                <AutomationDashboardPage />
               </Lazy>
             ),
           },

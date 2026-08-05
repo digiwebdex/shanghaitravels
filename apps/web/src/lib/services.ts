@@ -392,6 +392,18 @@ export const financeApi = {
   accounts: () => apiFetch<Account[]>("/accounts"),
 };
 
+export const automationApi = {
+  status: () =>
+    apiFetch<{
+      config: { enabled: boolean; channelPriority: string[] };
+      jobs: Record<string, { cron: string; lastRun?: string; runs: number; failures: number }>;
+      recent: { id: string; action: string; entityType: string; entityId: string; createdAt: string }[];
+    }>("/automation/status"),
+  settings: () => apiFetch<{ enabled: boolean; channelPriority: string[] }>("/automation/settings"),
+  saveSettings: (body: Record<string, unknown>) => apiFetch("/automation/settings", { method: "PUT", body }),
+  run: (job: string) => apiFetch(`/automation/run/${job}`, { method: "POST" }),
+};
+
 export const usersApi = {
   list: () => apiFetch<StaffUser[]>("/users"),
   /** Staff picker for assignment — requires application:assign, not user:manage. */

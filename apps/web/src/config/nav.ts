@@ -41,6 +41,7 @@ import {
   TrendingUp,
   Truck,
   UserCog,
+  Zap,
   UserRound,
   Users,
   Wallet,
@@ -536,6 +537,7 @@ export const NAV: NavSection[] = [
         perm: "settings:manage",
       },
       { id: "adm-users", label: "Users", to: "/admin/users", icon: UserCog, perm: "user:manage" },
+      { id: "adm-automation", label: "Automation", to: "/admin/automation", icon: Zap, perm: "settings:manage" },
       {
         id: "adm-settings",
         label: "Settings",
