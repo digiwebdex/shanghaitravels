@@ -372,6 +372,13 @@ export const NAV: NavSection[] = [
         perm: "financial-report:read",
       },
       {
+        id: "fin-commission-rules",
+        label: "Commission Rules",
+        to: "/finance/commission-rules",
+        icon: Receipt,
+        perm: "commission:read",
+      },
+      {
         id: "fin-collections",
         label: "Collections",
         to: "/finance/ar",

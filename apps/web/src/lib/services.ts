@@ -1829,6 +1829,55 @@ export const agentTiersApi = {
   update: (id: string, body: Partial<AgentTier>) => apiFetch<AgentTier>(`/agent-tiers/${id}`, { method: "PATCH", body }),
 };
 
+// V6 Wave 1 — commission engine
+export type CommissionRule = {
+  id: string;
+  name: string;
+  active: boolean;
+  priority: number;
+  basis: string; // fixed | percentage
+  value: number; // poisha (fixed) | bps (percentage)
+  agentId?: string | null;
+  serviceType?: string | null;
+  packageId?: string | null;
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
+};
+export type CommissionPreview = {
+  invoiceId: string;
+  agentId: string | null;
+  agentName?: string;
+  baseAmount: number;
+  basis?: string;
+  value?: number;
+  computedAmount: number;
+  source: "rule" | "agent_rate" | "none";
+  ruleId?: string;
+  ruleName?: string;
+};
+export type CommissionLedgerRow = {
+  id: string;
+  agentId: string;
+  entryType: string;
+  amount: number;
+  runningBalance: number;
+  memo?: string | null;
+  createdAt: string;
+};
+
+export const commissionRulesApi = {
+  list: (q?: { active?: boolean }) => apiFetch<CommissionRule[]>(`/commission-rules${q?.active != null ? `?active=${q.active}` : ""}`),
+  create: (body: Partial<CommissionRule> & { name: string; basis: string; value: number }) =>
+    apiFetch<CommissionRule>("/commission-rules", { method: "POST", body }),
+  update: (id: string, body: Partial<CommissionRule>) => apiFetch<CommissionRule>(`/commission-rules/${id}`, { method: "PATCH", body }),
+  remove: (id: string) => apiFetch(`/commission-rules/${id}`, { method: "DELETE" }),
+};
+export const commissionApi = {
+  previewInvoice: (invoiceId: string) => apiFetch<CommissionPreview>(`/commissions/preview/invoice/${invoiceId}`),
+  generateInvoice: (invoiceId: string) => apiFetch<{ id: string; amount: number; status: string }>(`/commissions/generate/invoice/${invoiceId}`, { method: "POST" }),
+  ledger: (agentId: string) => apiFetch<CommissionLedgerRow[]>(`/commissions/ledger/${agentId}`),
+};
+
 export const corporateClientsApi = {
   list: (q?: { q?: string; page?: number; limit?: number }) => {
     const p = new URLSearchParams();

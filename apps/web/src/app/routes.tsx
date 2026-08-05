@@ -131,6 +131,7 @@ const AdminUsersPage = lazy(() => import("@/pages/AdminUsersPage"));
 const AdminSettingsPage = lazy(() => import("@/pages/AdminSettingsPage"));
 const AutomationDashboardPage = lazy(() => import("@/pages/AutomationDashboardPage"));
 const FinanceCommercialReportsPage = lazy(() => import("@/pages/FinanceCommercialReportsPage"));
+const CommissionRulesPage = lazy(() => import("@/pages/CommissionRulesPage"));
 const NotificationCenterPage = lazy(() => import("@/pages/NotificationCenterPage"));
 const CmsTypedContentPage = lazy(() => import("@/pages/CmsTypedContentPage"));
 const CmsWebsiteSetupPage = lazy(() => import("@/pages/CmsWebsiteSetupPage"));
@@ -1627,6 +1628,14 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <FinanceCommercialReportsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "finance/commission-rules",
+            element: (
+              <Lazy>
+                <CommissionRulesPage />
               </Lazy>
             ),
           },
