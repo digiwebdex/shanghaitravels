@@ -390,6 +390,15 @@ export const financeApi = {
   recordRefund: (body: Record<string, unknown>) =>
     apiFetch<{ id: string }>("/payments/refund", { method: "POST", body }),
   accounts: () => apiFetch<Account[]>("/accounts"),
+  report: (type: string, q?: { from?: string; to?: string }) => {
+    const p = new URLSearchParams();
+    if (q?.from) p.set("from", q.from);
+    if (q?.to) p.set("to", q.to);
+    const qs = p.toString();
+    return apiFetch<{ type: string; period: { from: string; to: string }; rows: Record<string, unknown>[]; total: number; count: number }>(
+      `/finance/reports/${type}${qs ? `?${qs}` : ""}`,
+    );
+  },
 };
 
 export const automationApi = {

@@ -40,6 +40,7 @@ import {
   Target,
   TrendingUp,
   Truck,
+  Bell,
   UserCog,
   Zap,
   UserRound,
@@ -364,6 +365,13 @@ export const NAV: NavSection[] = [
         perm: "invoice:amount:read",
       },
       {
+        id: "fin-commercial-reports",
+        label: "Commercial Reports",
+        to: "/finance/commercial-reports",
+        icon: Receipt,
+        perm: "financial-report:read",
+      },
+      {
         id: "fin-collections",
         label: "Collections",
         to: "/finance/ar",
@@ -538,6 +546,7 @@ export const NAV: NavSection[] = [
       },
       { id: "adm-users", label: "Users", to: "/admin/users", icon: UserCog, perm: "user:manage" },
       { id: "adm-automation", label: "Automation", to: "/admin/automation", icon: Zap, perm: "settings:manage" },
+      { id: "adm-notifications", label: "Notifications", to: "/admin/notifications", icon: Bell, perm: "communication:manage" },
       {
         id: "adm-settings",
         label: "Settings",

@@ -129,6 +129,8 @@ const OperationsNotificationsPage = lazy(() => import("@/pages/OperationsNotific
 const AdminUsersPage = lazy(() => import("@/pages/AdminUsersPage"));
 const AdminSettingsPage = lazy(() => import("@/pages/AdminSettingsPage"));
 const AutomationDashboardPage = lazy(() => import("@/pages/AutomationDashboardPage"));
+const FinanceCommercialReportsPage = lazy(() => import("@/pages/FinanceCommercialReportsPage"));
+const NotificationCenterPage = lazy(() => import("@/pages/NotificationCenterPage"));
 const CmsTypedContentPage = lazy(() => import("@/pages/CmsTypedContentPage"));
 const CmsWebsiteSetupPage = lazy(() => import("@/pages/CmsWebsiteSetupPage"));
 const FinanceAccountingPage = lazy(() => import("@/pages/FinanceAccountingPage"));
@@ -1612,6 +1614,14 @@ export const router = createHashRouter([
             ),
           },
           {
+            path: "finance/commercial-reports",
+            element: (
+              <Lazy>
+                <FinanceCommercialReportsPage />
+              </Lazy>
+            ),
+          },
+          {
             path: "finance/payments",
             element: (
               <Lazy>
@@ -1720,6 +1730,14 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <AutomationDashboardPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "admin/notifications",
+            element: (
+              <Lazy>
+                <NotificationCenterPage />
               </Lazy>
             ),
           },
