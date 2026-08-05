@@ -109,6 +109,7 @@ const PackageGalleryPage = lazy(() => import("@/pages/PackageGalleryPage"));
 const PackageReportsPage = lazy(() => import("@/pages/PackageReportsPage"));
 const SuppliersPage = lazy(() => import("@/pages/SuppliersPage"));
 const AgentsPage = lazy(() => import("@/pages/AgentsPage"));
+const AgentDetailPage = lazy(() => import("@/pages/AgentDetailPage"));
 const CorporateClientsPage = lazy(() => import("@/pages/CorporateClientsPage"));
 const PartnersOverviewPage = lazy(() => import("@/pages/PartnersOverviewPage"));
 const FinanceDashboardPage = lazy(() => import("@/pages/FinanceDashboardPage"));
@@ -1550,6 +1551,14 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <AgentsPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "partners/agents/:id",
+            element: (
+              <Lazy>
+                <AgentDetailPage />
               </Lazy>
             ),
           },

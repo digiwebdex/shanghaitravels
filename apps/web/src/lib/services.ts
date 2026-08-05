@@ -1721,6 +1721,15 @@ export const siteDestinationsApi = {
 
 /* ---------- Enterprise UI (v4) — business partners, operations, admin ---------- */
 
+export type AgentTier = {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  sortOrder?: number;
+  active?: boolean;
+};
+
 export type Agent = {
   id: string;
   code: string;
@@ -1732,7 +1741,35 @@ export type Agent = {
   commissionRateBps?: number;
   /** Minor units (poisha). */
   walletBalance?: number;
+  /** pending | active | suspended | rejected */
   status?: string;
+  // V6 Phase 1 — onboarding (all optional)
+  tierId?: string | null;
+  tier?: AgentTier | null;
+  companyName?: string | null;
+  contactPerson?: string | null;
+  tradeLicenseNo?: string | null;
+  nationalId?: string | null;
+  kycStatus?: string | null;
+  kycNotes?: string | null;
+  appliedAt?: string | null;
+  approvedAt?: string | null;
+  approvedBy?: string | null;
+  rejectedAt?: string | null;
+  rejectedReason?: string | null;
+  reviewedBy?: string | null;
+};
+
+/** Agent onboarding audit entry (reuses AuditLog). */
+export type AgentAuditRow = {
+  id: string;
+  userId?: string | null;
+  action: string;
+  entityType: string;
+  entityId?: string | null;
+  before?: unknown;
+  after?: unknown;
+  createdAt: string;
 };
 
 export type CorporateClient = {
@@ -1752,17 +1789,35 @@ export type CorporateClient = {
 };
 
 export const agentsApi = {
-  list: (q?: { q?: string; page?: number; limit?: number }) => {
+  list: (q?: { q?: string; status?: string; page?: number; limit?: number }) => {
     const p = new URLSearchParams();
     if (q?.q) p.set("q", q.q);
+    if (q?.status) p.set("status", q.status);
     if (q?.page) p.set("page", String(q.page));
     if (q?.limit) p.set("limit", String(q.limit));
     const qs = p.toString();
     return apiFetch<Paginated<Agent>>(`/agents${qs ? `?${qs}` : ""}`);
   },
   get: (id: string) => apiFetch<Agent>(`/agents/${id}`),
-  create: (body: Partial<Agent> & { name: string }) => apiFetch<Agent>("/agents", { method: "POST", body }),
-  update: (id: string, body: Partial<Agent>) => apiFetch<Agent>(`/agents/${id}`, { method: "PATCH", body }),
+  create: (body: Partial<Agent> & { name: string; onboarding?: boolean; commissionRateBps?: number }) =>
+    apiFetch<Agent>("/agents", { method: "POST", body }),
+  update: (id: string, body: Partial<Agent> & { commissionRateBps?: number }) =>
+    apiFetch<Agent>(`/agents/${id}`, { method: "PATCH", body }),
+  // V6 Phase 1 — onboarding lifecycle
+  timeline: (id: string) => apiFetch<AgentAuditRow[]>(`/agents/${id}/timeline`),
+  reviewKyc: (id: string, body: { kycStatus: string; kycNotes?: string }) =>
+    apiFetch<Agent>(`/agents/${id}/kyc`, { method: "POST", body }),
+  approve: (id: string) => apiFetch<Agent>(`/agents/${id}/approve`, { method: "POST" }),
+  reject: (id: string, body: { reason: string }) => apiFetch<Agent>(`/agents/${id}/reject`, { method: "POST", body }),
+  suspend: (id: string) => apiFetch<Agent>(`/agents/${id}/suspend`, { method: "POST" }),
+  reinstate: (id: string) => apiFetch<Agent>(`/agents/${id}/reinstate`, { method: "POST" }),
+};
+
+export const agentTiersApi = {
+  list: () => apiFetch<AgentTier[]>("/agent-tiers"),
+  create: (body: { name: string; description?: string; sortOrder?: number }) =>
+    apiFetch<AgentTier>("/agent-tiers", { method: "POST", body }),
+  update: (id: string, body: Partial<AgentTier>) => apiFetch<AgentTier>(`/agent-tiers/${id}`, { method: "PATCH", body }),
 };
 
 export const corporateClientsApi = {
