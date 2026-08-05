@@ -116,6 +116,7 @@ const FinanceDashboardPage = lazy(() => import("@/pages/FinanceDashboardPage"));
 const FinanceInvoicesPage = lazy(() => import("@/pages/FinanceInvoicesPage"));
 const FinanceInvoiceDetailPage = lazy(() => import("@/pages/FinanceInvoiceDetailPage"));
 const VerifyPage = lazy(() => import("@/pages/VerifyPage"));
+const BookingTrackPage = lazy(() => import("@/pages/BookingTrackPage"));
 const FinancePaymentsPage = lazy(() => import("@/pages/FinancePaymentsPage"));
 const FinanceExpensesPage = lazy(() => import("@/pages/FinanceExpensesPage"));
 const FinanceCashPage = lazy(() => import("@/pages/FinanceCashPage"));
@@ -217,6 +218,22 @@ export const router = createHashRouter([
     element: (
       <Lazy>
         <VerifyPage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/track",
+    element: (
+      <Lazy>
+        <BookingTrackPage />
+      </Lazy>
+    ),
+  },
+  {
+    path: "/track/:ref",
+    element: (
+      <Lazy>
+        <BookingTrackPage />
       </Lazy>
     ),
   },

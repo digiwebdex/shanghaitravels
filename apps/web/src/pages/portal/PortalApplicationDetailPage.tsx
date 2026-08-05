@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { customerPortalApi } from "@/lib/portalApi";
 import { ApiError } from "@/lib/api";
+import { BookingTracker } from "@/components/tracking/BookingTracker";
 
 export default function PortalApplicationDetailPage() {
   const { id = "" } = useParams();
@@ -23,21 +24,20 @@ export default function PortalApplicationDetailPage() {
       {error && <p className="text-red-600 text-[12px]">{error}</p>}
       {app && (
         <>
-          <h1 className="text-[16px] font-bold">
-            {app.referenceNo} · {app.serviceType}
-          </h1>
-          <p className="text-[12px] text-[var(--muted-foreground)]">
-            Status: <span className="font-semibold">{app.status}</span> · Stage {app.currentStage}/{app.totalStages}
-          </p>
           <section className="bg-white border rounded-xl p-4">
-            <h2 className="text-[12px] font-bold mb-2">Stages</h2>
-            <ul className="text-[11px] space-y-1">
-              {(app.stages || []).map((s: any) => (
-                <li key={s.stageNo}>
-                  {s.stageNo}. {s.name} — {s.status}
-                </li>
-              ))}
-            </ul>
+            <h2 className="text-[12px] font-bold mb-3">Tracking</h2>
+            <BookingTracker
+              data={{
+                referenceNo: app.referenceNo,
+                serviceType: app.serviceType,
+                status: app.status,
+                currentStage: app.currentStage,
+                totalStages: app.totalStages,
+                title: app.title,
+                updatedAt: app.updatedAt,
+                stages: app.stages || [],
+              }}
+            />
           </section>
           <section className="bg-white border rounded-xl p-4">
             <h2 className="text-[12px] font-bold mb-2">Timeline</h2>
