@@ -32,3 +32,17 @@
 5. **Recurring cache trim** — a monthly `npm cache clean` + `apt-get clean` maintenance timer would keep ~3 GB from re-accumulating.
 
 **Gates:** N/A (server maintenance, no code change). **Verification:** `df -h /` before/after captured above.
+
+---
+
+## Fix 2 — Production Deployment Checklist (blocker C3)
+
+**Problem:** prod runs a pre-Wave-1 build; deploying "the ERP" without a runbook risks a broken/partial cutover.
+
+**Diagnosis (verified against `st_erp_prod`):** prod DB is "up to date" at its own baseline (~026) → **migrations `027`→`034` pending** (corporate portal, package engine, destination master, invoice lifecycle, agent onboarding, customer ownership + backfill, commission engine, wallet ledger) plus the new `035` indexes. Prod backend deps **nodemailer / pdfkit / qrcode / @nestjs/schedule are MISSING** (plus this sprint's helmet / throttler / class-validator / class-transformer) — prod can't run the new code until `npm ci`.
+
+**Delivered:** [`docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md`](./PRODUCTION_DEPLOYMENT_CHECKLIST.md) — a full owner-gated runbook: pre-deploy (maintenance window, disk headroom, fresh prod backup, release snapshot, additive-migration review) → deploy (sync source, `npm ci`, `prisma migrate deploy` + `generate`, `nest build`, frontend build/publish + nginx `client_max_body_size`, service restart) → **prod config** (delivery creds for C2, automation gate) → **smoke tests** (health/ready, auth, customer/invoice/payment/PDF, public track/verify, ownership/commission/wallet) → **rollback** (additive migrations make code rollback safe without column drops) → post-deploy watch.
+
+**Nothing deployed** — prod remains at its pre-sprint baseline (this is a runbook, not a deployment).
+
+**Gates:** N/A (documentation).
