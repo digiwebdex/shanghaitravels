@@ -60,3 +60,15 @@
 **Verification (staging):** `nest build` ✓; login missing-password → **400**, bad-email → **400**, valid → **201**; payment negative amount → **400**, missing accountId → **400**. (Register stays permissive by design — free-form profile fields; noted for a follow-up broadening, not an auth-credential/money endpoint.)
 
 **Files** (`/opt`, not under git): `src/common/dto/{auth,payment}.dto.ts` (new), `src/auth/auth.controller.ts`, `src/finance/finance.controller.ts`, `src/{agent-portal,customer-portal,corporate-portal}/*-auth.controller.ts`.
+
+---
+
+## Fix 4 — Helmet security headers (blocker H2)
+
+**Problem:** the API set no security headers (no `helmet`) — no HSTS, nosniff, frameguard, etc. from the app.
+
+**Fix (backend `/opt/shanghai-erp-api/src/main.ts`):** installed `helmet` and added `app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: { policy: "cross-origin" } }))`. CSP is intentionally left to nginx for the SPA (the API returns JSON/PDF, not HTML) and CORP is `cross-origin` so PDF/QR downloads through the `/api2` proxy keep working.
+
+**Verification (staging):** `nest build` ✓; `curl -D-` on `/api/health` now returns `Strict-Transport-Security: max-age=31536000; includeSubDomains`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Cross-Origin-Opener-Policy`, `Referrer-Policy`, `X-Download-Options`, `X-DNS-Prefetch-Control` — none of which were present before.
+
+**Files** (`/opt`): `src/main.ts`, `package.json` (+helmet).
