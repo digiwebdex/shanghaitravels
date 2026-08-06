@@ -46,3 +46,17 @@
 **Nothing deployed** — prod remains at its pre-sprint baseline (this is a runbook, not a deployment).
 
 **Gates:** N/A (documentation).
+
+---
+
+## Fix 3 — Validation DTOs on auth & payment endpoints (blocker C5)
+
+**Problem:** the global `ValidationPipe` was a no-op — every handler took `@Body() any` (0 DTOs), so credentials and money arrived unvalidated (NaN/negative/overflow amounts, mass-assignment).
+
+**Fix (backend `/opt/shanghai-erp-api/src`):** class-validator/class-transformer were already installed and the pipe already global (`whitelist+transform`) — it just had no typed bodies. Added DTOs and wired them onto **every auth and payment endpoint**:
+- `common/dto/auth.dto.ts` — `LoginDto` (email/password), `ChangePasswordDto` (newPassword ≥8), `EmailDto` (forgot / otp-request), `ResetPasswordDto`, `EmailCodeDto` (otp-verify / verify-email). Wired into **staff auth** (`auth.controller`) and **all three portal auth controllers** (agent/customer/corporate): login, forgot, reset, otp/request, otp/verify (+ customer verify-email).
+- `common/dto/payment.dto.ts` — `RecordPaymentDto` (`amount` must be a **positive integer** minor-unit value via `@IsInt @IsPositive @Type(Number)`; `accountId` required; optional invoice/customer/method/reference/note/receivedAt bounded). Wired into `POST /payments` and `POST /payments/refund`.
+
+**Verification (staging):** `nest build` ✓; login missing-password → **400**, bad-email → **400**, valid → **201**; payment negative amount → **400**, missing accountId → **400**. (Register stays permissive by design — free-form profile fields; noted for a follow-up broadening, not an auth-credential/money endpoint.)
+
+**Files** (`/opt`, not under git): `src/common/dto/{auth,payment}.dto.ts` (new), `src/auth/auth.controller.ts`, `src/finance/finance.controller.ts`, `src/{agent-portal,customer-portal,corporate-portal}/*-auth.controller.ts`.
