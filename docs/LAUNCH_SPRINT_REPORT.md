@@ -127,3 +127,15 @@
 **Note:** ST-scoped only — it monitors the two ST services + shared disk; it touches no other tenant. Real push/email alerting can be wired via `ST_MONITOR_WEBHOOK` (or once SMTP is configured in Fix 3's delivery layer).
 
 **Files** (git): `deploy/ops/st-erp-monitor/{check.sh,st-erp-monitor.service,st-erp-monitor.timer}`. Installed at `/opt/st-erp-monitor/` + `/etc/systemd/system/`.
+
+---
+
+## Fix 8 — Health checks / readiness endpoint (blocker L4 → H4 support)
+
+**Problem:** the only probe was `GET /api/health` (liveness + `SELECT 1`) — no **readiness** check to verify dependencies before routing traffic, and no operational signal about delivery/env.
+
+**Fix (backend `/opt/shanghai-erp-api/src/health.controller.ts`):** kept liveness `GET /api/health`; added **`GET /api/health/ready`** — runs the DB check and returns **503** (`ServiceUnavailableException`) if the database is down, else `200` with `checks: { database, deliveryMode, env }`. `deliveryMode` reports `live | simulate | unconfigured` so operators can see at a glance whether real message delivery is wired (directly surfaces blocker C2). Both endpoints are `@Public` + `@SkipThrottle`.
+
+**Verification (staging):** `nest build` ✓; `GET /api/health/ready` → `{ ok:true, checks:{ database:"ok", deliveryMode:"simulate", env:"staging" } }`. Ready for use as a deploy/orchestration readiness probe (and by the monitor).
+
+**Files** (`/opt`): `src/health.controller.ts`.
