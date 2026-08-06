@@ -1,0 +1,5 @@
+[Unit]
+Description=Shanghai Travels ERP weekly restore drill
+[Service]
+Type=oneshot
+ExecStart=/opt/st-erp-monitor/restore-verify.sh

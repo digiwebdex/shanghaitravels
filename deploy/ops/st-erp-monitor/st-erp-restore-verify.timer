@@ -1,0 +1,7 @@
+[Unit]
+Description=Weekly ST ERP restore drill
+[Timer]
+OnCalendar=Sun 04:30
+Persistent=true
+[Install]
+WantedBy=timers.target

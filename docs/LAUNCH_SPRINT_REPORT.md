@@ -139,3 +139,21 @@
 **Verification (staging):** `nest build` ✓; `GET /api/health/ready` → `{ ok:true, checks:{ database:"ok", deliveryMode:"simulate", env:"staging" } }`. Ready for use as a deploy/orchestration readiness probe (and by the monitor).
 
 **Files** (`/opt`): `src/health.controller.ts`.
+
+---
+
+## Fix 9 — Backup restore verification (blocker: restore never drilled)
+
+**Problem:** backups were confirmed present + encrypted, but a **restore had never been proven** — and it was unknown whether the decryption key survives a total box loss.
+
+**Findings:**
+- A staging restore drill already existed (`/root/backup-verify.sh`, every 6h) — full `pg_dump → pg_restore → count-compare` on `st_erp_staging`.
+- The **prod** nightly artifacts (`st_erp_prod-*.dump.age`) are encrypted to the **owner's `age` public key** (`/etc/st-erp/backup-recipient.pub`); the matching **private identity is deliberately NOT on this server** (correct — a server compromise can't read backups). So the encrypted-artifact restore can only be fully drilled by the owner.
+
+**Fix (what can be proven on-box):** added `restore-verify.sh` (installed `/opt/st-erp-monitor/`, version-controlled in repo) — a **real restore drill of `st_erp_prod`**: read-only `pg_dump -Fc` → restore into a throwaway `st_erp_restore_test` DB → compare row counts of User/Role/Customer/Application/Invoice → drop the scratch DB. Prod is never touched. Scheduled **weekly** via `st-erp-restore-verify.timer` (Sun 04:30).
+
+**Verification (executed now against prod):** `RESTORE VERIFIED — source == restored (User 18 · Role 7 · Customer 144 · Application 248 · Invoice 68)`. The prod RTO/RPO **mechanism is proven** on real prod data.
+
+**Owner action (documented, cannot be done on-box):** periodically prove the **encrypted** artifact restores end-to-end using the owner-held `age` identity, and confirm that identity is backed up **off this server** — otherwise the encrypted backups are unrecoverable after a total box loss.
+
+**Files** (git): `deploy/ops/st-erp-monitor/{restore-verify.sh,st-erp-restore-verify.service,st-erp-restore-verify.timer}`.
