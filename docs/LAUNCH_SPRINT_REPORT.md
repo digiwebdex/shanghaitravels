@@ -157,3 +157,44 @@
 **Owner action (documented, cannot be done on-box):** periodically prove the **encrypted** artifact restores end-to-end using the owner-held `age` identity, and confirm that identity is backed up **off this server** — otherwise the encrypted backups are unrecoverable after a total box loss.
 
 **Files** (git): `deploy/ops/st-erp-monitor/{restore-verify.sh,st-erp-restore-verify.service,st-erp-restore-verify.timer}`.
+
+---
+
+## Fix 10 — Production configuration audit (blockers H3, M1, H2-partial)
+
+**Problem:** prod config had no resource caps (OOM blast radius on the shared box), an upload-limit mismatch, and simulated delivery.
+
+**Applied (safe, ST-scoped):**
+- **systemd resource caps** — drop-in `st-erp-api.service.d/10-hardening.conf` (+ staging): `MemoryMax=768M`, `MemoryHigh=640M`, `LimitNOFILE=65535`, `NoNewPrivileges`, `PrivateTmp`. `daemon-reload` — MemoryMax enforced immediately (cgroup); caps the H3 blast radius on the shared box. **No restart forced.**
+- **nginx upload limit** — added `client_max_body_size 25m` to the ST `/api2` location (was nginx default 1m → 15-20MB doc/OCR uploads would 413). `nginx -t` passed; **graceful reload** — fixes M1. Only the ST site was touched.
+
+**Documented (owner-gated, NOT applied):** delivery credentials (C2), global `nginx.conf` TLS 1.0/1.1 removal (shared by all tenants), nginx HSTS/CSP, dedicated host/quotas (H3 full fix), Redis throttler store for multi-instance, automation enablement, leader election.
+
+**Delivered:** [`docs/PRODUCTION_CONFIG_AUDIT.md`](./PRODUCTION_CONFIG_AUDIT.md) — full env/systemd/nginx/TLS audit with applied-vs-owner-gated verdicts.
+
+**Verification:** `systemctl show st-erp-api -p MemoryMax` → `805306368` (768M); `nginx -t` ok + reloaded; `client_max_body_size 25m` present on the ST site.
+
+**Files** (git): `docs/PRODUCTION_CONFIG_AUDIT.md`, `deploy/ops/systemd/st-erp-api.d-10-hardening.conf`. Installed at `/etc/systemd/system/st-erp-api.service.d/` + the nginx ST site.
+
+---
+
+## Sprint summary
+
+| # | Fix | Blocker | Applied where | Verified |
+|---|---|---|---|---|
+| 1 | Disk cleanup + strategy | C1 | server (regenerable caches) | 96%→92%, +3.6GB |
+| 2 | Deployment checklist | C3 | doc/runbook | migrations 027-035 + deps mapped |
+| 3 | Validation DTOs (auth/payment) | C5 | `/opt` backend | 400 on bad input |
+| 4 | Helmet | H2 | `/opt` backend | headers present |
+| 5 | Rate limiting | H1 | `/opt` backend | 429 after 120/min |
+| 6 | DB indexes (034 SQL) | C4 | staging DB | 47 indexes |
+| 7 | Monitoring | H4 | server (systemd timer) | disk alert fired |
+| 8 | Readiness health check | L4/H4 | `/opt` backend | `/health/ready` 200/503 |
+| 9 | Backup restore drill | (untested restore) | server + prod drill | RESTORE VERIFIED |
+| 10 | Config audit + caps | H3/M1 | systemd + nginx | MemoryMax 768M, upload 25m |
+
+**Discipline held:** backend code/migrations built + verified on **staging only** (`:4201`), **not deployed to prod, not pushed**; only ST-scoped or universally-safe (regenerable-cache / resource-cap / ST-site) changes were made on the shared server — no other tenant's app or data touched. Each fix committed separately.
+
+**Remaining owner-gated blockers to reach go-live** (from the readiness review, unchanged by this sprint): **C2 delivery credentials** and **C3 deploy the staged code to prod** (runbook ready). After those two, the ST launch-blocker set is cleared.
+
+_Production hardening sprint complete. Stopped here._
