@@ -90,3 +90,24 @@
 **Note:** throttler storage is in-memory (per-instance) — correct for the single-instance prod today; a Redis storage is needed if ever scaling out (documented in the config audit / readiness review).
 
 **Files** (`/opt`): `src/app.module.ts`, `src/health.controller.ts`, `src/ocr/ocr.public.controller.ts`, `package.json` (+@nestjs/throttler).
+
+---
+
+## Fix 6 — Database indexes (blocker C4, top perf blocker)
+
+**Problem:** the busiest tables were unindexed on their filter/FK columns (Postgres doesn't auto-index FKs). `Application`, `Invoice` had only `packageId`; `Passport`, `AuditLog`, `Notification` had **no indexes at all** — every branch-scoped list, customer join, passport lookup, audit query, and the 15-min `Notification` pending-poll was a sequential scan that degrades linearly with data.
+
+**Fix:** additive migration `035_perf_indexes` (staging only) — **34 `CREATE INDEX IF NOT EXISTS`** across the audited hot tables:
+- **Application** — customerId, branchId, status, agentId, corporateClientId, assignedTo, createdAt, deletedAt.
+- **Invoice** — customerId, applicationId, branchId, status, dueAt, createdAt, deletedAt.
+- **Customer** — branchId, status, createdAt, deletedAt.
+- **Passport** — customerId, passportNo, expiryDate.
+- **AuditLog** — (entityType, entityId), userId, createdAt.
+- **Notification** — status, createdAt, (relatedType, relatedId).
+- **ApplicationEvent** — applicationId. **Task** — applicationId, status, assignedTo, deletedAt.
+
+**Verification (staging):** `prisma migrate deploy` ✓; `pg_indexes` now shows **47** indexes on these tables (new + pre-existing). Idempotent (`IF NOT EXISTS`) + additive (no data change), so prod-safe. (At today's tiny row counts the planner still prefers seq-scan for some — expected; the indexes take effect as the first customer's data grows.)
+
+**Note:** applied as a raw SQL migration (this repo hand-writes migrations; `migrate dev`/`db push` aren't used, so there is no drift-drop risk). Mirroring these as `@@index` in `schema.prisma` is a low-priority housekeeping follow-up — it does not affect runtime, since Postgres uses the indexes regardless.
+
+**Files** (`/opt`): `prisma/migrations/20260805160000_035_perf_indexes/migration.sql` (new).
