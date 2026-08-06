@@ -72,3 +72,21 @@
 **Verification (staging):** `nest build` ✓; `curl -D-` on `/api/health` now returns `Strict-Transport-Security: max-age=31536000; includeSubDomains`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Cross-Origin-Opener-Policy`, `Referrer-Policy`, `X-Download-Options`, `X-DNS-Prefetch-Control` — none of which were present before.
 
 **Files** (`/opt`): `src/main.ts`, `package.json` (+helmet).
+
+---
+
+## Fix 5 — Rate limiting (blocker H1)
+
+**Problem:** no framework rate limiting — the entire authenticated API and all public read endpoints were unthrottled; the unauthenticated **public OCR scan** (paid Google Vision) was an abuse vector protected only by a per-instance in-memory map.
+
+**Fix (backend `/opt/shanghai-erp-api/src`):** added `@nestjs/throttler`:
+- `ThrottlerModule.forRoot([{ ttl: 60000, limit: 120 }])` — baseline **120 req/min per IP across the whole API**.
+- `ThrottlerGuard` registered as the **first** `APP_GUARD` (before JWT/permissions) so it throttles even unauthenticated traffic.
+- `@SkipThrottle()` on `HealthController` (monitoring must never be throttled).
+- Stricter `@Throttle({ default: { limit: 5, ttl: 60000 } })` on the public OCR scan (on top of its existing in-memory limiter).
+
+**Verification (staging):** `nest build` ✓; hammering `/api/public/track` 130× → **120×200 then 10×429**; `/api/health` polled 10× → 10×200 (exempt).
+
+**Note:** throttler storage is in-memory (per-instance) — correct for the single-instance prod today; a Redis storage is needed if ever scaling out (documented in the config audit / readiness review).
+
+**Files** (`/opt`): `src/app.module.ts`, `src/health.controller.ts`, `src/ocr/ocr.public.controller.ts`, `package.json` (+@nestjs/throttler).
