@@ -1,0 +1,5 @@
+[Unit]
+Description=Shanghai Travels ERP monitor (health + disk)
+[Service]
+Type=oneshot
+ExecStart=/opt/st-erp-monitor/check.sh

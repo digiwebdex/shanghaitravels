@@ -111,3 +111,19 @@
 **Note:** applied as a raw SQL migration (this repo hand-writes migrations; `migrate dev`/`db push` aren't used, so there is no drift-drop risk). Mirroring these as `@@index` in `schema.prisma` is a low-priority housekeeping follow-up — it does not affect runtime, since Postgres uses the indexes regardless.
 
 **Files** (`/opt`): `prisma/migrations/20260805160000_035_perf_indexes/migration.sql` (new).
+
+---
+
+## Fix 7 — Monitoring (blocker H4)
+
+**Problem:** no monitoring/alerting on the box (Grafana/Prometheus were removed) — the `/api/health` endpoint existed but nothing polled it, and disk crept from 81% → 96% with no alarm.
+
+**Fix:** an ST-scoped monitor installed on the server (and version-controlled in the repo under `deploy/ops/st-erp-monitor/`):
+- `check.sh` — polls **prod (`:4200`)** and **staging (`:4201`)** `/api/health` (asserts `{ok:true}`), checks both systemd services are active, and checks **disk ≥ 90%**. Healthy → one OK line to `/var/log/st-erp-monitor.log`; any failure → `ALERT` lines to the log **and** the journal (`systemd-cat -p err`), plus an optional webhook POST if `ST_MONITOR_WEBHOOK` is set.
+- `st-erp-monitor.service` + `st-erp-monitor.timer` — runs every **3 minutes** (`OnUnitActiveSec=3min`), enabled.
+
+**Verification:** ran once → correctly emitted `ALERT disk 92% >= 90% on /` (health checks passed); `systemctl list-timers` shows the timer active with the next run scheduled. This gives the previously-absent early warning for the exact failure mode (disk) that made C1 critical.
+
+**Note:** ST-scoped only — it monitors the two ST services + shared disk; it touches no other tenant. Real push/email alerting can be wired via `ST_MONITOR_WEBHOOK` (or once SMTP is configured in Fix 3's delivery layer).
+
+**Files** (git): `deploy/ops/st-erp-monitor/{check.sh,st-erp-monitor.service,st-erp-monitor.timer}`. Installed at `/opt/st-erp-monitor/` + `/etc/systemd/system/`.
