@@ -12,6 +12,7 @@ import { Column, DataTable, Pill } from "@/components/enterprise/DataTable";
 import { Avatar } from "@/components/enterprise/Avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { CustomerIntelligencePanel } from "@/components/search/CustomerIntelligencePanel";
+import { CustomerSummaryHeader } from "@/components/customers/CustomerSummaryHeader";
 import { downloadBlob } from "@/lib/statements";
 import {
   KpiCard,
@@ -36,9 +37,10 @@ type BadgeTone = "slate" | "green" | "amber" | "red" | "blue";
 /** Descriptor badges under the customer name (derived from existing list fields). */
 function customerBadges(c: Customer): { label: string; tone: BadgeTone }[] {
   const out: { label: string; tone: BadgeTone }[] = [];
-  if (c.type === "corporate") out.push({ label: "Corporate", tone: "blue" });
-  else out.push({ label: "Individual", tone: "slate" });
+  out.push(c.type === "corporate" ? { label: "Corporate", tone: "blue" } : { label: "Individual", tone: "slate" });
   if (c.primaryAgent) out.push({ label: "Agent-Owned", tone: "amber" });
+  if (c.secondaryAgent) out.push({ label: "Co-Agent", tone: "blue" });
+  if (c.createdAt && Date.now() - new Date(c.createdAt).getTime() < 30 * 864e5) out.push({ label: "New", tone: "green" });
   if (c.status && c.status.toLowerCase() !== "active") out.push({ label: c.status, tone: "red" });
   return out;
 }
@@ -451,7 +453,12 @@ export default function CustomersPage() {
           <SheetHeader className="sr-only">
             <SheetTitle>Customer 360</SheetTitle>
           </SheetHeader>
-          {viewId && <CustomerIntelligencePanel profile={profile} loading={profileLoading} />}
+          {viewId && (
+            <>
+              <CustomerSummaryHeader profile={profile} />
+              <CustomerIntelligencePanel profile={profile} loading={profileLoading} />
+            </>
+          )}
         </SheetContent>
       </Sheet>
     </PageShell>
