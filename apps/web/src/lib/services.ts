@@ -1875,6 +1875,8 @@ export const agentsApi = {
   timeline: (id: string) => apiFetch<AgentAuditRow[]>(`/agents/${id}/timeline`),
   reviewKyc: (id: string, body: { kycStatus: string; kycNotes?: string }) =>
     apiFetch<Agent>(`/agents/${id}/kyc`, { method: "POST", body }),
+  remove: (id: string) => apiFetch<{ ok: boolean; agent: Agent }>(`/agents/${id}`, { method: "DELETE" }),
+  restore: (id: string) => apiFetch<Agent>(`/agents/${id}/restore`, { method: "POST" }),
   approve: (id: string) => apiFetch<Agent>(`/agents/${id}/approve`, { method: "POST" }),
   reject: (id: string, body: { reason: string }) => apiFetch<Agent>(`/agents/${id}/reject`, { method: "POST", body }),
   suspend: (id: string) => apiFetch<Agent>(`/agents/${id}/suspend`, { method: "POST" }),

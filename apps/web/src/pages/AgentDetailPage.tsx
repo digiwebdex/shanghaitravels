@@ -9,6 +9,7 @@ import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { Pill, statusTone } from "@/components/enterprise/DataTable";
 import { AgentWalletCard } from "@/components/agents/AgentWalletCard";
 import { AgentDocumentsCard } from "@/components/agents/AgentDocumentsCard";
+import { AgentContextCards } from "@/components/agents/AgentContextCards";
 import {
   PageHeader,
   PageShell,
@@ -305,6 +306,8 @@ export default function AgentDetailPage() {
           </Surface>
         )}
       </div>
+
+      <AgentContextCards agentId={agent.id} />
 
       {status === "active" && <AgentWalletCard agentId={agent.id} />}
 

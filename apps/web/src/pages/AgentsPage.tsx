@@ -1,6 +1,6 @@
 import { FormEvent, ReactNode, useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Handshake, Plus, RefreshCw } from "lucide-react";
+import { Eye, Handshake, Pencil, Plus, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 import { agentsApi, type Agent } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import { Can } from "@/auth/Can";
@@ -21,7 +21,7 @@ import {
 } from "@/components/enterprise/Page";
 import { fmtBDTPlain } from "@/lib/money";
 
-const STATUS_FILTERS = ["", "pending", "active", "suspended", "rejected"] as const;
+const STATUS_FILTERS = ["", "pending", "active", "suspended", "rejected", "inactive"] as const;
 const BUSINESS_TYPES = ["", "Individual", "Proprietorship", "Partnership", "Limited Company", "Corporate", "Freelance Agent"];
 const GENDERS = ["", "male", "female", "other"];
 const OPENING_TYPES = ["none", "debit", "credit"];
@@ -66,6 +66,8 @@ export default function AgentsPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FormShape>(EMPTY_FORM);
   const [busy, setBusy] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<Agent | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -108,10 +110,62 @@ export default function AgentsPage() {
     );
   }
 
-  async function create(e: FormEvent) {
+  // Map an existing agent → editable form values (dates → yyyy-mm-dd, poisha → ৳).
+  function agentToForm(a: Agent): FormShape {
+    const d = (v?: string | null) => (v ? String(v).slice(0, 10) : "");
+    const g = (v?: string | null) => v || "";
+    return {
+      name: g(a.name), ownerName: g(a.ownerName), companyName: g(a.companyName), contactPerson: g(a.contactPerson),
+      phone: g(a.phone), email: g(a.email), address: g(a.address),
+      tradeLicenseNo: g(a.tradeLicenseNo), nationalId: g(a.nationalId), passportNo: g(a.passportNo),
+      dob: d(a.dob), gender: g(a.gender), nationality: g(a.nationality),
+      businessType: g(a.businessType), businessStartDate: d(a.businessStartDate),
+      yearsExperience: a.yearsExperience != null ? String(a.yearsExperience) : "",
+      website: g(a.website), facebookPage: g(a.facebookPage), googleBusiness: g(a.googleBusiness),
+      officeAddress: g(a.officeAddress), city: g(a.city), district: g(a.district), country: g(a.country),
+      postalCode: g(a.postalCode), googleMapLocation: g(a.googleMapLocation),
+      bankName: g(a.bankName), bankBranch: g(a.bankBranch), bankAccountName: g(a.bankAccountName),
+      bankAccountNumber: g(a.bankAccountNumber), bankRoutingNumber: g(a.bankRoutingNumber),
+      bkash: g(a.bkash), nagad: g(a.nagad), rocket: g(a.rocket), upay: g(a.upay),
+      commissionRateBps: String(a.commissionRateBps ?? 250),
+      openingBalanceType: g(a.openingBalanceType) || "none",
+      openingBalance: a.openingBalance != null ? String((a.openingBalance || 0) / 100) : "",
+      currency: g(a.currency) || "BDT",
+      emergencyName: g(a.emergencyName), emergencyRelationship: g(a.emergencyRelationship), emergencyPhone: g(a.emergencyPhone),
+      internalNotes: g(a.internalNotes),
+      tierId: a.tierId || "", asApplicant: false,
+    };
+  }
+  function openCreate() {
+    setError(""); setOk(""); setEditingId(null); setForm(EMPTY_FORM); setShowForm(true);
+  }
+  async function startEdit(a: Agent) {
+    setError(""); setOk("");
+    try {
+      const full = await agentsApi.get(a.id); // reuse existing detail API for pre-fill
+      setForm(agentToForm(full));
+      setEditingId(a.id);
+      setShowForm(true);
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Failed to load agent");
+    }
+  }
+  async function doRemove(a: Agent) {
+    setBusy(true); setError("");
+    try { await agentsApi.remove(a.id); setOk(`${a.name} deactivated`); setConfirm(null); await load(); }
+    catch (e) { setError(e instanceof ApiError ? e.message : "Deactivate failed"); }
+    finally { setBusy(false); }
+  }
+  async function doRestore(a: Agent) {
+    setBusy(true); setError("");
+    try { await agentsApi.restore(a.id); setOk(`${a.name} restored`); await load(); }
+    catch (e) { setError(e instanceof ApiError ? e.message : "Restore failed"); }
+    finally { setBusy(false); }
+  }
+
+  async function save(e: FormEvent) {
     e.preventDefault();
-    setError("");
-    setOk("");
+    setError(""); setOk("");
     // Required (mirrors the backend guard): Owner, Name, Phone, Email, Address, Commission, TradeLicense OR NID.
     const required: [keyof FormShape, string][] = [
       ["name", "Agent name"], ["ownerName", "Owner / proprietor name"], ["phone", "Phone"], ["email", "Email"], ["address", "Address"],
@@ -123,7 +177,7 @@ export default function AgentsPage() {
     setBusy(true);
     try {
       const s = (k: keyof FormShape) => val(k).trim() || undefined;
-      const created = await agentsApi.create({
+      const payload = {
         name: val("name").trim(), ownerName: val("ownerName").trim(),
         companyName: s("companyName"), contactPerson: s("contactPerson"),
         phone: s("phone"), email: s("email"), address: s("address"),
@@ -144,14 +198,19 @@ export default function AgentsPage() {
         emergencyName: s("emergencyName"), emergencyRelationship: s("emergencyRelationship"), emergencyPhone: s("emergencyPhone"),
         internalNotes: s("internalNotes"),
         tierId: form.tierId || undefined,
-        onboarding: form.asApplicant,
-      });
-      setForm(EMPTY_FORM);
-      setShowForm(false);
-      // Continue onboarding on the profile (documents, KYC, approval).
-      navigate(`/partners/agents/${created.id}`);
+      };
+      if (editingId) {
+        await agentsApi.update(editingId, payload); // reuse existing update API; immutable fields untouched
+        setForm(EMPTY_FORM); setShowForm(false); setEditingId(null);
+        setOk("Agent updated");
+        await load();
+      } else {
+        const created = await agentsApi.create({ ...payload, onboarding: form.asApplicant });
+        setForm(EMPTY_FORM); setShowForm(false);
+        navigate(`/partners/agents/${created.id}`); // continue onboarding (documents, KYC, approval)
+      }
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Create failed");
+      setError(err instanceof ApiError ? err.message : editingId ? "Update failed" : "Create failed");
     } finally {
       setBusy(false);
     }
@@ -174,6 +233,41 @@ export default function AgentsPage() {
     { key: "rate", header: "Commission", className: "tabular-nums", render: (r) => `${((r.commissionRateBps ?? 0) / 100).toFixed(2)}%` },
     { key: "wallet", header: "Wallet", className: "text-right tabular-nums", render: (r) => fmtBDTPlain(r.walletBalance ?? 0) },
     { key: "status", header: "Status", render: (r) => <Pill value={r.status || "active"} tone={statusTone(r.status || "active")} /> },
+    {
+      key: "actions",
+      header: "Actions",
+      className: "text-right",
+      render: (r) => {
+        const inactive = r.status === "inactive";
+        return (
+          <div className="flex items-center justify-end gap-1">
+            <Can perm="commission:read">
+              <Link to={`/partners/agents/${r.id}`} className={`${btnGhost} px-2 py-1`} title="View" aria-label="View">
+                <Eye size={13} />
+              </Link>
+            </Can>
+            {!inactive && (
+              <Can perm="agent:manage">
+                <button type="button" className={`${btnGhost} px-2 py-1`} title="Edit" aria-label="Edit" onClick={() => void startEdit(r)}>
+                  <Pencil size={13} />
+                </button>
+              </Can>
+            )}
+            <Can perm="agent:manage">
+              {inactive ? (
+                <button type="button" className={`${btnGhost} px-2 py-1`} title="Restore" aria-label="Restore" disabled={busy} onClick={() => void doRestore(r)}>
+                  <RotateCcw size={13} />
+                </button>
+              ) : (
+                <button type="button" className={`${btnGhost} px-2 py-1 text-red-600`} title="Deactivate" aria-label="Delete" disabled={busy} onClick={() => setConfirm(r)}>
+                  <Trash2 size={13} />
+                </button>
+              )}
+            </Can>
+          </div>
+        );
+      },
+    },
   ];
 
   const section = (title: string, hint: string, children: ReactNode) => (
@@ -196,7 +290,7 @@ export default function AgentsPage() {
               <RefreshCw size={12} /> Refresh
             </button>
             <Can perm="agent:manage">
-              <button type="button" className={btnPrimary} style={btnPrimaryStyle} onClick={() => setShowForm((s) => !s)}>
+              <button type="button" className={btnPrimary} style={btnPrimaryStyle} onClick={openCreate}>
                 <Plus size={13} /> Onboard agent
               </button>
             </Can>
@@ -207,9 +301,32 @@ export default function AgentsPage() {
       <ErrorBanner message={error} />
       <SuccessBanner message={ok} />
 
+      {confirm && (
+        <Can perm="agent:manage">
+          <Surface>
+            <div className="p-4 sm:p-5">
+              <p className="text-[13px] font-bold text-[var(--primary)]">Delete Agent?</p>
+              <p className="mt-1 text-[11.5px] leading-relaxed text-[var(--muted-foreground)]">
+                This action will deactivate <span className="font-semibold">{confirm.name}</span>. Existing bookings, customers, commission and wallet history will remain.
+              </p>
+              <div className="mt-3 flex gap-2">
+                <button type="button" className={btnGhost} onClick={() => setConfirm(null)}>Cancel</button>
+                <button type="button" className={btnPrimary} style={btnPrimaryStyle} disabled={busy} onClick={() => void doRemove(confirm)}>Deactivate</button>
+              </div>
+            </div>
+          </Surface>
+        </Can>
+      )}
+
       {showForm && (
         <Can perm="agent:manage">
-          <form onSubmit={(e) => void create(e)} className="space-y-4">
+          <form onSubmit={(e) => void save(e)} className="space-y-4">
+            <Surface>
+              <SurfaceHeader
+                title={editingId ? "Edit agent" : "Onboard agent"}
+                hint={editingId ? "Editing an existing agent. Agent code, created date/by, ledgers and audit history are immutable." : "New commercial agent onboarding. Owner name required."}
+              />
+            </Surface>
             {section("1 · Basic Information", "Owner name is required. Applicants start pending and require approval.", (
               <>
                 {txt("name", "Agent Name", { req: true })}
@@ -303,10 +420,16 @@ export default function AgentsPage() {
             ))}
 
             {section("9 · Status", "Status follows the onboarding workflow: Save → KYC Pending → Approval → Active.", (
-              <label className="flex items-center gap-2 text-[11.5px] font-semibold text-[var(--foreground)] sm:col-span-2">
-                <input type="checkbox" checked={form.asApplicant} onChange={(e) => setForm({ ...form, asApplicant: e.target.checked })} />
-                Register as onboarding applicant (pending approval)
-              </label>
+              editingId ? (
+                <div className="sm:col-span-2 text-[11.5px] text-[var(--muted-foreground)]">
+                  Status is managed via the profile lifecycle actions (Approve / Suspend / Reinstate) — not editable here.
+                </div>
+              ) : (
+                <label className="flex items-center gap-2 text-[11.5px] font-semibold text-[var(--foreground)] sm:col-span-2">
+                  <input type="checkbox" checked={form.asApplicant} onChange={(e) => setForm({ ...form, asApplicant: e.target.checked })} />
+                  Register as onboarding applicant (pending approval)
+                </label>
+              )
             ))}
 
             {section("10 · KYC", "KYC is reviewed on the agent's profile after saving (verify → approve).", (
@@ -333,10 +456,10 @@ export default function AgentsPage() {
             <div className="flex gap-2">
               <Can perm="agent:manage">
                 <button type="submit" disabled={busy} className={btnPrimary} style={btnPrimaryStyle}>
-                  {form.asApplicant ? "Submit application" : "Create active agent"}
+                  {editingId ? "Save changes" : form.asApplicant ? "Submit application" : "Create active agent"}
                 </button>
               </Can>
-              <button type="button" className={btnGhost} onClick={() => setShowForm(false)}>Cancel</button>
+              <button type="button" className={btnGhost} onClick={() => { setShowForm(false); setEditingId(null); }}>Cancel</button>
             </div>
           </form>
         </Can>
