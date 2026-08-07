@@ -8,6 +8,7 @@ import { useAuth } from "@/auth/AuthProvider";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { Pill, statusTone } from "@/components/enterprise/DataTable";
 import { AgentWalletCard } from "@/components/agents/AgentWalletCard";
+import { AgentDocumentsCard } from "@/components/agents/AgentDocumentsCard";
 import {
   PageHeader,
   PageShell,
@@ -176,6 +177,7 @@ export default function AgentDetailPage() {
             <Field label="Status" value={status} />
             <Field label="Phone" value={agent.phone} />
             <Field label="Email" value={agent.email} />
+            <Field label="Owner / Proprietor" value={agent.ownerName} />
             <Field label="Company" value={agent.companyName} />
             <Field label="Contact person" value={agent.contactPerson} />
             <Field label="Trade license" value={agent.tradeLicenseNo} />
@@ -237,6 +239,71 @@ export default function AgentDetailPage() {
             </Can>
           </div>
         </Surface>
+      </div>
+
+      <AgentDocumentsCard agentId={agent.id} />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Surface>
+          <SurfaceHeader title="Identity & Business" />
+          <div className="grid grid-cols-2 gap-4 p-4 sm:p-5">
+            <Field label="Passport No" value={agent.passportNo} />
+            <Field label="Date of Birth" value={agent.dob ? new Date(agent.dob).toLocaleDateString() : "—"} />
+            <Field label="Gender" value={agent.gender} />
+            <Field label="Nationality" value={agent.nationality} />
+            <Field label="Business Type" value={agent.businessType} />
+            <Field label="Business Start" value={agent.businessStartDate ? new Date(agent.businessStartDate).toLocaleDateString() : "—"} />
+            <Field label="Years Experience" value={agent.yearsExperience != null ? String(agent.yearsExperience) : "—"} />
+            <Field label="Website" value={agent.website} />
+            <Field label="Facebook" value={agent.facebookPage} />
+            <Field label="Google Business" value={agent.googleBusiness} />
+          </div>
+        </Surface>
+        <Surface>
+          <SurfaceHeader title="Office & Bank" />
+          <div className="grid grid-cols-2 gap-4 p-4 sm:p-5">
+            <Field label="Office Address" value={agent.officeAddress} />
+            <Field label="City" value={agent.city} />
+            <Field label="District" value={agent.district} />
+            <Field label="Country" value={agent.country} />
+            <Field label="Postal Code" value={agent.postalCode} />
+            <Field label="Map" value={agent.googleMapLocation} />
+            <Field label="Bank" value={agent.bankName} />
+            <Field label="Branch" value={agent.bankBranch} />
+            <Field label="Account Name" value={agent.bankAccountName} />
+            <Field label="Account No" value={agent.bankAccountNumber} />
+            <Field label="Routing" value={agent.bankRoutingNumber} />
+            <Field label="bKash" value={agent.bkash} />
+            <Field label="Nagad" value={agent.nagad} />
+            <Field label="Rocket" value={agent.rocket} />
+            <Field label="Upay" value={agent.upay} />
+          </div>
+        </Surface>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Surface>
+          <SurfaceHeader title="Emergency & Wallet" />
+          <div className="grid grid-cols-2 gap-4 p-4 sm:p-5">
+            <Field label="Emergency Name" value={agent.emergencyName} />
+            <Field label="Relationship" value={agent.emergencyRelationship} />
+            <Field label="Emergency Phone" value={agent.emergencyPhone} />
+            <Field
+              label="Opening Balance"
+              value={agent.openingBalanceType && agent.openingBalanceType !== "none"
+                ? `${agent.openingBalanceType} ${((agent.openingBalance || 0) / 100).toLocaleString()} ${agent.currency || "BDT"}`
+                : "—"}
+            />
+            <Field label="Commission" value={`${((agent.commissionRateBps ?? 0) / 100).toFixed(2)}%`} />
+            <Field label="Reviewed" value={agent.reviewedAt ? new Date(agent.reviewedAt).toLocaleString() : "—"} />
+          </div>
+        </Surface>
+        {agent.internalNotes && (
+          <Surface>
+            <SurfaceHeader title="Internal Notes" hint="Staff only." />
+            <div className="whitespace-pre-wrap p-4 text-[12px] text-[var(--foreground)] sm:p-5">{agent.internalNotes}</div>
+          </Surface>
+        )}
       </div>
 
       {status === "active" && <AgentWalletCard agentId={agent.id} />}

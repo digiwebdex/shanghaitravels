@@ -1767,6 +1767,51 @@ export type Agent = {
   rejectedAt?: string | null;
   rejectedReason?: string | null;
   reviewedBy?: string | null;
+  reviewedAt?: string | null;
+  // V6.x — commercial onboarding profile (all optional)
+  ownerName?: string | null;
+  passportNo?: string | null;
+  dob?: string | null;
+  gender?: string | null;
+  nationality?: string | null;
+  businessType?: string | null;
+  businessStartDate?: string | null;
+  yearsExperience?: number | null;
+  website?: string | null;
+  facebookPage?: string | null;
+  googleBusiness?: string | null;
+  officeAddress?: string | null;
+  city?: string | null;
+  district?: string | null;
+  country?: string | null;
+  postalCode?: string | null;
+  googleMapLocation?: string | null;
+  bankName?: string | null;
+  bankBranch?: string | null;
+  bankAccountName?: string | null;
+  bankAccountNumber?: string | null;
+  bankRoutingNumber?: string | null;
+  bkash?: string | null;
+  nagad?: string | null;
+  rocket?: string | null;
+  upay?: string | null;
+  openingBalanceType?: string | null;
+  openingBalance?: number | null;
+  currency?: string | null;
+  emergencyName?: string | null;
+  emergencyRelationship?: string | null;
+  emergencyPhone?: string | null;
+  internalNotes?: string | null;
+};
+
+export type AgentDocument = {
+  id: string;
+  category: string;
+  fileName: string;
+  status: string;
+  mimeType?: string;
+  sizeBytes?: number;
+  createdAt: string;
 };
 
 /** Agent onboarding audit entry (reuses AuditLog). */
@@ -1818,6 +1863,14 @@ export const agentsApi = {
   walletRequests: (id: string) => apiFetch<{ topups: WalletRequest[]; withdrawals: WalletRequest[] }>(`/agents/${id}/wallet/requests`),
   walletTopup: (id: string, body: { amount: number; memo?: string }) => apiFetch<WalletRequest>(`/agents/${id}/wallet/topup`, { method: "POST", body }),
   walletWithdraw: (id: string, body: { amount: number; method?: string; bankRef?: string }) => apiFetch<WalletRequest>(`/agents/${id}/wallet/withdraw`, { method: "POST", body }),
+  // V6.x — onboarding documents (reuse generic Document store; ownerType=agent)
+  listDocuments: (id: string) => apiFetch<AgentDocument[]>(`/agents/${id}/documents`),
+  uploadDocument: (id: string, file: File, category: string) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("category", category);
+    return apiFetch<AgentDocument>(`/agents/${id}/documents`, { method: "POST", form: fd });
+  },
   // V6 Phase 1 — onboarding lifecycle
   timeline: (id: string) => apiFetch<AgentAuditRow[]>(`/agents/${id}/timeline`),
   reviewKyc: (id: string, body: { kycStatus: string; kycNotes?: string }) =>
