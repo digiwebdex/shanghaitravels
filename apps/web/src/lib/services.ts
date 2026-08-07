@@ -1802,6 +1802,14 @@ export type Agent = {
   emergencyRelationship?: string | null;
   emergencyPhone?: string | null;
   internalNotes?: string | null;
+  // V6 polish — deactivation guard (server-computed on list). If any blocker is
+  // set the agent cannot be deactivated until it is resolved.
+  blockers?: {
+    outstandingCommission?: boolean;
+    pendingWithdrawal?: boolean;
+    pendingBookings?: boolean;
+  } | null;
+  canDeactivate?: boolean;
 };
 
 export type AgentDocument = {

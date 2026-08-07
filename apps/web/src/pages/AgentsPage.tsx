@@ -1,12 +1,17 @@
-import { FormEvent, ReactNode, useCallback, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router";
-import { Eye, Handshake, Pencil, Plus, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
+import { FormEvent, ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router";
+import { Eye, FileSpreadsheet, FileText, Handshake, Pencil, Plus, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 import { agentsApi, type Agent } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
 import { Can } from "@/auth/Can";
+import { useAuth } from "@/auth/AuthProvider";
 import { ErrorBanner, SuccessBanner } from "@/components/Feedback";
 import { PartnerModuleNav } from "@/components/partners/PartnerModuleNav";
 import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import AgentDetailPage from "@/pages/AgentDetailPage";
+import { downloadBlob } from "@/lib/statements";
+import { ERP } from "@/config/env";
 import {
   PageHeader,
   PageShell,
@@ -57,6 +62,7 @@ type FormShape = typeof EMPTY_FORM;
 
 export default function AgentsPage() {
   const navigate = useNavigate();
+  const { can } = useAuth();
   const [rows, setRows] = useState<Agent[]>([]);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<string>("");
@@ -68,6 +74,55 @@ export default function AgentsPage() {
   const [busy, setBusy] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<Agent | null>(null);
+  // Polish: row selection (keyboard target), and the right-side View drawer.
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [viewId, setViewId] = useState<string | null>(null);
+  const scrollPosRef = useRef(0);
+
+  const selectedAgent = rows.find((r) => r.id === selectedKey) || null;
+
+  function openView(a: Agent) {
+    setSelectedKey(a.id);
+    setViewId(a.id);
+  }
+
+  /** Human reason a soft-delete is blocked (mirrors the backend guard). */
+  function deactivateReason(r: Agent): string {
+    const b = r.blockers || {};
+    const parts = [
+      b.outstandingCommission && "outstanding commission",
+      b.pendingWithdrawal && "a pending wallet withdrawal",
+      b.pendingBookings && "pending bookings",
+    ].filter(Boolean) as string[];
+    return parts.length ? parts.join(", ") : "unresolved obligations";
+  }
+
+  function exportPdf(a: Agent | null) {
+    if (!a) return;
+    window.open(`${ERP}/agents/${a.id}/pdf`, "_blank", "noopener");
+  }
+
+  function exportExcel(a: Agent | null) {
+    if (!a) return;
+    const pairs: [string, string][] = [
+      ["Code", a.code], ["Name", a.name], ["Owner / Proprietor", a.ownerName || ""],
+      ["Company", a.companyName || ""], ["Contact Person", a.contactPerson || ""],
+      ["Phone", a.phone || ""], ["Email", a.email || ""],
+      ["Status", a.status || ""], ["Tier", a.tier?.name || ""],
+      ["Trade License", a.tradeLicenseNo || ""], ["National ID", a.nationalId || ""], ["Passport", a.passportNo || ""],
+      ["Business Type", a.businessType || ""],
+      ["Commission %", ((a.commissionRateBps ?? 0) / 100).toFixed(2)],
+      ["Wallet (BDT)", ((a.walletBalance ?? 0) / 100).toFixed(2)],
+      ["City", a.city || ""], ["District", a.district || ""], ["Country", a.country || ""],
+      ["Bank", a.bankName || ""], ["Bank Branch", a.bankBranch || ""], ["Account No", a.bankAccountNumber || ""],
+      ["bKash", a.bkash || ""], ["Nagad", a.nagad || ""],
+      ["KYC", a.kycStatus || ""],
+      ["Emergency", [a.emergencyName, a.emergencyPhone].filter(Boolean).join(" — ")],
+    ];
+    const esc = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+    const csv = "\uFEFF" + [["Field", "Value"] as [string, string], ...pairs].map((r) => r.map(esc).join(",")).join("\r\n");
+    downloadBlob(`${a.code}.csv`, csv, "text/csv;charset=utf-8");
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -85,6 +140,35 @@ export default function AgentsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Keyboard shortcuts on the selected row: Enter → View, Ctrl/⌘+E → Edit, Delete → Deactivate.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!selectedKey || showForm || viewId || confirm) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+      const r = rows.find((x) => x.id === selectedKey);
+      if (!r) return;
+      const inactive = r.status === "inactive";
+      if (e.key === "Enter") {
+        e.preventDefault();
+        openView(r);
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === "e" || e.key === "E")) {
+        if (!inactive && can("agent:manage")) {
+          e.preventDefault();
+          void startEdit(r);
+        }
+      } else if (e.key === "Delete") {
+        if (!inactive && can("agent:manage") && r.canDeactivate !== false) {
+          e.preventDefault();
+          setConfirm(r);
+        }
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedKey, rows, showForm, viewId, confirm, can]);
 
   // Render helpers (functions, not components, to keep input focus stable).
   const setK = (k: keyof FormShape) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -141,6 +225,7 @@ export default function AgentsPage() {
   }
   async function startEdit(a: Agent) {
     setError(""); setOk("");
+    scrollPosRef.current = window.scrollY; // preserve position for after the edit
     try {
       const full = await agentsApi.get(a.id); // reuse existing detail API for pre-fill
       setForm(agentToForm(full));
@@ -203,7 +288,8 @@ export default function AgentsPage() {
         await agentsApi.update(editingId, payload); // reuse existing update API; immutable fields untouched
         setForm(EMPTY_FORM); setShowForm(false); setEditingId(null);
         setOk("Agent updated");
-        await load();
+        await load(); // search / status filter stay in state — nothing is reset
+        requestAnimationFrame(() => window.scrollTo(0, scrollPosRef.current)); // restore scroll position
       } else {
         const created = await agentsApi.create({ ...payload, onboarding: form.asApplicant });
         setForm(EMPTY_FORM); setShowForm(false);
@@ -222,9 +308,13 @@ export default function AgentsPage() {
       key: "name",
       header: "Name",
       render: (r) => (
-        <Link to={`/partners/agents/${r.id}`} className="font-semibold text-[var(--accent)] hover:underline">
+        <button
+          type="button"
+          onClick={() => openView(r)}
+          className="text-left font-semibold text-[var(--accent)] hover:underline"
+        >
           {r.name}
-        </Link>
+        </button>
       ),
     },
     { key: "company", header: "Company", render: (r) => r.companyName || "—" },
@@ -239,12 +329,13 @@ export default function AgentsPage() {
       className: "text-right",
       render: (r) => {
         const inactive = r.status === "inactive";
+        const blocked = r.canDeactivate === false;
         return (
           <div className="flex items-center justify-end gap-1">
             <Can perm="commission:read">
-              <Link to={`/partners/agents/${r.id}`} className={`${btnGhost} px-2 py-1`} title="View" aria-label="View">
+              <button type="button" className={`${btnGhost} px-2 py-1`} title="View" aria-label="View" onClick={() => openView(r)}>
                 <Eye size={13} />
-              </Link>
+              </button>
             </Can>
             {!inactive && (
               <Can perm="agent:manage">
@@ -258,8 +349,16 @@ export default function AgentsPage() {
                 <button type="button" className={`${btnGhost} px-2 py-1`} title="Restore" aria-label="Restore" disabled={busy} onClick={() => void doRestore(r)}>
                   <RotateCcw size={13} />
                 </button>
+              ) : blocked ? (
+                <span
+                  className="inline-flex cursor-not-allowed items-center gap-1 rounded px-1.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted-foreground)]"
+                  title={`Cannot deactivate — ${deactivateReason(r)}. Resolve these first.`}
+                  aria-label={`Cannot deactivate: ${deactivateReason(r)}`}
+                >
+                  <Trash2 size={12} className="opacity-40" /> Cannot deactivate
+                </span>
               ) : (
-                <button type="button" className={`${btnGhost} px-2 py-1 text-red-600`} title="Deactivate" aria-label="Delete" disabled={busy} onClick={() => setConfirm(r)}>
+                <button type="button" className={`${btnGhost} px-2 py-1 text-red-600`} title="Deactivate" aria-label="Deactivate" disabled={busy} onClick={() => setConfirm(r)}>
                   <Trash2 size={13} />
                 </button>
               )}
@@ -468,8 +567,27 @@ export default function AgentsPage() {
       <Surface>
         <SurfaceHeader
           title={`${rows.length} agent${rows.length === 1 ? "" : "s"}`}
+          hint={selectedAgent ? `Selected: ${selectedAgent.name} — Enter to view, Ctrl+E to edit, Del to deactivate.` : "Click a row to select it, then use the export or keyboard shortcuts."}
           action={
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                className={btnGhost}
+                disabled={!selectedAgent}
+                title={selectedAgent ? `Export ${selectedAgent.name} as PDF` : "Select an agent row first"}
+                onClick={() => exportPdf(selectedAgent)}
+              >
+                <FileText size={12} /> PDF
+              </button>
+              <button
+                type="button"
+                className={btnGhost}
+                disabled={!selectedAgent}
+                title={selectedAgent ? `Export ${selectedAgent.name} as Excel` : "Select an agent row first"}
+                onClick={() => exportExcel(selectedAgent)}
+              >
+                <FileSpreadsheet size={12} /> Excel
+              </button>
               <select className={selectClassName} value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Filter by status">
                 {STATUS_FILTERS.map((s) => (
                   <option key={s || "all"} value={s}>{s ? s : "All statuses"}</option>
@@ -493,8 +611,22 @@ export default function AgentsPage() {
           loading={loading}
           emptyTitle="No agents"
           emptyHint="Onboard an agent or check commission:read permission."
+          selectedKey={selectedKey}
+          onRowClick={(r) => setSelectedKey(r.id)}
+          onRowDoubleClick={(r) => openView(r)}
+          rowClassName={(r) => (r.status === "inactive" ? "opacity-60" : "")}
         />
       </Surface>
+
+      {/* View drawer — reuses the enterprise Sheet + full AgentDetailPage, no navigation away. */}
+      <Sheet open={!!viewId} onOpenChange={(o) => !o && setViewId(null)}>
+        <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-3xl">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Agent profile</SheetTitle>
+          </SheetHeader>
+          {viewId && <AgentDetailPage agentId={viewId} embedded />}
+        </SheetContent>
+      </Sheet>
     </PageShell>
   );
 }

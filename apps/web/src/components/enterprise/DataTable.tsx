@@ -28,6 +28,10 @@ export function DataTable<T>({
   emptyTitle = "No records",
   emptyHint,
   maxHeight = 520,
+  onRowClick,
+  onRowDoubleClick,
+  rowClassName,
+  selectedKey,
 }: {
   rows: T[];
   columns: Column<T>[];
@@ -36,6 +40,11 @@ export function DataTable<T>({
   emptyTitle?: string;
   emptyHint?: string;
   maxHeight?: number;
+  /** Optional row interactions / styling — all additive, safe for existing usages. */
+  onRowClick?: (row: T) => void;
+  onRowDoubleClick?: (row: T) => void;
+  rowClassName?: (row: T) => string;
+  selectedKey?: string | null;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -113,7 +122,11 @@ export function DataTable<T>({
           {slice.map((row) => (
             <tr
               key={rowKey(row)}
-              className="border-b border-[var(--border)] transition-colors last:border-0 hover:bg-[var(--navy-50)]/60"
+              onClick={onRowClick ? () => onRowClick(row) : undefined}
+              onDoubleClick={onRowDoubleClick ? () => onRowDoubleClick(row) : undefined}
+              className={`border-b border-[var(--border)] transition-colors last:border-0 hover:bg-[var(--navy-50)]/60 ${
+                onRowClick || onRowDoubleClick ? "cursor-pointer" : ""
+              } ${selectedKey && selectedKey === rowKey(row) ? "bg-[var(--navy-50)]" : ""} ${rowClassName ? rowClassName(row) : ""}`}
               style={virtualize ? { height: ROW_HEIGHT } : undefined}
             >
               {columns.map((c) => (
@@ -153,8 +166,10 @@ export function Pill({ value, tone = "slate" }: { value: string; tone?: "slate" 
 export function statusTone(status?: string | null): "slate" | "green" | "amber" | "red" | "blue" {
   const s = (status || "").toLowerCase();
   if (["posted", "approved", "paid", "published", "active", "completed", "sent", "done"].includes(s)) return "green";
+  if (["suspended"].includes(s)) return "amber"; // orange
   if (["draft", "pending", "submitted", "in_progress", "issued", "queued", "open"].includes(s)) return "amber";
-  if (["void", "rejected", "failed", "cancelled", "overdue", "inactive"].includes(s)) return "red";
-  if (["partial", "allocated", "in_review"].includes(s)) return "blue";
+  if (["void", "rejected", "failed", "cancelled", "overdue"].includes(s)) return "red";
+  if (["partial", "allocated", "in_review", "under_review", "kyc_review"].includes(s)) return "blue";
+  if (["inactive", "deactivated", "archived"].includes(s)) return "slate"; // gray
   return "slate";
 }

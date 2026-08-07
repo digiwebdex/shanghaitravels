@@ -32,8 +32,9 @@ function Field({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
-export default function AgentDetailPage() {
-  const { id = "" } = useParams();
+export default function AgentDetailPage({ agentId, embedded }: { agentId?: string; embedded?: boolean } = {}) {
+  const params = useParams();
+  const id = agentId ?? params.id ?? "";
   const { can } = useAuth();
   const canManage = can("agent:manage");
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -95,9 +96,11 @@ export default function AgentDetailPage() {
     return (
       <PageShell>
         <ErrorBanner message={error || "Agent not found"} />
-        <Link to="/partners/agents" className={btnGhost}>
-          <ArrowLeft size={12} /> Back to agents
-        </Link>
+        {!embedded && (
+          <Link to="/partners/agents" className={btnGhost}>
+            <ArrowLeft size={12} /> Back to agents
+          </Link>
+        )}
       </PageShell>
     );
   }
@@ -114,9 +117,11 @@ export default function AgentDetailPage() {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Pill value={status} tone={statusTone(status)} />
-            <Link to="/partners/agents" className={btnGhost}>
-              <ArrowLeft size={12} /> Back
-            </Link>
+            {!embedded && (
+              <Link to="/partners/agents" className={btnGhost}>
+                <ArrowLeft size={12} /> Back
+              </Link>
+            )}
             <Can perm="agent:manage">
               <>
                 {status === "pending" && (
