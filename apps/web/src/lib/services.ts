@@ -1755,6 +1755,8 @@ export type Agent = {
   // V6 Phase 1 — onboarding (all optional)
   tierId?: string | null;
   tier?: AgentTier | null;
+  /** Reserved sub-agent hierarchy link; presence drives the "Sub Agent" badge. */
+  parentAgentId?: string | null;
   companyName?: string | null;
   contactPerson?: string | null;
   tradeLicenseNo?: string | null;
@@ -1810,6 +1812,10 @@ export type Agent = {
     pendingBookings?: boolean;
   } | null;
   canDeactivate?: boolean;
+  /** Server-computed: agent has an uploaded photo document → show circular avatar. */
+  hasPhoto?: boolean;
+  /** Server-computed: most recent AuditLog timestamp for this agent (ISO string). */
+  lastActivityAt?: string | null;
 };
 
 export type AgentDocument = {

@@ -4,7 +4,8 @@ import { InlineSpinner } from "@/components/FullPageSpinner";
 
 export type Column<T> = {
   key: string;
-  header: string;
+  /** Column heading — plain text, or a node (e.g. a select-all checkbox). */
+  header: ReactNode;
   /** Tailwind width/alignment classes applied to both header and cell. */
   className?: string;
   render: (row: T) => ReactNode;

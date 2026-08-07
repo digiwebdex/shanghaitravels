@@ -60,6 +60,69 @@ const EMPTY_FORM = {
 };
 type FormShape = typeof EMPTY_FORM;
 
+type BadgeTone = "slate" | "green" | "amber" | "red" | "blue";
+
+/** Up to two initials from the agent name — avatar fallback. */
+function initialsOf(name?: string | null): string {
+  const parts = (name || "").split(/\s+/).filter(Boolean);
+  const ini = parts.slice(0, 2).map((p) => p[0]?.toUpperCase() || "").join("");
+  return ini || "?";
+}
+
+/** Circular avatar — uploaded photo (reused Document store) with initials fallback. */
+function AgentAvatar({ a }: { a: Agent }) {
+  const [failed, setFailed] = useState(false);
+  if (a.hasPhoto && !failed) {
+    return (
+      <img
+        src={`${ERP}/agents/${a.id}/documents/avatar`}
+        alt=""
+        onError={() => setFailed(true)}
+        className="h-8 w-8 rounded-full border border-[var(--border)] object-cover"
+      />
+    );
+  }
+  return (
+    <span
+      className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--navy-50)] text-[10px] font-bold text-[var(--foreground)]"
+      title={a.name}
+    >
+      {initialsOf(a.name)}
+    </span>
+  );
+}
+
+/** Quick descriptor badges under the agent name (derived, no new fields). */
+function agentBadges(a: Agent): { label: string; tone: BadgeTone }[] {
+  const out: { label: string; tone: BadgeTone }[] = [];
+  if (a.businessType === "Corporate") out.push({ label: "Corporate", tone: "blue" });
+  else if (a.businessType === "Individual") out.push({ label: "Individual", tone: "slate" });
+  if (a.parentAgentId) out.push({ label: "Sub Agent", tone: "slate" });
+  if (a.status === "inactive") out.push({ label: "Inactive", tone: "slate" });
+  if (a.kycStatus === "verified") out.push({ label: "Verified", tone: "green" });
+  else if (a.kycStatus === "pending") out.push({ label: "KYC Pending", tone: "amber" });
+  return out;
+}
+
+/** Coarse "time ago" for the Last Activity column (reused AuditLog timestamp). */
+function relativeTime(iso?: string | null): string {
+  if (!iso) return "—";
+  const diff = Date.now() - new Date(iso).getTime();
+  if (diff < 60_000) return "just now";
+  const m = Math.floor(diff / 60_000);
+  if (m < 60) return `${m} min${m === 1 ? "" : "s"} ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} hour${h === 1 ? "" : "s"} ago`;
+  const d = Math.floor(h / 24);
+  if (d === 1) return "Yesterday";
+  if (d < 7) return `${d} days ago`;
+  const w = Math.floor(d / 7);
+  if (w < 5) return `${w} week${w === 1 ? "" : "s"} ago`;
+  const mo = Math.floor(d / 30);
+  if (mo < 12) return `${mo} month${mo === 1 ? "" : "s"} ago`;
+  return `${Math.floor(d / 365)} year${Math.floor(d / 365) === 1 ? "" : "s"} ago`;
+}
+
 export default function AgentsPage() {
   const navigate = useNavigate();
   const { can } = useAuth();
@@ -78,8 +141,50 @@ export default function AgentsPage() {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [viewId, setViewId] = useState<string | null>(null);
   const scrollPosRef = useRef(0);
+  // Final polish: multi-select for bulk actions.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkConfirm, setBulkConfirm] = useState<null | "deactivate" | "restore">(null);
 
   const selectedAgent = rows.find((r) => r.id === selectedKey) || null;
+  const allSelected = rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
+  const someSelected = !allSelected && rows.some((r) => selectedIds.has(r.id));
+
+  function toggleOne(id: string) {
+    setSelectedIds((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  }
+  function toggleAll() {
+    setSelectedIds(allSelected ? new Set() : new Set(rows.map((r) => r.id)));
+  }
+
+  async function runBulk(action: "deactivate" | "restore") {
+    const targets = rows.filter((r) => selectedIds.has(r.id));
+    setBusy(true); setError(""); setOk("");
+    let done = 0, skipped = 0;
+    try {
+      for (const a of targets) {
+        if (action === "deactivate") {
+          if (a.status === "inactive" || a.canDeactivate === false) { skipped++; continue; }
+          try { await agentsApi.remove(a.id); done++; } catch { skipped++; }
+        } else {
+          if (a.status !== "inactive") { skipped++; continue; }
+          try { await agentsApi.restore(a.id); done++; } catch { skipped++; }
+        }
+      }
+      setOk(`${action === "deactivate" ? "Deactivated" : "Restored"} ${done} agent${done === 1 ? "" : "s"}${skipped ? `, skipped ${skipped}` : ""}.`);
+      setSelectedIds(new Set());
+      setBulkConfirm(null);
+      await load();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Bulk action failed");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   function openView(a: Agent) {
     setSelectedKey(a.id);
@@ -122,6 +227,25 @@ export default function AgentsPage() {
     const esc = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
     const csv = "\uFEFF" + [["Field", "Value"] as [string, string], ...pairs].map((r) => r.map(esc).join(",")).join("\r\n");
     downloadBlob(`${a.code}.csv`, csv, "text/csv;charset=utf-8");
+  }
+
+  /** Bulk export \u2014 one columnar row per selected agent (reuses downloadBlob). */
+  function exportBulkExcel(agents: Agent[]) {
+    if (!agents.length) return;
+    const cols: [string, (a: Agent) => string][] = [
+      ["Code", (a) => a.code], ["Name", (a) => a.name], ["Owner", (a) => a.ownerName || ""],
+      ["Company", (a) => a.companyName || ""], ["Phone", (a) => a.phone || ""], ["Email", (a) => a.email || ""],
+      ["Status", (a) => a.status || ""], ["Tier", (a) => a.tier?.name || ""],
+      ["Business Type", (a) => a.businessType || ""],
+      ["Commission %", (a) => ((a.commissionRateBps ?? 0) / 100).toFixed(2)],
+      ["Wallet (BDT)", (a) => ((a.walletBalance ?? 0) / 100).toFixed(2)],
+      ["KYC", (a) => a.kycStatus || ""], ["City", (a) => a.city || ""], ["Country", (a) => a.country || ""],
+    ];
+    const esc = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+    const header = cols.map((c) => c[0]);
+    const body = agents.map((a) => cols.map((c) => c[1](a)));
+    const csv = "\uFEFF" + [header, ...body].map((r) => r.map(esc).join(",")).join("\r\n");
+    downloadBlob(`agents-${agents.length}.csv`, csv, "text/csv;charset=utf-8");
   }
 
   const load = useCallback(async () => {
@@ -303,25 +427,78 @@ export default function AgentsPage() {
   }
 
   const columns: Column<Agent>[] = [
+    {
+      key: "select",
+      className: "w-8",
+      header: (
+        <input
+          type="checkbox"
+          aria-label="Select all agents"
+          className="cursor-pointer"
+          checked={allSelected}
+          ref={(el) => { if (el) el.indeterminate = someSelected; }}
+          onChange={toggleAll}
+        />
+      ),
+      render: (r) => (
+        <input
+          type="checkbox"
+          aria-label={`Select ${r.name}`}
+          className="cursor-pointer"
+          checked={selectedIds.has(r.id)}
+          onClick={(e) => e.stopPropagation()}
+          onChange={() => toggleOne(r.id)}
+        />
+      ),
+    },
+    { key: "avatar", header: "", className: "w-10", render: (r) => <AgentAvatar a={r} /> },
     { key: "code", header: "Code", className: "font-mono font-semibold", render: (r) => r.code },
     {
       key: "name",
       header: "Name",
-      render: (r) => (
-        <button
-          type="button"
-          onClick={() => openView(r)}
-          className="text-left font-semibold text-[var(--accent)] hover:underline"
-        >
-          {r.name}
-        </button>
-      ),
+      render: (r) => {
+        const badges = agentBadges(r);
+        return (
+          <div className="flex flex-col gap-1">
+            <button
+              type="button"
+              onClick={() => openView(r)}
+              className="text-left font-semibold text-[var(--accent)] hover:underline"
+            >
+              {r.name}
+            </button>
+            {badges.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {badges.map((b) => <Pill key={b.label} value={b.label} tone={b.tone} />)}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     { key: "company", header: "Company", render: (r) => r.companyName || "—" },
     { key: "tier", header: "Tier", render: (r) => r.tier?.name || "—" },
     { key: "phone", header: "Phone", render: (r) => r.phone || "—" },
     { key: "rate", header: "Commission", className: "tabular-nums", render: (r) => `${((r.commissionRateBps ?? 0) / 100).toFixed(2)}%` },
-    { key: "wallet", header: "Wallet", className: "text-right tabular-nums", render: (r) => fmtBDTPlain(r.walletBalance ?? 0) },
+    {
+      key: "wallet",
+      header: "Wallet",
+      className: "text-right tabular-nums",
+      render: (r) => {
+        const w = r.walletBalance ?? 0;
+        const tone = w > 0 ? "text-emerald-600" : w < 0 ? "text-red-600" : "text-[var(--muted-foreground)]";
+        return <span className={`font-semibold ${tone}`}>{fmtBDTPlain(w)}</span>;
+      },
+    },
+    {
+      key: "activity",
+      header: "Last Activity",
+      render: (r) => (
+        <span className="text-[11px] text-[var(--muted-foreground)]" title={r.lastActivityAt ? new Date(r.lastActivityAt).toLocaleString() : "No recorded activity"}>
+          {relativeTime(r.lastActivityAt)}
+        </span>
+      ),
+    },
     { key: "status", header: "Status", render: (r) => <Pill value={r.status || "active"} tone={statusTone(r.status || "active")} /> },
     {
       key: "actions",
@@ -399,6 +576,50 @@ export default function AgentsPage() {
       <PartnerModuleNav />
       <ErrorBanner message={error} />
       <SuccessBanner message={ok} />
+
+      {bulkConfirm && (
+        <Can perm="agent:manage">
+          <Surface>
+            <div className="p-4 sm:p-5">
+              <p className="text-[13px] font-bold text-[var(--primary)]">
+                {bulkConfirm === "deactivate" ? "Deactivate" : "Restore"} {selectedIds.size} agent{selectedIds.size === 1 ? "" : "s"}?
+              </p>
+              <p className="mt-1 text-[11.5px] leading-relaxed text-[var(--muted-foreground)]">
+                {bulkConfirm === "deactivate"
+                  ? "Agents that are already inactive or have unresolved obligations (outstanding commission, pending withdrawal or bookings) are skipped."
+                  : "Only inactive agents are restored; others are skipped."}
+              </p>
+              <div className="mt-3 flex gap-2">
+                <button type="button" className={btnGhost} onClick={() => setBulkConfirm(null)}>Cancel</button>
+                <button type="button" className={btnPrimary} style={btnPrimaryStyle} disabled={busy} onClick={() => void runBulk(bulkConfirm)}>
+                  {bulkConfirm === "deactivate" ? "Deactivate selected" : "Restore selected"}
+                </button>
+              </div>
+            </div>
+          </Surface>
+        </Can>
+      )}
+
+      {selectedIds.size > 0 && (
+        <Surface>
+          <div className="flex flex-wrap items-center gap-2 p-3 sm:p-4">
+            <span className="text-[12px] font-bold text-[var(--foreground)]">{selectedIds.size} selected</span>
+            <span className="text-[11px] text-[var(--muted-foreground)]">Bulk actions:</span>
+            <button type="button" className={btnGhost} onClick={() => exportBulkExcel(rows.filter((r) => selectedIds.has(r.id)))}>
+              <FileSpreadsheet size={12} /> Export
+            </button>
+            <Can perm="agent:manage">
+              <button type="button" className={btnGhost} disabled={busy} onClick={() => setBulkConfirm("deactivate")}>
+                <Trash2 size={12} /> Deactivate
+              </button>
+              <button type="button" className={btnGhost} disabled={busy} onClick={() => setBulkConfirm("restore")}>
+                <RotateCcw size={12} /> Restore
+              </button>
+            </Can>
+            <button type="button" className={`${btnGhost} ml-auto`} onClick={() => setSelectedIds(new Set())}>Clear</button>
+          </div>
+        </Surface>
+      )}
 
       {confirm && (
         <Can perm="agent:manage">
