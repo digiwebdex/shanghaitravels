@@ -47,6 +47,8 @@ export const SERVICE_OPTIONS: {
   label: string;
   apiType: string;
   description: string;
+  /** HF2 — false = no real vertical yet; not selectable and rejected by the API. */
+  supported?: boolean;
 }[] = [
   { value: "visa", label: "Visa", apiType: "visa", description: "Embassy / CVASC visa cases" },
   { value: "air_ticket", label: "Air Ticket", apiType: "air_ticket", description: "Flight ticketing" },
@@ -55,17 +57,21 @@ export const SERVICE_OPTIONS: {
   { value: "transport", label: "Transport", apiType: "transport", description: "Transfers & vehicles" },
   { value: "hajj", label: "Hajj", apiType: "hajj", description: "Hajj packages" },
   { value: "umrah", label: "Umrah", apiType: "umrah", description: "Umrah packages" },
+  // HF2 — not yet implemented. apiType is their OWN value (NOT "visa") so they can
+  // never be silently created as visa cases; the API also rejects them.
   {
     value: "student",
     label: "Student Consultancy",
-    apiType: "visa",
-    description: "Uses visa workflow until a dedicated service exists",
+    apiType: "student",
+    description: "Not yet supported",
+    supported: false,
   },
   {
     value: "manpower",
     label: "Manpower",
-    apiType: "visa",
-    description: "Uses visa workflow until a dedicated service exists",
+    apiType: "manpower",
+    description: "Not yet supported",
+    supported: false,
   },
 ];
 

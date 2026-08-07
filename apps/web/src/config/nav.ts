@@ -19,7 +19,6 @@ import {
   FileText,
   Files,
   Globe,
-  GraduationCap,
   Handshake,
   Hotel,
   Image as ImageIcon,
@@ -158,22 +157,8 @@ export const NAV: NavSection[] = [
       { id: "tours", label: "Tour Packages", to: "/tours", icon: Map, perm: "application:read" },
       { id: "transport", label: "Transport", to: "/transport", icon: Car, perm: "application:read" },
       { id: "hajj", label: "Hajj & Umrah", to: "/hajj", icon: Moon, perm: "application:read" },
-      {
-        id: "student",
-        label: "Student Consultancy",
-        to: "/bookings/new?service=student",
-        icon: GraduationCap,
-        perm: "application:create",
-        keywords: "education consultancy visa",
-      },
-      {
-        id: "manpower",
-        label: "Manpower & Overseas Employment",
-        to: "/bookings/new?service=manpower",
-        icon: Users,
-        perm: "application:create",
-        keywords: "overseas employment recruitment",
-      },
+      // HF2 — Student & Manpower nav entries removed until real verticals exist
+      // (they previously opened the wizard and silently created visa cases).
       {
         id: "package-mgmt",
         label: "Package Management",

@@ -44,7 +44,7 @@ export default function UnifiedBookingWizardPage() {
 
   const [step, setStep] = useState(0);
   const [service, setService] = useState<ServiceKind>(
-    SERVICE_OPTIONS.some((s) => s.value === presetService) ? presetService : "visa",
+    SERVICE_OPTIONS.some((s) => s.value === presetService && s.supported !== false) ? presetService : "visa",
   );
   const [packageId, setPackageId] = useState("");
   const [packageLabel, setPackageLabel] = useState("");
@@ -140,6 +140,11 @@ export default function UnifiedBookingWizardPage() {
   }
 
   async function createBooking() {
+    // HF2 — never create an unsupported service (would otherwise map to visa).
+    if (SERVICE_OPTIONS.find((s) => s.value === service)?.supported === false) {
+      setError("This service type is not yet supported.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -291,7 +296,7 @@ export default function UnifiedBookingWizardPage() {
           <div className="space-y-3">
             <h2 className="text-[14px] font-bold text-[var(--primary)]">1 · Choose service</h2>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {SERVICE_OPTIONS.map((s) => (
+              {SERVICE_OPTIONS.filter((s) => s.supported !== false).map((s) => (
                 <button
                   key={s.value}
                   type="button"
