@@ -25,6 +25,11 @@ export type Customer = {
   notes?: string | null;
   createdAt?: string;
   passports?: Passport[];
+  /** individual | corporate — returned by the list/detail API (additive, optional). */
+  type?: string | null;
+  /** active | inactive | … — returned by the list/detail API (additive, optional). */
+  status?: string | null;
+  deletedAt?: string | null;
   // V6 Wave 1 — customer ownership
   primaryAgentId?: string | null;
   primaryAgent?: { id: string; name: string; code: string } | null;
