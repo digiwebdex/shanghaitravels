@@ -1,33 +1,36 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import {
-  AlertTriangle,
   Bell,
   BookOpen,
   Brain,
+  Briefcase,
   CalendarDays,
-  CheckCircle2,
   ClipboardList,
-  FileCheck,
+  Eye,
+  FileSpreadsheet,
   Files,
-  Hotel,
-  Moon,
-  Plane,
   Route,
-  Truck,
+  Search,
   Workflow,
 } from "lucide-react";
-import { applicationsApi } from "@/lib/services";
+import { applicationsApi, financeApi, usersApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
-import type { Application } from "@/lib/types";
+import type { AppDocument, Application, Invoice, Journey, StaffUser } from "@/lib/types";
 import {
-  EmptyPanel,
+  ListToolbar,
   PageHeader,
   PageShell,
-  SkeletonRows,
   Surface,
+  SurfaceHeader,
   btnGhost,
+  searchInputClassName,
 } from "@/components/enterprise/Page";
+import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
+import { Avatar } from "@/components/enterprise/Avatar";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { BookingSummaryHeader, type BookingDetail } from "@/components/bookings/BookingSummaryHeader";
+import { downloadBlob } from "@/lib/statements";
 import { WorkspaceTabsCompact } from "@/workspaces/WorkspaceTabs";
 import { workspaceById } from "@/workspaces/registry";
 import { OcrOpsWidget } from "@/components/ocr/OcrOpsWidget";
@@ -59,6 +62,20 @@ const HUB_CARDS = [
   { label: "New booking", to: "/bookings/new", icon: ClipboardList },
 ];
 
+type Tone = "slate" | "green" | "amber" | "red" | "blue";
+function priorityTone(p?: string | null): Tone {
+  const v = (p || "").toLowerCase();
+  if (v === "urgent") return "red";
+  if (v === "high") return "amber";
+  return "slate";
+}
+function bookingBadges(a: Application): { label: string; tone: Tone }[] {
+  const out: { label: string; tone: Tone }[] = [];
+  if (a.priority && a.priority.toLowerCase() !== "normal") out.push({ label: a.priority, tone: priorityTone(a.priority) });
+  if (a.direction) out.push({ label: a.direction, tone: "slate" });
+  return out;
+}
+
 export default function OperationsOverviewPage() {
   const workspace = workspaceById("operations")!;
   const [params, setParams] = useSearchParams();
@@ -73,6 +90,14 @@ export default function OperationsOverviewPage() {
   const [rows, setRows] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [q, setQ] = useState("");
+  const [staffMap, setStaffMap] = useState<Record<string, string>>({});
+  // Selection (keyboard target) + booking 360 drawer.
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [viewId, setViewId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<BookingDetail | null>(null);
+  // Multi-select bulk export.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -90,31 +115,179 @@ export default function OperationsOverviewPage() {
     void load();
   }, [load]);
 
+  // Staff name lookup for the Assigned column (reused usersApi).
+  useEffect(() => {
+    let alive = true;
+    usersApi.list()
+      .then((u: StaffUser[]) => { if (alive) setStaffMap(Object.fromEntries(u.map((s) => [s.id, s.fullName]))); })
+      .catch(() => { /* non-fatal */ });
+    return () => { alive = false; };
+  }, []);
+
+  // Booking 360 bundle whenever the drawer opens (parallel, existing endpoints).
+  useEffect(() => {
+    if (!viewId) { setDetail(null); return; }
+    let alive = true;
+    setDetail(null);
+    Promise.all([
+      applicationsApi.get(viewId),
+      applicationsApi.journey(viewId).catch(() => null as Journey | null),
+      financeApi.listInvoices({ applicationId: viewId }).then((r) => listOf<Invoice>(r)).catch(() => [] as Invoice[]),
+      applicationsApi.documents(viewId).catch(() => [] as AppDocument[]),
+    ])
+      .then(([app, journey, invoices, documents]) => { if (alive) setDetail({ app, journey, invoices, documents }); })
+      .catch(() => { if (alive) setDetail(null); });
+    return () => { alive = false; };
+  }, [viewId]);
+
   const filtered = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
     switch (tab) {
-      case "visa":
-        return rows.filter((r) => r.serviceType === "visa");
-      case "ticket":
-        return rows.filter((r) => r.serviceType === "air_ticket");
-      case "hotel":
-        return rows.filter((r) => r.serviceType === "hotel");
-      case "transport":
-        return rows.filter((r) => r.serviceType === "transport");
-      case "hajj":
-        return rows.filter((r) => r.serviceType === "hajj" || r.serviceType === "umrah");
-      case "documents":
-        return rows.filter((r) => r.status === "docs_required");
-      case "urgent":
-        return rows.filter((r) => r.priority === "urgent" || r.priority === "high");
-      case "completed":
-        return rows.filter((r) => r.status === "completed");
-      case "today":
-        return rows.filter((r) => (r.createdAt || "").startsWith(today) || r.status === "in_progress");
-      default:
-        return rows.filter((r) => !["completed", "cancelled", "rejected"].includes(r.status));
+      case "visa": return rows.filter((r) => r.serviceType === "visa");
+      case "ticket": return rows.filter((r) => r.serviceType === "air_ticket");
+      case "hotel": return rows.filter((r) => r.serviceType === "hotel");
+      case "transport": return rows.filter((r) => r.serviceType === "transport");
+      case "hajj": return rows.filter((r) => r.serviceType === "hajj" || r.serviceType === "umrah");
+      case "documents": return rows.filter((r) => r.status === "docs_required");
+      case "urgent": return rows.filter((r) => r.priority === "urgent" || r.priority === "high");
+      case "completed": return rows.filter((r) => r.status === "completed");
+      case "today": return rows.filter((r) => (r.createdAt || "").startsWith(today) || r.status === "in_progress");
+      default: return rows.filter((r) => !["completed", "cancelled", "rejected"].includes(r.status));
     }
   }, [rows, tab]);
+
+  const visible = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (!s) return filtered;
+    return filtered.filter((a) =>
+      `${a.referenceNo} ${a.customer?.fullName || ""} ${a.title || ""} ${a.serviceType} ${a.status}`.toLowerCase().includes(s),
+    );
+  }, [filtered, q]);
+
+  const selectedBooking = visible.find((r) => r.id === selectedKey) || null;
+  const allSelected = visible.length > 0 && visible.every((r) => selectedIds.has(r.id));
+  const someSelected = !allSelected && visible.some((r) => selectedIds.has(r.id));
+
+  function openView(a: Application) {
+    setSelectedKey(a.id);
+    setViewId(a.id);
+  }
+  function toggleOne(id: string) {
+    setSelectedIds((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  }
+  function toggleAll() {
+    setSelectedIds(allSelected ? new Set() : new Set(visible.map((r) => r.id)));
+  }
+  function exportExcel(list: Application[]) {
+    if (!list.length) return;
+    const cols: [string, (a: Application) => string][] = [
+      ["Reference", (a) => a.referenceNo], ["Service", (a) => serviceLabel(a.serviceType)],
+      ["Customer", (a) => a.customer?.fullName || a.title || ""], ["Status", (a) => a.status],
+      ["Stage", (a) => `${a.currentStage}/${a.totalStages}`], ["Priority", (a) => a.priority || ""],
+      ["Direction", (a) => a.direction || ""], ["Assigned", (a) => (a.assignedTo ? staffMap[a.assignedTo] || a.assignedTo : "")],
+      ["Created", (a) => (a.createdAt ? String(a.createdAt).slice(0, 10) : "")],
+    ];
+    const esc = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+    const csv = "\uFEFF" + [cols.map((c) => c[0]), ...list.map((a) => cols.map((c) => c[1](a)))].map((r) => r.map(esc).join(",")).join("\r\n");
+    downloadBlob(list.length === 1 ? `${list[0].referenceNo}.csv` : `bookings-${list.length}.csv`, csv, "text/csv;charset=utf-8");
+  }
+
+  // Enter → open booking 360 for the selected row.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!selectedKey || viewId) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+      if (e.key === "Enter") {
+        const a = visible.find((x) => x.id === selectedKey);
+        if (a) { e.preventDefault(); openView(a); }
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedKey, viewId, visible]);
+
+  const columns: Column<Application>[] = [
+    {
+      key: "select",
+      className: "w-8",
+      header: (
+        <input type="checkbox" aria-label="Select all bookings" className="cursor-pointer" checked={allSelected}
+          ref={(el) => { if (el) el.indeterminate = someSelected; }} onChange={toggleAll} />
+      ),
+      render: (a) => (
+        <input type="checkbox" aria-label={`Select ${a.referenceNo}`} className="cursor-pointer" checked={selectedIds.has(a.id)}
+          onClick={(e) => e.stopPropagation()} onChange={() => toggleOne(a.id)} />
+      ),
+    },
+    { key: "avatar", header: "", className: "w-10", render: (a) => <Avatar name={a.customer?.fullName || a.title} /> },
+    {
+      key: "ref",
+      header: "Reference",
+      className: "font-mono font-semibold",
+      render: (a) => (
+        <button type="button" onClick={() => openView(a)} className="text-[var(--accent)] hover:underline">{a.referenceNo}</button>
+      ),
+    },
+    { key: "service", header: "Service", render: (a) => <Pill value={serviceLabel(a.serviceType)} tone="blue" /> },
+    {
+      key: "customer",
+      header: "Customer",
+      render: (a) => {
+        const badges = bookingBadges(a);
+        return (
+          <div className="flex flex-col gap-1">
+            <button type="button" onClick={() => openView(a)} className="text-left font-semibold text-[var(--primary)] hover:underline">
+              {a.customer?.fullName || a.title || "—"}
+            </button>
+            {badges.length > 0 && (
+              <div className="flex flex-wrap gap-1">{badges.map((b) => <Pill key={b.label} value={b.label} tone={b.tone} />)}</div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      key: "stage",
+      header: "Stage",
+      className: "tabular-nums",
+      render: (a) => {
+        const pct = a.totalStages ? Math.round((Math.min(a.currentStage, a.totalStages) / a.totalStages) * 100) : 0;
+        return (
+          <div className="w-24">
+            <div className="mb-0.5 text-[10px] text-[var(--muted-foreground)]">{a.currentStage}/{a.totalStages}</div>
+            <div className="h-1 w-full overflow-hidden rounded-full bg-[var(--muted)]">
+              <div className="h-full rounded-full bg-[var(--accent)]" style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        );
+      },
+    },
+    { key: "status", header: "Status", render: (a) => <Pill value={a.status} tone={statusTone(a.status)} /> },
+    { key: "assigned", header: "Assigned", render: (a) => (a.assignedTo ? staffMap[a.assignedTo] || "Assigned" : <span className="text-[10.5px] uppercase text-[var(--muted-foreground)]">Unassigned</span>) },
+    {
+      key: "actions",
+      header: "Actions",
+      className: "text-right",
+      render: (a) => (
+        <div className="flex items-center justify-end gap-1">
+          <button type="button" className={`${btnGhost} px-2 py-1`} title="Booking 360" aria-label="View" onClick={() => openView(a)}>
+            <Eye size={13} />
+          </button>
+          <Link to={bookingWorkspaceHref(a.id)} className={`${btnGhost} px-2 py-1`} title="Open workspace" aria-label="Workspace">
+            <Briefcase size={13} />
+          </Link>
+          <Link to={serviceCaseHref(a.serviceType, a.id)} className="px-1 text-[11px] font-semibold text-[var(--muted-foreground)] hover:text-[var(--accent)]" title="Service desk">
+            Desk →
+          </Link>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <PageShell wide>
@@ -123,16 +296,10 @@ export default function OperationsOverviewPage() {
         subtitle="One queue for every booking — stay here instead of jumping between service modules."
         breadcrumb={[{ label: "Operations" }]}
         actions={
-          <button type="button" className={btnGhost} onClick={() => void load()}>
-            Refresh
-          </button>
+          <button type="button" className={btnGhost} onClick={() => void load()}>Refresh</button>
         }
       />
-      <JourneyContinuity
-        active="operations"
-        previousHint="Booking created · documents in OCR"
-        nextHint="Invoice → collect → mark travel ready"
-      />
+      <JourneyContinuity active="operations" previousHint="Booking created · documents in OCR" nextHint="Invoice → collect → mark travel ready" />
       <WorkspaceTabsCompact workspace={workspace} />
 
       <NextStepBanner
@@ -149,74 +316,76 @@ export default function OperationsOverviewPage() {
         <OcrOpsWidget />
       </div>
 
+      {/* Queue strip (kept) */}
       <EntityTabs tabs={[...QUEUE_TABS]} active={tab} onChange={setTab} />
 
-      <Surface padded className="mt-3">
-        {error && <p className="mb-2 text-[11px] text-[var(--error)]">{error}</p>}
-        {loading ? (
-          <SkeletonRows rows={6} />
-        ) : !filtered.length ? (
-          <EmptyPanel title="No cases in this queue" hint="Switch tabs or start a booking from the unified wizard." />
-        ) : (
-          <ul className="divide-y divide-[var(--border)]">
-            {filtered.slice(0, 40).map((a) => (
-              <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-3 text-[12px]">
-                <div className="flex items-start gap-2">
-                  <ServiceIcon type={a.serviceType} />
-                  <div>
-                    <Link to={bookingWorkspaceHref(a.id)} className="font-mono font-bold text-[var(--accent)]">
-                      {a.referenceNo}
-                    </Link>
-                    <span className="ml-2 text-[var(--muted-foreground)]">
-                      {serviceLabel(a.serviceType)} · {a.status}
-                    </span>
-                    {(a.priority === "urgent" || a.priority === "high") && (
-                      <span className="ml-2 inline-flex items-center gap-0.5 text-[10px] font-bold text-[var(--accent)]">
-                        <AlertTriangle size={10} /> {a.priority}
-                      </span>
-                    )}
-                    <p className="text-[11px] text-[var(--primary)]">{a.title || a.customer?.fullName || "—"}</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Link to={bookingWorkspaceHref(a.id)} className="text-[11px] font-bold text-[var(--accent)]">
-                    Booking 360
-                  </Link>
-                  <Link
-                    to={serviceCaseHref(a.serviceType, a.id)}
-                    className="text-[11px] font-semibold text-[var(--muted-foreground)]"
-                  >
-                    Desk →
-                  </Link>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+      {selectedIds.size > 0 && (
+        <Surface>
+          <div className="flex flex-wrap items-center gap-2 p-3 sm:p-4">
+            <span className="text-[12px] font-bold text-[var(--foreground)]">{selectedIds.size} selected</span>
+            <span className="text-[11px] text-[var(--muted-foreground)]">Bulk actions:</span>
+            <button type="button" className={btnGhost} onClick={() => exportExcel(visible.filter((r) => selectedIds.has(r.id)))}>
+              <FileSpreadsheet size={12} /> Export
+            </button>
+            <button type="button" className={`${btnGhost} ml-auto`} onClick={() => setSelectedIds(new Set())}>Clear</button>
+          </div>
+        </Surface>
+      )}
+
+      <Surface className="mt-3">
+        <SurfaceHeader
+          title={`${visible.length} booking${visible.length === 1 ? "" : "s"} in this queue`}
+          hint={selectedBooking ? `Selected: ${selectedBooking.referenceNo} — Enter to open Booking 360.` : "Click a row to select; double-click to open Booking 360."}
+          action={
+            <button type="button" className={btnGhost} disabled={!selectedBooking} title={selectedBooking ? `Export ${selectedBooking.referenceNo}` : "Select a booking row first"}
+              onClick={() => selectedBooking && exportExcel([selectedBooking])}>
+              <FileSpreadsheet size={12} /> Export
+            </button>
+          }
+        />
+        <ListToolbar>
+          <div className="relative flex-1">
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search reference / customer / service / status…" className={searchInputClassName} />
+          </div>
+        </ListToolbar>
+        {error && <p className="mb-2 px-4 text-[11px] text-[var(--error)]">{error}</p>}
+        <DataTable
+          rows={visible}
+          columns={columns}
+          rowKey={(r) => r.id}
+          loading={loading}
+          emptyTitle="No cases in this queue"
+          emptyHint="Switch tabs or start a booking from the unified wizard."
+          selectedKey={selectedKey}
+          onRowClick={(r) => setSelectedKey(r.id)}
+          onRowDoubleClick={(r) => openView(r)}
+          rowClassName={(r) => (["cancelled", "rejected"].includes(r.status) ? "opacity-60" : "")}
+        />
       </Surface>
 
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {HUB_CARDS.map((c) => (
-          <Link
-            key={c.to}
-            to={c.to}
-            className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-[var(--shadow-sm)] transition-all hover:border-[var(--accent)] hover:shadow-[var(--shadow-md)]"
-          >
+          <Link key={c.to} to={c.to}
+            className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-[var(--shadow-sm)] transition-all hover:border-[var(--accent)] hover:shadow-[var(--shadow-md)]">
             <c.icon size={18} className="text-[var(--accent)]" />
             <p className="mt-3 text-[14px] font-bold text-[var(--primary)]">{c.label}</p>
           </Link>
         ))}
       </div>
+
+      {/* Booking 360 drawer — reuses Sheet + BookingSummaryHeader, no navigation away. */}
+      <Sheet open={!!viewId} onOpenChange={(o) => !o && setViewId(null)}>
+        <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-3xl">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Booking 360</SheetTitle>
+          </SheetHeader>
+          {viewId && (
+            detail ? <BookingSummaryHeader detail={detail} staffMap={staffMap} />
+              : <div className="p-8 text-center text-[12px] text-[var(--muted-foreground)]">Loading booking 360…</div>
+          )}
+        </SheetContent>
+      </Sheet>
     </PageShell>
   );
-}
-
-function ServiceIcon({ type }: { type: string }) {
-  const cls = "mt-0.5 text-[var(--muted-foreground)]";
-  if (type === "visa") return <FileCheck size={14} className={cls} />;
-  if (type === "air_ticket") return <Plane size={14} className={cls} />;
-  if (type === "hotel") return <Hotel size={14} className={cls} />;
-  if (type === "transport") return <Truck size={14} className={cls} />;
-  if (type === "hajj" || type === "umrah") return <Moon size={14} className={cls} />;
-  return <CheckCircle2 size={14} className={cls} />;
 }
