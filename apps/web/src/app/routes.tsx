@@ -42,6 +42,9 @@ const HajjPackagesPage = lazy(() => import("@/pages/HajjPackagesPage"));
 const HajjPilgrimsPage = lazy(() => import("@/pages/HajjPilgrimsPage"));
 const HajjGroupsPage = lazy(() => import("@/pages/HajjGroupsPage"));
 const HajjReportsPage = lazy(() => import("@/pages/HajjReportsPage"));
+// V14 — Student vertical (NewStudentCasePage is a named export, same chunk)
+const StudentListPage = lazy(() => import("@/pages/StudentListPage"));
+const NewStudentCasePage = lazy(() => import("@/pages/StudentListPage").then((m) => ({ default: m.NewStudentCasePage })));
 const FinanceAccountsPage = lazy(() => import("@/pages/FinanceAccountsPage"));
 const FinanceGroupsPage = lazy(() => import("@/pages/FinanceGroupsPage"));
 const FinancePeriodsPage = lazy(() => import("@/pages/FinancePeriodsPage"));
@@ -1057,6 +1060,22 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <HajjCasePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "students",
+            element: (
+              <Lazy>
+                <StudentListPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "students/new",
+            element: (
+              <Lazy>
+                <NewStudentCasePage />
               </Lazy>
             ),
           },

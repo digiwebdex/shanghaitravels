@@ -85,6 +85,8 @@ export const WORKSPACES: Workspace[] = [
       { kind: "work", label: "Tours", to: "/tours", end: true, perm: "application:read" },
       { kind: "work", label: "Transport", to: "/transport", end: true, perm: "application:read" },
       { kind: "work", label: "Hajj & Umrah", to: "/hajj", end: true, perm: "application:read" },
+      { kind: "work", label: "Students", to: "/students", end: true, perm: "application:read" },
+      { kind: "work", label: "Manpower", to: "/manpower", end: true, perm: "application:read" },
       { kind: "work", label: "Packages", to: "/products/packages", perm: "application:read" },
       { kind: "reports", label: "Reports", to: "/analytics/sales", perm: "analytics:read" },
       { kind: "calendar", label: "Calendar", to: "/operations/calendar", perm: "task:read" },

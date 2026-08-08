@@ -137,6 +137,8 @@ export type Application = {
   tour?: TourDetail | null;
   transport?: TransportDetail | null;
   hajjUmrah?: HajjDetail | null;
+  student?: StudentDetail | null;
+  work?: WorkDetail | null;
   createdAt?: string;
   completedAt?: string | null;
 };
@@ -354,6 +356,36 @@ export type TransportRoute = {
   kind: string;
   notes?: string | null;
   isActive?: boolean;
+};
+
+/** V14 — student consultancy detail (mirrors backend StudentDetail). */
+export type StudentDetail = {
+  id?: string;
+  applicationId?: string;
+  institution?: string | null;
+  country?: string | null;
+  courseName?: string | null;
+  degreeLevel?: string | null;
+  intakeTerm?: string | null;
+  applicationRef?: string | null;
+  notes?: string | null;
+};
+
+/** V15 — manpower / overseas employment detail (mirrors backend WorkDetail; serviceType "work"). */
+export type WorkDetail = {
+  id?: string;
+  applicationId?: string;
+  employerName?: string | null;
+  jobTitle?: string | null;
+  country?: string | null;
+  workPermitNo?: string | null;
+  visaType?: string | null;
+  contractMonths?: number | null;
+  departureDate?: string | null;
+  bmetClearance?: string | null;
+  medicalStatus?: string | null;
+  agencyRef?: string | null;
+  notes?: string | null;
 };
 
 export type TourDetail = {
