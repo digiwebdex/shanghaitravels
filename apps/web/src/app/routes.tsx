@@ -45,6 +45,9 @@ const HajjReportsPage = lazy(() => import("@/pages/HajjReportsPage"));
 // V14 — Student vertical (NewStudentCasePage is a named export, same chunk)
 const StudentListPage = lazy(() => import("@/pages/StudentListPage"));
 const NewStudentCasePage = lazy(() => import("@/pages/StudentListPage").then((m) => ({ default: m.NewStudentCasePage })));
+// V15 — Manpower vertical (serviceType "work"; NewManpowerCasePage same chunk)
+const ManpowerListPage = lazy(() => import("@/pages/ManpowerListPage"));
+const NewManpowerCasePage = lazy(() => import("@/pages/ManpowerListPage").then((m) => ({ default: m.NewManpowerCasePage })));
 const FinanceAccountsPage = lazy(() => import("@/pages/FinanceAccountsPage"));
 const FinanceGroupsPage = lazy(() => import("@/pages/FinanceGroupsPage"));
 const FinancePeriodsPage = lazy(() => import("@/pages/FinancePeriodsPage"));
@@ -1076,6 +1079,22 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <NewStudentCasePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "manpower",
+            element: (
+              <Lazy>
+                <ManpowerListPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "manpower/new",
+            element: (
+              <Lazy>
+                <NewManpowerCasePage />
               </Lazy>
             ),
           },
