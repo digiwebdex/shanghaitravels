@@ -1,0 +1,279 @@
+{
+  "generatedAt": "2026-08-02T19:42:24.468Z",
+  "processingTimeMs": 1229,
+  "supportedCountries": [
+    "BGD",
+    "IND",
+    "GBR",
+    "USA",
+    "CAN",
+    "ARE",
+    "SAU",
+    "MYS",
+    "SGP"
+  ],
+  "summary": {
+    "extractionRate": 1,
+    "fieldAccuracy": 1,
+    "averageConfidence": 94.29999999999998,
+    "failedFields": [],
+    "countriesTested": 9,
+    "checkDigitHelperOk": true
+  },
+  "cases": [
+    {
+      "country": "BGD",
+      "mrzOk": true,
+      "checks": {
+        "passportNo": true,
+        "dateOfBirth": true,
+        "dateOfExpiry": true,
+        "optionalData": true,
+        "composite": true
+      },
+      "extractionRate": 1,
+      "averageConfidence": 94.3,
+      "mismatches": [
+        "passportNo"
+      ],
+      "fieldAccuracy": 1,
+      "failedFields": []
+    },
+    {
+      "country": "IND",
+      "mrzOk": true,
+      "checks": {
+        "passportNo": true,
+        "dateOfBirth": true,
+        "dateOfExpiry": true,
+        "optionalData": true,
+        "composite": true
+      },
+      "extractionRate": 1,
+      "averageConfidence": 94.3,
+      "mismatches": [
+        "passportNo"
+      ],
+      "fieldAccuracy": 1,
+      "failedFields": []
+    },
+    {
+      "country": "GBR",
+      "mrzOk": true,
+      "checks": {
+        "passportNo": true,
+        "dateOfBirth": true,
+        "dateOfExpiry": true,
+        "optionalData": true,
+        "composite": true
+      },
+      "extractionRate": 1,
+      "averageConfidence": 94.3,
+      "mismatches": [
+        "passportNo"
+      ],
+      "fieldAccuracy": 1,
+      "failedFields": []
+    },
+    {
+      "country": "USA",
+      "mrzOk": true,
+      "checks": {
+        "passportNo": true,
+        "dateOfBirth": true,
+        "dateOfExpiry": true,
+        "optionalData": true,
+        "composite": true
+      },
+      "extractionRate": 1,
+      "averageConfidence": 94.3,
+      "mismatches": [
+        "passportNo"
+      ],
+      "fieldAccuracy": 1,
+      "failedFields": []
+    },
+    {
+      "country": "CAN",
+      "mrzOk": true,
+      "checks": {
+        "passportNo": true,
+        "dateOfBirth": true,
+        "dateOfExpiry": true,
+        "optionalData": true,
+        "composite": true
+      },
+      "extractionRate": 1,
+      "averageConfidence": 94.3,
+      "mismatches": [
+        "passportNo"
+      ],
+      "fieldAccuracy": 1,
+      "failedFields": []
+    },
+    {
+      "country": "ARE",
+      "mrzOk": true,
+      "checks": {
+        "passportNo": true,
+        "dateOfBirth": true,
+        "dateOfExpiry": true,
+        "optionalData": true,
+        "composite": true
+      },
+      "extractionRate": 1,
+      "averageConfidence": 94.3,
+      "mismatches": [
+        "passportNo"
+      ],
+      "fieldAccuracy": 1,
+      "failedFields": []
+    },
+    {
+      "country": "SAU",
+      "mrzOk": true,
+      "checks": {
+        "passportNo": true,
+        "dateOfBirth": true,
+        "dateOfExpiry": true,
+        "optionalData": true,
+        "composite": true
+      },
+      "extractionRate": 1,
+      "averageConfidence": 94.3,
+      "mismatches": [
+        "passportNo"
+      ],
+      "fieldAccuracy": 1,
+      "failedFields": []
+    },
+    {
+      "country": "MYS",
+      "mrzOk": true,
+      "checks": {
+        "passportNo": true,
+        "dateOfBirth": true,
+        "dateOfExpiry": true,
+        "optionalData": true,
+        "composite": true
+      },
+      "extractionRate": 1,
+      "averageConfidence": 94.3,
+      "mismatches": [
+        "passportNo"
+      ],
+      "fieldAccuracy": 1,
+      "failedFields": []
+    },
+    {
+      "country": "SGP",
+      "mrzOk": true,
+      "checks": {
+        "passportNo": true,
+        "dateOfBirth": true,
+        "dateOfExpiry": true,
+        "optionalData": true,
+        "composite": true
+      },
+      "extractionRate": 1,
+      "averageConfidence": 94.3,
+      "mismatches": [
+        "passportNo"
+      ],
+      "fieldAccuracy": 1,
+      "failedFields": []
+    }
+  ],
+  "preprocess": [
+    {
+      "scenario": "scanned",
+      "ok": true,
+      "meta": {
+        "rotatedDeg": -12,
+        "deskewDeg": -12,
+        "trimmed": true,
+        "contrastBoosted": true,
+        "width": 886,
+        "height": 655,
+        "mrzBandCrop": false
+      },
+      "ms": 218
+    },
+    {
+      "scenario": "rotated",
+      "ok": true,
+      "meta": {
+        "rotatedDeg": 0,
+        "deskewDeg": 0,
+        "trimmed": true,
+        "contrastBoosted": true,
+        "width": 868,
+        "height": 619,
+        "mrzBandCrop": false
+      },
+      "ms": 243
+    },
+    {
+      "scenario": "low-light",
+      "ok": true,
+      "meta": {
+        "rotatedDeg": -12,
+        "deskewDeg": -12,
+        "trimmed": true,
+        "contrastBoosted": true,
+        "width": 886,
+        "height": 655,
+        "mrzBandCrop": false
+      },
+      "ms": 188
+    },
+    {
+      "scenario": "blurred",
+      "ok": true,
+      "meta": {
+        "rotatedDeg": -12,
+        "deskewDeg": -12,
+        "trimmed": true,
+        "contrastBoosted": true,
+        "width": 886,
+        "height": 655,
+        "mrzBandCrop": false
+      },
+      "ms": 158
+    },
+    {
+      "scenario": "cropped",
+      "ok": true,
+      "meta": {
+        "rotatedDeg": -12,
+        "deskewDeg": -12,
+        "trimmed": true,
+        "contrastBoosted": true,
+        "width": 638,
+        "height": 453,
+        "mrzBandCrop": false
+      },
+      "ms": 78
+    },
+    {
+      "scenario": "mobile-photo",
+      "ok": true,
+      "meta": {
+        "rotatedDeg": 0,
+        "deskewDeg": 0,
+        "trimmed": true,
+        "contrastBoosted": true,
+        "width": 848,
+        "height": 581,
+        "mrzBandCrop": false
+      },
+      "ms": 195
+    }
+  ],
+  "notes": [
+    "Live Vision not called — synthetic ICAO MRZ + VIZ fixtures.",
+    "OCR noise O/I substituted; MRZ repair + check digits recover values.",
+    "Wrong VIZ passport numbers are overridden by validated MRZ.",
+    "Preprocess scenarios cover scan/rotate/low-light/blur/crop/mobile."
+  ]
+}

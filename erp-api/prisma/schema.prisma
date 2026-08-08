@@ -1,0 +1,3546 @@
+// Shanghai Travels ERP — foundation schema (migration 001)
+// Covers: identity/access + RBAC, Customers (first module), the Application
+// (case) engine, and Documents. Service-detail + finance/HR tables are added
+// per-module later. Soft-delete via deletedAt (NO hard delete anywhere).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  active
+  disabled
+}
+
+enum PermEffect {
+  allow
+  deny
+}
+
+enum DocStatus {
+  pending
+  verified
+  rejected
+}
+
+// Closed, stable, correctness-critical sets → Postgres enums (owner decision,
+// 2026-07-23). New service types are added with ALTER TYPE ... ADD VALUE in the
+// phase migration that introduces their module.
+enum ServiceType {
+  visa
+  air_ticket
+  hotel
+  tour
+  hajj
+  umrah
+  student
+  medical
+  immigration
+  insurance
+  transport
+  corporate
+  work
+}
+
+enum CaseStatus {
+  draft
+  in_progress
+  docs_required // ball is with the CUSTOMER (missing documents) — staff filter daily
+  on_hold       // ball is internal/external (embassy delay, capacity, etc.)
+  submitted     // e.g. lodged with embassy/authority
+  approved
+  rejected
+  completed
+  cancelled
+}
+
+enum CasePriority {
+  low
+  medium
+  high
+  urgent
+}
+
+enum StageStatus {
+  pending
+  active
+  done
+  blocked
+}
+
+enum TaskStatus {
+  open
+  in_progress
+  done
+  cancelled
+}
+
+// ---------- Finance (Phase 3) enums ----------
+enum InvoiceStatus {
+  draft
+  issued
+  partially_paid
+  paid
+  void
+  cancelled
+  generated
+  approved
+  sent
+  viewed
+  overdue
+  refunded
+}
+
+enum PaymentMethod {
+  cash
+  bank_transfer
+  bkash
+  nagad
+  card
+  cheque
+  other
+}
+
+enum PaymentKind {
+  payment   // money IN from customer (needs payment:record)
+  refund    // money OUT to customer (needs the SEPARATE payment:refund)
+}
+
+enum AccountType {
+  cash
+  bank
+}
+
+model Organization {
+  id           String   @id @default(uuid())
+  name         String
+  regNo        String?
+  regAuthority String?
+  currency     String   @default("BDT")
+  branches     Branch[]
+  createdAt    DateTime @default(now())
+}
+
+model Branch {
+  id        String     @id @default(uuid())
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id])
+  name      String
+  type      String     // corporate | head
+  address   String?
+  phone     String?
+  email     String?
+  isActive  Boolean    @default(true)
+  users     User[]
+  customers Customer[]
+  createdAt DateTime   @default(now())
+}
+
+// ---------- RBAC ----------
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique          // super_admin, general_manager, ...
+  description String?
+  isSystem    Boolean          @default(false)
+  users       User[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  key         String           @unique          // e.g. application:approve, payment:refund
+  description String?
+  roles       RolePermission[]
+  users       UserPermission[]
+}
+
+model RolePermission {
+  roleId String
+  role   Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permId String
+  perm   Permission @relation(fields: [permId], references: [id], onDelete: Cascade)
+  @@id([roleId, permId])
+}
+
+// Per-user overrides so individuals can be adjusted later (e.g. revoke payment:refund).
+model UserPermission {
+  userId String
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permId String
+  perm   Permission @relation(fields: [permId], references: [id], onDelete: Cascade)
+  effect PermEffect
+  @@id([userId, permId])
+}
+
+model User {
+  id                 String           @id @default(uuid())
+  branchId           String?
+  branch             Branch?          @relation(fields: [branchId], references: [id])
+  email              String           @unique
+  passwordHash       String
+  fullName           String
+  phone              String?
+  roleId             String
+  role               Role             @relation(fields: [roleId], references: [id])
+  status             UserStatus       @default(active)
+  mustChangePassword Boolean          @default(true)
+  lastLoginAt        DateTime?
+  overrides          UserPermission[]
+  refreshTokens      RefreshToken[]
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  deletedAt          DateTime?
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  userAgent String?
+  ip        String?
+  createdAt DateTime  @default(now())
+}
+
+model PasswordReset {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  usedAt    DateTime?
+}
+
+// ---------- Customers (first module) ----------
+model Customer {
+  id          String     @id @default(uuid())
+  branchId    String
+  branch      Branch     @relation(fields: [branchId], references: [id])
+  code        String     @unique
+  fullName    String
+  email       String?
+  phone       String?
+  whatsapp    String?
+  nationality String?
+  dob         DateTime?
+  gender      String?
+  address     String?
+  type        String     @default("individual") // individual | corporate
+  source      String?
+  status      String     @default("active")
+  notes       String?
+  passports   Passport[]
+  applications Application[]
+  invoices    Invoice[]
+  payments    Payment[]
+  arDocuments ArDocument[]
+  portalUsers CustomerUser[]
+  familyMembers CustomerFamilyMember[]
+  savedTravellers CustomerSavedTraveller[]
+  emergencyContacts CustomerEmergencyContact[]
+  supportRequests CustomerSupportRequest[]
+  packageWishlists PackageWishlist[]
+  // ---- V6 Wave 1: customer ownership (additive) ----
+  primaryAgentId   String?
+  primaryAgent     Agent?   @relation("CustomerPrimaryAgent", fields: [primaryAgentId], references: [id])
+  secondaryAgentId String?
+  secondaryAgent   Agent?   @relation("CustomerSecondaryAgent", fields: [secondaryAgentId], references: [id])
+  assignedById     String?
+  assignments      CustomerAssignment[]
+  createdBy   String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+  @@index([primaryAgentId])
+  @@index([secondaryAgentId])
+}
+
+// V6 Wave 1 — append-only ownership history. Every change to a customer's
+// primary/secondary agent writes one row here plus an AuditLog entry.
+model CustomerAssignment {
+  id           String   @id @default(uuid())
+  customerId   String
+  customer     Customer @relation(fields: [customerId], references: [id])
+  fromAgentId  String?
+  toAgentId    String?
+  role         String   // primary | secondary
+  action       String   // assign | reassign | transfer | release | add_secondary | remove_secondary | backfill
+  reason       String?
+  assignedById String?  // staff actor
+  actorAgentId String?  // agent actor (portal-created)
+  createdAt    DateTime @default(now())
+  @@index([customerId])
+  @@index([toAgentId])
+}
+
+model Passport {
+  id             String    @id @default(uuid())
+  customerId     String
+  customer       Customer  @relation(fields: [customerId], references: [id])
+  passportNo     String
+  issuingCountry String?
+  issueDate      DateTime?
+  expiryDate     DateTime?
+  documentId     String?
+  isPrimary      Boolean   @default(false)
+}
+
+// ---------- Workflow templates (editable from Settings — no code deploy) ----------
+// A new Application COPIES the active template's stages into ApplicationStage
+// rows at creation. Editing a template affects future cases only; in-flight
+// cases keep the stages they were created with.
+model WorkflowTemplate {
+  id          String                  @id @default(uuid())
+  serviceType ServiceType
+  name        String
+  version     Int                     @default(1)
+  isActive    Boolean                 @default(true) // one active per serviceType — enforced by partial unique index (raw SQL) + service layer
+  stages      WorkflowTemplateStage[]
+  createdBy   String?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  deletedAt   DateTime?
+  @@unique([serviceType, version])
+}
+
+model WorkflowTemplateStage {
+  id         String           @id @default(uuid())
+  templateId String
+  template   WorkflowTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  stageNo    Int
+  name       String
+  slaHours   Int?             // optional per-stage SLA; feeds Application.slaDueAt
+  @@unique([templateId, stageNo])
+}
+
+// ---------- Application (case) engine — shared spine ----------
+model Application {
+  id            String   @id @default(uuid())
+  branchId      String
+  referenceNo   String   @unique
+  serviceType   ServiceType
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id])
+  title         String?
+  status        CaseStatus @default(draft)
+  currentStage  Int      @default(1)
+  totalStages   Int      @default(1)
+  priority      CasePriority @default(medium)
+  assignedTo    String?
+  source        String   @default("walkin")
+  agentId       String?             // set when a B2B agent submitted the case (agent portal)
+  corporateClientId String?         // set when corporate portal Travel Desk books the case
+  packageId     String?
+  packageMaster PackageMaster? @relation("ApplicationPackage", fields: [packageId], references: [id], onDelete: SetNull)
+  direction     CaseDirection @default(outbound) // outbound = BD→destination | inbound = →BD
+  slaDueAt      DateTime?
+  createdBy     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  completedAt   DateTime?
+  deletedAt     DateTime?           // soft-delete only (super_admin / general_manager)
+  stages        ApplicationStage[]
+  events        ApplicationEvent[]
+  docs          ApplicationDocument[]
+  checklistItems ApplicationChecklistItem[]
+  visa          VisaDetail?
+  airTicket     AirTicketDetail?
+  hotel         HotelDetail?
+  tour          TourPackageDetail?
+  transport     TransportDetail?
+  hajjUmrah     HajjUmrahDetail?
+  student       StudentDetail?
+  medical       MedicalDetail?
+  immigration   ImmigrationDetail?
+  insurance     InsuranceDetail?
+  work          WorkDetail?
+  tasks         Task[]
+  invoices      Invoice[]
+  arDocuments   ArDocument[]
+  apDocuments   ApDocument[]
+
+  @@index([packageId])
+}
+
+// ---------- Visa detail (Phase 2) — the thin per-service detail table.
+// Pattern-setter: every later service module gets ONE table like this hanging
+// off the Application spine. No money fields (those live on Invoice, Phase 3).
+model VisaDetail {
+  id            String      @id @default(uuid())
+  applicationId String      @unique
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  visaType      String      // tourist | business | student | work | family | umrah | hajj | medical (free-text; enum later if desired)
+  destination   String      // country
+  embassy       String?
+  entryType     String?     // single | multiple | double
+  durationDays  Int?
+  applicationNo String?     // embassy/VFS reference (manually entered)
+  appointmentAt DateTime?
+  submittedAt   DateTime?
+  decisionAt    DateTime?
+  collectedAt   DateTime?   // V8: passport collected (stamped when the Collected stage completes)
+  deliveredAt   DateTime?   // V8: passport delivered (stamped when the Delivered stage completes)
+  visaNumber    String?
+  outcome       String?     // approved | refused | withdrawn (reporting mirror of case status)
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+// ---------- Phase 4 service detail tables (manual entry, NO GDS) ----------
+// Same thin-detail pattern as VisaDetail: one table per service, hanging off
+// the Application spine. No money fields (those live on Invoice).
+model AirTicketDetail {
+  id            String      @id @default(uuid())
+  applicationId String      @unique
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  pnr           String?     // manually entered from the airline/agent, no GDS pull
+  airline       String?
+  flightNo      String?
+  origin        String?
+  destination   String?
+  tripType      String?     // one_way | round_trip | multi_city
+  departAt      DateTime?
+  returnAt      DateTime?
+  cabinClass    String?     // economy | premium | business | first
+  passengerName String?
+  ticketNo      String?
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model HotelDetail {
+  id             String      @id @default(uuid())
+  applicationId  String      @unique
+  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  hotelName      String?
+  city           String?
+  country        String?
+  checkIn        DateTime?
+  checkOut       DateTime?
+  nights         Int?
+  roomType       String?
+  mealPlan       String? // RO | BB | HB | FB | AI | other (manual catalog)
+  rooms          Int?
+  guests         Int?
+  confirmationNo String?
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model TourPackageDetail {
+  id                  String      @id @default(uuid())
+  applicationId       String      @unique
+  application         Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  packageName         String?
+  packageCode         String?
+  packageType         String? // group | private | corporate | honeymoon | family | educational | religious | other
+  category            String? // domestic | international
+  destination         String?
+  season              String? // peak | shoulder | off | all_year
+  startDate           DateTime?
+  endDate             DateTime?
+  pax                 Int?
+  itinerary           String? // day-by-day text or JSON
+  inclusions          String?
+  exclusions          String?
+  activities          String?
+  hotelsNote          String?
+  transportNote       String?
+  flightsNote         String?
+  visaRequirements    String?
+  insuranceNote       String?
+  occupancyNote       String?
+  childPolicy         String?
+  seasonalPricingNote String?
+  costBreakdown       String?
+  supplierCostPoisha  Int?
+  sellingPricePoisha  Int?
+  confirmationNo      String?
+  notes               String?
+  packageId           String?
+  packageMaster       PackageMaster? @relation("TourDetailPackage", fields: [packageId], references: [id], onDelete: SetNull)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  @@index([packageId])
+}
+
+model TransportDetail {
+  id             String      @id @default(uuid())
+  applicationId  String      @unique
+  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  vehicleType    String?     // sedan | microbus | coaster | bus | other
+  serviceKind    String?     // airport_transfer | city_transfer | chauffeur | other
+  pickupLocation String?
+  dropLocation   String?
+  routeName      String?
+  scheduledAt    DateTime?
+  passengers     Int?
+  driverName     String?
+  vehicleNo      String?
+  confirmationNo String?
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+// ---------- Phase 7 service detail tables (same spine pattern, manual entry) ----------
+model HajjUmrahDetail {
+  id                 String      @id @default(uuid())
+  applicationId      String      @unique
+  application        Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  packageType        String?     // hajj | umrah
+  year               String?
+  pilgrimName        String?
+  passportNo         String?
+  mahramName         String?
+  packageName        String?
+  packageCode        String?
+  packageCategory    String?     // economy | standard | premium | vip
+  groupCode          String?
+  groupName          String?
+  leaderName         String?
+  nationality        String?
+  gender             String?     // M | F
+  dob                String?
+  phone              String?
+  mahramRelation     String?
+  healthNotes        String?
+  emergencyContact   String?
+  emergencyPhone     String?
+  visaStatus         String?     // not_applied | applied | approved | rejected
+  visaNo             String?
+  passportStatus     String?     // received | pending | expired
+  flightNo           String?
+  airline            String?
+  transportNote      String?
+  roomAllocation     String?
+  occupancyNote      String?
+  inclusions         String?
+  exclusions         String?
+  paymentPlanNote    String?
+  supplierCostPoisha Int?
+  sellingPricePoisha Int?
+  paidPoisha         Int?
+  confirmationNo     String?
+  departureDate      DateTime?
+  returnDate         DateTime?
+  hotelMakkah        String?
+  hotelMadinah       String?
+  roomType           String?     // quad | triple | double | economy
+  notes              String?
+  packageId          String?
+  packageMaster      PackageMaster? @relation("HajjDetailPackage", fields: [packageId], references: [id], onDelete: SetNull)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  @@index([packageId])
+}
+
+model StudentDetail {
+  id            String      @id @default(uuid())
+  applicationId String      @unique
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  institution   String?
+  country       String?
+  courseName    String?
+  degreeLevel   String?     // diploma | bachelor | master | phd
+  intakeTerm    String?
+  applicationRef String?
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model MedicalDetail {
+  id              String      @id @default(uuid())
+  applicationId   String      @unique
+  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  hospital        String?
+  country         String?
+  treatment       String?
+  patientName     String?
+  appointmentDate DateTime?
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model ImmigrationDetail {
+  id             String      @id @default(uuid())
+  applicationId  String      @unique
+  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  country        String?
+  visaCategory   String?     // pr | work | family | investor
+  applicationRef String?
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model InsuranceDetail {
+  id             String      @id @default(uuid())
+  applicationId  String      @unique
+  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  policyType     String?     // travel | medical | student
+  provider       String?
+  policyNo       String?
+  coverageNote   String?
+  insuredName    String?
+  startDate      DateTime?
+  endDate        DateTime?
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+// Work / Manpower service (Bangladesh → China work, Z visa). Thin spine detail.
+model WorkDetail {
+  id             String      @id @default(uuid())
+  applicationId  String      @unique
+  application    Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  employerName   String?
+  jobTitle       String?
+  country        String?     @default("China")
+  workPermitNo   String?
+  visaType       String?     @default("Z") // China work visa
+  contractMonths Int?
+  departureDate  DateTime?
+  bmetClearance  String?     // BMET clearance / smart-card no (Bangladesh manpower)
+  medicalStatus  String?     // pending | fit | unfit | done
+  agencyRef      String?
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+// ---------- Tasks & Workflow (Phase 2) ----------
+model Task {
+  id            String       @id @default(uuid())
+  title         String
+  description   String?
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id])
+  assignedTo    String?      // User id
+  createdBy     String
+  priority      CasePriority @default(medium)
+  status        TaskStatus   @default(open)
+  dueAt         DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?    // soft-delete only
+}
+
+// ---------- Finance core (Phase 3) ----------
+// Money model is CASH-BASIS: every payment/refund/expense posts a signed
+// LedgerEntry against a cash/bank Account; Account.currentBalance =
+// openingBalance + sum(ledger.amount). Amounts are integer MINOR units (poisha)
+// to avoid float rounding — 1 BDT = 100. Single currency (BDT); FX deferred.
+// Full double-entry GL is a deferred long-tail item; this is the core.
+
+model Account {
+  id             String        @id @default(uuid())
+  branchId       String?
+  name           String
+  type           AccountType
+  bankName       String?
+  accountNo      String?
+  openingBalance Int           @default(0)   // minor units
+  currentBalance Int           @default(0)   // denormalized; kept in sync in-txn with ledger
+  isActive       Boolean       @default(true)
+  ledger         LedgerEntry[]
+  bankAccounts   BankAccount[]
+  createdAt      DateTime      @default(now())
+  deletedAt      DateTime?
+}
+
+model Invoice {
+  id            String         @id @default(uuid())
+  branchId      String
+  invoiceNo     String         @unique
+  customerId    String
+  customer      Customer       @relation(fields: [customerId], references: [id])
+  applicationId String?
+  application   Application?   @relation(fields: [applicationId], references: [id])
+  status        InvoiceStatus  @default(draft)
+  subtotal      Int            @default(0)   // minor units
+  discount      Int            @default(0)
+  tax           Int            @default(0)
+  total         Int            @default(0)   // subtotal - discount + tax
+  currency      String         @default("BDT")
+  notes         String?
+  issuedAt      DateTime?
+  dueAt         DateTime?
+  approvedAt    DateTime?
+  approvedBy    String?
+  sentAt        DateTime?
+  viewedAt      DateTime?
+  cancelledAt   DateTime?
+  cancelledBy   String?
+  packageId     String?
+  packageMaster PackageMaster? @relation("InvoicePackage", fields: [packageId], references: [id], onDelete: SetNull)
+  items         InvoiceItem[]
+  payments      Payment[]
+  arDocuments   ArDocument[]
+  createdBy     String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?
+
+  @@index([packageId])
+}
+
+model InvoiceItem {
+  id          String  @id @default(uuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Int     @default(1)
+  unitPrice   Int     @default(0)   // minor units
+  amount      Int     @default(0)   // quantity * unitPrice
+  packageId   String?
+  packageMaster PackageMaster? @relation("InvoiceItemPackage", fields: [packageId], references: [id], onDelete: SetNull)
+
+  @@index([packageId])
+}
+
+model Payment {
+  id         String        @id @default(uuid())
+  kind       PaymentKind   @default(payment)
+  invoiceId  String?
+  invoice    Invoice?      @relation(fields: [invoiceId], references: [id])
+  customerId String?
+  customer   Customer?     @relation(fields: [customerId], references: [id])
+  accountId  String        // which cash/bank account the money moved through
+  amount     Int           // minor units, always positive; kind decides direction
+  method     PaymentMethod @default(cash)
+  reference  String?
+  receivedAt DateTime      @default(now())
+  note       String?
+  recordedBy String
+  createdAt  DateTime      @default(now())
+  deletedAt  DateTime?
+}
+
+model Expense {
+  id          String        @id @default(uuid())
+  branchId    String
+  category    String        // office | salary | vendor | marketing | utility | other
+  description String?
+  amount      Int           // minor units
+  vendorName  String?
+  supplierId  String?
+  accountId   String        // paid from this cash/bank account
+  method      PaymentMethod @default(cash)
+  reference   String?
+  paidAt      DateTime      @default(now())
+  recordedBy  String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+}
+
+model LedgerEntry {
+  id         String    @id @default(uuid())
+  accountId  String
+  account    Account   @relation(fields: [accountId], references: [id])
+  amount     Int       // SIGNED minor units: +in / -out
+  sourceType String    // payment | refund | expense | manual | opening
+  sourceId   String?
+  memo       String?
+  postedAt   DateTime  @default(now())
+  createdBy  String
+}
+
+model ApplicationStage {
+  id            String    @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  stageNo       Int
+  name          String
+  status        StageStatus @default(pending)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  byUser        String?
+}
+
+model ApplicationEvent {
+  id            String   @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  type          String
+  message       String
+  meta          Json?
+  userId        String?
+  createdAt     DateTime @default(now())
+}
+
+/// Per-case document checklist ticks — multi-device / multi-user (not localStorage).
+model ApplicationChecklistItem {
+  id            String   @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  itemKey       String   // checklist label (stable key for the case)
+  checked       Boolean  @default(false)
+  checkedAt     DateTime?
+  checkedBy     String?  // User.id
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([applicationId, itemKey])
+  @@index([applicationId])
+}
+
+model ApplicationDocument {
+  id            String   @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  documentId    String
+  docType       String
+  status        DocStatus @default(pending)
+  note          String?
+}
+
+// ---------- Documents (StorageService-backed) ----------
+model Document {
+  id         String    @id @default(uuid())
+  branchId   String
+  ownerType  String    // customer | application | employee | supplier
+  ownerId    String
+  category   String?   // e.g. passport, photo, bank_statement
+  isPassport Boolean   @default(false)   // gates document:read-passport
+  fileName   String
+  storageKey String
+  mimeType   String
+  sizeBytes  Int
+  checksum   String?
+  status     DocStatus @default(pending)
+  uploadedBy String
+  createdAt  DateTime  @default(now())
+  deletedAt  DateTime?
+}
+
+// ---------- Phase 6 partners (staff-managed). External SELF-SERVICE portals
+// (agent login, corporate login) are DEFERRED pending a dedicated security
+// design — these tables are managed by internal staff only for now. Money uses
+// integer minor units (poisha) like Phase 3.
+enum CommissionStatus {
+  pending
+  approved
+  paid
+  cancelled
+}
+
+enum WalletTxnType {
+  commission_credit
+  withdrawal
+  adjustment
+  topup
+  refund
+  settlement
+}
+
+model Supplier {
+  id          String    @id @default(uuid())
+  branchId    String?
+  code        String    @unique
+  name        String
+  type        String    // airline | hotel | dmc | transport | other
+  contactName String?
+  phone       String?
+  email       String?
+  address     String?
+  isActive    Boolean   @default(true)
+  notes       String?
+  apDocuments ApDocument[]
+  packageMasters PackageMaster[]
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+}
+
+// V6 Phase 1 — Agent onboarding. Pure classification of agents (e.g. bronze /
+// silver / gold, or retail / wholesale). Carries NO money/commission fields in
+// Phase 1; the future CommissionRule engine will reference tierId. Additive.
+model AgentTier {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String?
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  agents      Agent[]
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Agent {
+  id                String           @id @default(uuid())
+  code              String           @unique
+  name              String
+  phone             String?
+  email             String?          @unique   // reserved for the future (deferred) agent portal login
+  address           String?
+  /// Optional operating branch for multi-branch agent scoping (Phase G1)
+  branchId          String?
+  commissionRateBps Int              @default(0) // basis points; 250 = 2.5% (integer, no float)
+  walletBalance     Int              @default(0) // minor units, denormalized; kept in sync in-txn
+  status            String           @default("active") // pending | active | suspended | rejected
+  wallet            AgentWalletTxn[]
+  commissions       Commission[]
+  agentUsers        AgentUser[]      // portal login accounts for this agent
+  supportRequests   AgentSupportRequest[]
+  primaryCustomers   Customer[]      @relation("CustomerPrimaryAgent")
+  secondaryCustomers Customer[]      @relation("CustomerSecondaryAgent")
+  // ---- V6 Phase 1: onboarding (additive, all nullable) ----
+  tierId            String?
+  tier              AgentTier?       @relation(fields: [tierId], references: [id])
+  /// Reserved for a FUTURE agent hierarchy. Nullable, NOT surfaced in the UI and
+  /// NOT used by any hierarchy/commission logic in Phase 1 (extension-ready only).
+  parentAgentId     String?
+  parent            Agent?           @relation("AgentHierarchy", fields: [parentAgentId], references: [id])
+  children          Agent[]          @relation("AgentHierarchy")
+  companyName       String?
+  contactPerson     String?
+  tradeLicenseNo    String?
+  nationalId        String?
+  kycStatus         String?          // pending | verified | rejected
+  kycNotes          String?
+  appliedAt         DateTime?
+  reviewedBy        String?
+  reviewedAt        DateTime?        // V6.x: KYC review date
+  approvedAt        DateTime?
+  approvedBy        String?
+  rejectedAt        DateTime?
+  rejectedReason    String?
+  // ---- V6.x: commercial onboarding profile (additive, all nullable) ----
+  ownerName             String?
+  passportNo            String?
+  dob                   DateTime?
+  gender                String?
+  nationality           String?
+  businessType          String?      // Individual|Proprietorship|Partnership|Limited Company|Corporate|Freelance Agent
+  businessStartDate     DateTime?
+  yearsExperience       Int?
+  website               String?
+  facebookPage          String?
+  googleBusiness        String?
+  officeAddress         String?
+  city                  String?
+  district              String?
+  country               String?
+  postalCode            String?
+  googleMapLocation     String?
+  bankName              String?
+  bankBranch            String?
+  bankAccountName       String?
+  bankAccountNumber     String?
+  bankRoutingNumber     String?
+  bkash                 String?
+  nagad                 String?
+  rocket                String?
+  upay                  String?
+  openingBalanceType    String?      // none|debit|credit
+  openingBalance        Int?         // minor units (poisha)
+  currency              String?      // default BDT
+  emergencyName         String?
+  emergencyRelationship String?
+  emergencyPhone        String?
+  internalNotes         String?
+  createdBy         String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  deletedAt         DateTime?
+  deletedBy         String?          // who deactivated the agent (soft delete)
+
+  @@index([branchId])
+  @@index([tierId])
+  @@index([parentAgentId])
+}
+
+model AgentWalletTxn {
+  id             String        @id @default(uuid())
+  agentId        String
+  agent          Agent         @relation(fields: [agentId], references: [id])
+  amount         Int           // SIGNED minor units: +credit / -debit
+  type           WalletTxnType
+  relatedType    String?
+  relatedId      String?
+  memo           String?
+  runningBalance Int?          // V6 Wave 1: immutable ledger balance snapshot after this txn
+  createdBy      String
+  createdAt      DateTime      @default(now())
+}
+
+// V6 Wave 1 — agent wallet funding request (top-up). Approval posts a `topup`
+// credit; balance stays traceable to a source.
+model WalletTopupRequest {
+  id              String    @id @default(uuid())
+  agentId         String
+  amount          Int       // minor units
+  proofDocumentId String?
+  status          String    @default("requested") // requested | approved | rejected | posted
+  requestedBy     String
+  decidedBy       String?
+  decidedAt       DateTime?
+  txnId           String?
+  memo            String?
+  createdAt       DateTime  @default(now())
+  @@index([agentId])
+  @@index([status])
+}
+
+// V6 Wave 1 — agent wallet withdrawal request (payout). Approval posts a
+// `withdrawal` debit (guarded against negative balance).
+model WalletWithdrawalRequest {
+  id          String    @id @default(uuid())
+  agentId     String
+  amount      Int       // minor units
+  method      String    @default("bank") // bank | cash | adjustment
+  bankRef     String?
+  status      String    @default("requested") // requested | approved | rejected | paid
+  requestedBy String
+  decidedBy   String?
+  decidedAt   DateTime?
+  txnId       String?
+  memo        String?
+  createdAt   DateTime  @default(now())
+  @@index([agentId])
+  @@index([status])
+}
+
+model Commission {
+  id            String           @id @default(uuid())
+  agentId       String
+  agent         Agent            @relation(fields: [agentId], references: [id])
+  applicationId String?
+  invoiceId     String?
+  amount        Int              // minor units (computed commission)
+  status        CommissionStatus @default(pending)
+  note          String?
+  // ---- V6 Wave 1: commission engine (additive) ----
+  ruleId        String?          // the CommissionRule that produced this (null = manual)
+  ruleSnapshot  Json?            // frozen {basis, value, scope} at compute time
+  baseAmount    Int?             // the amount the rule applied to (e.g. invoice total)
+  trigger       String?          // manual | on_invoice | on_payment | on_booking
+  createdBy     String
+  createdAt     DateTime         @default(now())
+  approvedAt    DateTime?
+  paidAt        DateTime?
+}
+
+// V6 Wave 1 — commission RULE (policy). The most-specific active, in-date rule
+// matching a commissionable event produces a Commission. Primary agent earns
+// 100% in Wave 1 (splits are a future capability). basis: fixed|percentage.
+model CommissionRule {
+  id            String    @id @default(uuid())
+  name          String
+  active        Boolean   @default(true)
+  priority      Int       @default(0)  // higher wins on tie; explicit precedence
+  basis         String    // fixed | percentage
+  value         Int       // poisha (fixed) or basis-points (percentage; 250 = 2.5%)
+  // scope dimensions — null = "any" (a rule matches when every non-null dim matches)
+  agentId       String?
+  agentTierId   String?
+  serviceType   String?
+  countryCode   String?
+  packageId     String?
+  branchId      String?
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+  createdBy     String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+  @@index([active])
+}
+
+// V6 Wave 1 — append-only commission ledger (what the agent is owed). A paid
+// commission moves value into the wallet as a commission_credit (existing rail).
+model CommissionLedger {
+  id             String   @id @default(uuid())
+  agentId        String
+  commissionId   String?
+  entryType      String   // earn | settle | adjust | clawback | cancel
+  amount         Int      // signed minor units
+  runningBalance Int      // snapshot after this entry
+  memo           String?
+  createdBy      String
+  createdAt      DateTime @default(now())
+  @@index([agentId])
+}
+
+model CorporateClient {
+  id               String    @id @default(uuid())
+  branchId         String?
+  companyName      String
+  contactPerson    String?
+  phone            String?
+  email            String?
+  address          String?
+  billingAddress   String?
+  preferredServices String?  // JSON string array e.g. ["visa","air_ticket"]
+  billingCustomerId String?  // Customer.id (type=corporate) for Invoice/AR reuse
+  creditLimit      Int       @default(0) // minor units
+  paymentTermsDays Int       @default(0)
+  isActive         Boolean   @default(true)
+  notes            String?
+  createdBy        String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+  portalUsers      CorporateUser[]
+  employees        CorporateEmployee[]
+  approvalChains   CorporateApprovalChain[]
+  travelRequests   CorporateTravelRequest[]
+  supportRequests  CorporateSupportRequest[]
+  announcements    CorporateAnnouncement[]
+}
+
+// ---------- Phase 8: HR / CRM / CMS / Settings ----------
+enum LeadStatus {
+  new_lead
+  contacted
+  qualified
+  converted
+  lost
+}
+
+model Employee {
+  id          String           @id @default(uuid())
+  branchId    String?
+  code        String           @unique
+  fullName    String
+  designation String?
+  department  String?
+  phone       String?
+  email       String?
+  joinDate    DateTime?
+  salary      Int              @default(0) // monthly gross, minor units
+  status      String           @default("active") // active | inactive
+  notes       String?
+  salaries    SalaryPayment[]
+  createdBy   String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  deletedAt   DateTime?
+}
+
+model SalaryPayment {
+  id         String    @id @default(uuid())
+  employeeId String
+  employee   Employee  @relation(fields: [employeeId], references: [id])
+  period     String    // e.g. "2026-07"
+  amount     Int       // minor units
+  accountId  String?   // cash/bank account it was paid from (Phase 3)
+  paidAt     DateTime  @default(now())
+  note       String?
+  recordedBy String
+  createdAt  DateTime  @default(now())
+}
+
+model Lead {
+  id                       String     @id @default(uuid())
+  branchId                 String?
+  leadNo                   String?    @unique
+  name                     String
+  phone                    String?
+  email                    String?
+  /// web | walkin | phone | whatsapp | facebook | referral
+  source                   String?
+  serviceInterest          String?
+  status                   LeadStatus @default(new_lead)
+  /// hot | warm | cold
+  priority                 String     @default("warm")
+  assignedTo               String?
+  notes                    String?
+  contactId                String?
+  contact                  CrmContact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  organizationId           String?
+  organization             CrmOrganization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  customerId               String?
+  convertedApplicationId   String?
+  convertedAt              DateTime?
+  lostReason               String?
+  packageId                String?
+  packageMaster            PackageMaster? @relation("LeadPackage", fields: [packageId], references: [id], onDelete: SetNull)
+  createdBy                String
+  createdAt                DateTime   @default(now())
+  updatedAt                DateTime   @updatedAt
+  deletedAt                DateTime?
+
+  opportunities Opportunity[]
+  quotations    Quotation[]
+
+  @@index([branchId])
+  @@index([status])
+  @@index([source])
+  @@index([packageId])
+}
+
+model Communication {
+  id               String   @id @default(uuid())
+  branchId         String?
+  relatedType      String   // lead | customer | application | opportunity | contact | organization | agent | supplier
+  relatedId        String
+  channel          String   // call | email | whatsapp | meeting | sms | note | internal
+  direction        String   @default("outbound") // inbound | outbound | internal
+  summary          String
+  subject          String?
+  body             String?
+  /// logged | queued | sent | delivered | failed | read
+  status           String   @default("logged")
+  /// prospect | customer | agent | supplier | corporate | internal
+  partyKind        String?
+  partyLabel       String?
+  threadId         String?
+  templateId       String?
+  provider         String?
+  providerMessageId String?
+  deliveryStatus   String?
+  attachmentCount  Int      @default(0)
+  byUser           String
+  createdAt        DateTime @default(now())
+  attachments      CommAttachment[]
+
+  @@index([relatedType, relatedId])
+  @@index([channel])
+  @@index([status])
+  @@index([threadId])
+  @@index([branchId])
+}
+
+/// Phase D3 — message templates (email / WhatsApp / SMS)
+model CommTemplate {
+  id          String    @id @default(uuid())
+  branchId    String?
+  code        String    @unique
+  name        String
+  /// email | whatsapp | sms
+  channel     String
+  /// general | booking | quotation | payment | otp | reminder
+  category    String    @default("general")
+  subject     String?
+  body        String
+  /// JSON array of merge field names e.g. ["customerName","referenceNo"]
+  mergeFields Json?
+  isActive    Boolean   @default(true)
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([channel])
+  @@index([category])
+  @@index([branchId])
+}
+
+/// Phase D3 — conversation / email thread
+model CommThread {
+  id            String    @id @default(uuid())
+  branchId      String?
+  /// email | whatsapp | sms | mixed
+  channel       String
+  subject       String?
+  relatedType   String
+  relatedId     String
+  /// prospect | customer | agent | supplier | corporate
+  partyKind     String    @default("customer")
+  partyId       String?
+  partyLabel    String?
+  /// open | closed
+  status        String    @default("open")
+  lastMessageAt DateTime  @default(now())
+  createdBy     String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  messages      CommMessage[]
+
+  @@index([relatedType, relatedId])
+  @@index([partyKind, partyId])
+  @@index([channel])
+  @@index([status])
+  @@index([branchId])
+}
+
+model CommMessage {
+  id                String    @id @default(uuid())
+  threadId          String
+  thread            CommThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  branchId          String?
+  channel           String
+  direction         String    @default("outbound")
+  subject           String?
+  body              String
+  /// draft | queued | sent | delivered | failed | read
+  status            String    @default("queued")
+  templateId        String?
+  provider          String?
+  providerMessageId String?
+  error             String?
+  byUser            String
+  createdAt         DateTime  @default(now())
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  attachments       CommAttachment[]
+
+  @@index([threadId])
+  @@index([status])
+  @@index([channel])
+  @@index([createdAt])
+}
+
+model CommAttachment {
+  id              String         @id @default(uuid())
+  messageId       String?
+  message         CommMessage?   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  communicationId String?
+  communication   Communication? @relation(fields: [communicationId], references: [id], onDelete: Cascade)
+  fileName        String
+  mimeType        String         @default("application/octet-stream")
+  sizeBytes       Int            @default(0)
+  storageKey      String
+  createdBy       String
+  createdAt       DateTime       @default(now())
+
+  @@index([messageId])
+  @@index([communicationId])
+}
+
+/// Phase D1 — CRM contact (individual / family / corporate person)
+model CrmContact {
+  id             String    @id @default(uuid())
+  branchId       String?
+  /// individual | family | corporate
+  kind           String    @default("individual")
+  fullName       String
+  phone          String?
+  email          String?
+  familyGroup    String?
+  organizationId String?
+  organization   CrmOrganization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  customerId     String?
+  assignedTo     String?
+  notes          String?
+  createdBy      String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+  leads          Lead[]
+  opportunities  Opportunity[]
+  quotations     Quotation[]
+
+  @@index([branchId])
+  @@index([kind])
+  @@index([organizationId])
+}
+
+/// Phase D1 — CRM organization (corporate / travel agent / partner)
+model CrmOrganization {
+  id                 String    @id @default(uuid())
+  branchId           String?
+  code               String    @unique
+  name               String
+  /// corporate | travel_agent | partner_agency
+  type               String
+  phone              String?
+  email              String?
+  address            String?
+  agentId            String?
+  corporateClientId  String?
+  creditLimitPoisha  Int       @default(0)
+  isActive           Boolean   @default(true)
+  notes              String?
+  createdBy          String
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
+  contacts           CrmContact[]
+  leads              Lead[]
+  opportunities      Opportunity[]
+  quotations         Quotation[]
+
+  @@index([branchId])
+  @@index([type])
+}
+
+/// Phase D1 — sales opportunity / pipeline
+model Opportunity {
+  id                    String    @id @default(uuid())
+  branchId              String?
+  opportunityNo         String    @unique
+  title                 String
+  /// qualification | needs_analysis | proposal | negotiation | won | lost | converted (or SalesStage.code)
+  stage                 String    @default("qualification")
+  /// 0–10000 basis points (6000 = 60%)
+  probabilityBps        Int       @default(2000)
+  expectedRevenuePoisha Int       @default(0)
+  currencyCode          String    @default("BDT")
+  serviceType           String?
+  expectedCloseDate     DateTime?
+  /// open | won | lost | converted
+  status                String    @default("open")
+  leadId                String?
+  lead                  Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  contactId             String?
+  contact               CrmContact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  organizationId        String?
+  organization          CrmOrganization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  customerId            String?
+  applicationId         String?
+  assignedTo            String?
+  lostReason            String?
+  lostReasonId          String?
+  lostReasonRef         LostReason? @relation(fields: [lostReasonId], references: [id], onDelete: SetNull)
+  wonAt                 DateTime?
+  lostAt                DateTime?
+  convertedAt           DateTime?
+  notes                 String?
+  packageId             String?
+  packageMaster         PackageMaster? @relation("OpportunityPackage", fields: [packageId], references: [id], onDelete: SetNull)
+  createdBy             String
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  deletedAt             DateTime?
+  quotations            Quotation[]
+  stageHistory          OpportunityStageHistory[]
+  salesTasks            SalesTask[]
+
+  @@index([branchId])
+  @@index([stage])
+  @@index([status])
+  @@index([assignedTo])
+  @@index([packageId])
+}
+
+/// Phase D2 — configurable sales stages
+model SalesStage {
+  id                   String   @id @default(uuid())
+  code                 String   @unique
+  name                 String
+  sortOrder            Int      @default(0)
+  defaultProbabilityBps Int     @default(2000)
+  isWon                Boolean  @default(false)
+  isLost               Boolean  @default(false)
+  isConverted          Boolean  @default(false)
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model OpportunityStageHistory {
+  id             String       @id @default(uuid())
+  opportunityId  String
+  opportunity    Opportunity  @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  fromStage      String?
+  toStage        String
+  probabilityBps Int?
+  note           String?
+  lostReasonId   String?
+  changedBy      String
+  changedAt      DateTime     @default(now())
+
+  @@index([opportunityId])
+  @@index([changedAt])
+}
+
+model LostReason {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  label       String
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  opportunities Opportunity[]
+}
+
+/// Phase D1 — CRM activity / follow-up (D3: recurrence + SLA)
+model CrmActivity {
+  id          String    @id @default(uuid())
+  branchId    String?
+  /// call | meeting | email | whatsapp | task | follow_up
+  type        String
+  subject     String
+  body        String?
+  relatedType String
+  relatedId   String
+  dueAt       DateTime?
+  completedAt DateTime?
+  /// open | done | cancelled | escalated
+  status      String    @default("open")
+  assignedTo  String?
+  byUser      String
+  /// none | daily | weekly | monthly
+  recurrenceRule String? @default("none")
+  slaDueAt    DateTime?
+  escalateAt  DateTime?
+  escalatedAt DateTime?
+  parentActivityId String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([relatedType, relatedId])
+  @@index([status])
+  @@index([dueAt])
+  @@index([slaDueAt])
+  @@index([assignedTo])
+}
+
+model Quotation {
+  id              String    @id @default(uuid())
+  branchId        String?
+  quoteNo         String    @unique
+  /// visa | air_ticket | hotel | tour | hajj | umrah
+  serviceType     String
+  /// draft | pending_approval | approved | rejected | sent | accepted | expired | converted
+  status          String    @default("draft")
+  version         Int       @default(1)
+  rootQuoteId     String?
+  opportunityId   String?
+  opportunity     Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  leadId          String?
+  lead            Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  contactId       String?
+  contact         CrmContact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  organizationId  String?
+  organization    CrmOrganization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  customerId      String?
+  currencyCode    String    @default("BDT")
+  subtotalPoisha  Int       @default(0)
+  discountPoisha  Int       @default(0)
+  discountBps     Int       @default(0)
+  taxPoisha       Int       @default(0)
+  totalPoisha     Int       @default(0)
+  validUntil      DateTime?
+  notes           String?
+  htmlSnapshot    String?
+  applicationId   String?
+  submittedAt     DateTime?
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectedBy      String?
+  rejectedAt      DateTime?
+  rejectReason    String?
+  packageId       String?
+  packageMaster   PackageMaster? @relation("QuotationPackage", fields: [packageId], references: [id], onDelete: SetNull)
+  createdBy       String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+  lines           QuotationLine[]
+
+  @@index([branchId])
+  @@index([status])
+  @@index([serviceType])
+  @@index([rootQuoteId])
+  @@index([packageId])
+}
+
+model QuotationLine {
+  id              String    @id @default(uuid())
+  quotationId     String
+  quotation       Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  lineNo          Int
+  productCode     String?
+  description     String
+  quantity        Int       @default(1)
+  unitPricePoisha Int       @default(0)
+  discountPoisha  Int       @default(0)
+  amountPoisha    Int       @default(0)
+  packageId       String?
+  packageMaster   PackageMaster? @relation("QuotationLinePackage", fields: [packageId], references: [id], onDelete: SetNull)
+
+  @@index([quotationId])
+  @@index([packageId])
+}
+
+/// Phase D2 — pricing templates
+model PriceTemplate {
+  id           String   @id @default(uuid())
+  branchId     String?
+  code         String   @unique
+  name         String
+  serviceType  String
+  currencyCode String   @default("BDT")
+  isActive     Boolean  @default(true)
+  notes        String?
+  createdBy    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+  lines        PriceTemplateLine[]
+
+  @@index([serviceType])
+  @@index([branchId])
+}
+
+model PriceTemplateLine {
+  id              String        @id @default(uuid())
+  templateId      String
+  template        PriceTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  lineNo          Int
+  productCode     String?
+  description     String
+  unitPricePoisha Int           @default(0)
+
+  @@index([templateId])
+}
+
+/// Phase D2 — customer / corporate / agent / promo pricing
+model PriceBook {
+  id               String    @id @default(uuid())
+  branchId         String?
+  code             String    @unique
+  name             String
+  /// standard | customer | corporate | agent | promo
+  kind             String    @default("standard")
+  serviceType      String?
+  customerId       String?
+  organizationId   String?
+  agentId          String?
+  productCode      String?
+  unitPricePoisha  Int?
+  discountBps      Int       @default(0)
+  validFrom        DateTime?
+  validTo          DateTime?
+  isActive         Boolean   @default(true)
+  notes            String?
+  createdBy        String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  @@index([kind])
+  @@index([serviceType])
+  @@index([customerId])
+  @@index([organizationId])
+  @@index([agentId])
+}
+
+/// Phase D2 — sales tasks with SLA
+model SalesTask {
+  id             String    @id @default(uuid())
+  branchId       String?
+  title          String
+  description    String?
+  /// follow_up | reminder | call | meeting | escalate
+  type           String    @default("follow_up")
+  /// open | done | cancelled | escalated
+  status         String    @default("open")
+  opportunityId  String?
+  opportunity    Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  quotationId    String?
+  leadId         String?
+  assignedTo     String?
+  dueAt          DateTime?
+  reminderAt     DateTime?
+  slaDueAt       DateTime?
+  escalatedAt    DateTime?
+  completedAt    DateTime?
+  createdBy      String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status])
+  @@index([assignedTo])
+  @@index([dueAt])
+  @@index([slaDueAt])
+  @@index([opportunityId])
+}
+
+/// Phase E — CMS page (extended with workflow, SEO, blocks, branch)
+model CmsPage {
+  id            String    @id @default(uuid())
+  branchId      String?
+  slug          String    @unique
+  title         String
+  body          String    @default("")
+  /// JSON page-builder blocks [{type, props}]
+  blocks        Json?
+  published     Boolean   @default(false)
+  /// draft | in_review | published | archived
+  status        String    @default("draft")
+  templateKey   String?   @default("default")
+  seoTitle      String?
+  seoDescription String?
+  seoKeywords   String?
+  canonicalUrl  String?
+  ogImage       String?
+  structuredData Json?
+  publishedAt   DateTime?
+  publishedBy   String?
+  updatedBy     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+  versions      CmsPageVersion[]
+  views         CmsPageView[]
+
+  @@index([branchId])
+  @@index([status])
+  @@index([published])
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedBy String?
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+// ---------- Notifications (Phase 5 outbox; delivery adapters gated on config) ----------
+// Intake/events ENQUEUE rows here (status=pending). A delivery worker (email /
+// WhatsApp) marks them sent/failed — that worker needs SMTP / WhatsApp creds and
+// is NOT wired until the owner provides them. Nothing is ever marked "sent"
+// without a real send.
+model Notification {
+  id          String    @id @default(uuid())
+  channel     String    // email | whatsapp | inapp
+  recipient   String    // email / phone / userId
+  subject     String?
+  body        String
+  status      String    @default("pending") // pending | sent | failed
+  relatedType String?   // application | task
+  relatedId   String?
+  error       String?
+  createdAt   DateTime  @default(now())
+  sentAt      DateTime?
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String?
+  before     Json?
+  after      Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+}
+
+// ---------- OCR (Gemini/Vision, pluggable) — Phase 10 ----------
+// One row per document scan. OCR returns PROPOSED fields only; a human confirms
+// via /ocr/:id/apply before anything is written to a Passport/Customer record
+// (no fabricated data auto-committed). Soft-delete via deletedAt.
+enum OcrStatus {
+  pending
+  processing
+  completed
+  failed
+}
+
+enum OcrDocType {
+  passport
+  national_id
+  visa
+  air_ticket
+  photo
+  other
+}
+
+enum OcrSource {
+  staff
+  agent
+  customer
+  public
+}
+
+model OcrScan {
+  id            String     @id @default(uuid())
+  branchId      String?
+  source        OcrSource
+  docType       OcrDocType @default(passport)
+  status        OcrStatus  @default(pending)
+  provider      String?    // gemini | vision | none
+  applicationId String?    // optional: attach scan to a case
+  customerId    String?    // optional: attach to a customer
+  documentId    String?    // stored image (Document row, isPassport-gated)
+  storageKey    String     // secure path of the uploaded image
+  mimeType      String?
+  sizeBytes     Int?
+  rawText       String?    // full OCR text (sensitive)
+  fields        Json?      // proposed fields: name, passportNo, dob, expiry, nationality, mrz…
+  confidence    Float?
+  error         String?
+  requestedBy   String     // userId, or customerId/"public"
+  reviewedBy    String?    // staff who confirmed
+  appliedAt     DateTime?  // when confirmed fields were written to a record
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime?
+
+  @@index([status])
+  @@index([applicationId])
+  @@index([customerId])
+}
+
+// ---------- Agent self-service portal (Phase 11) ----------
+// SEPARATE from staff auth: agent tokens use JWT_AGENT_SECRET + st_agent cookie
+// and are only accepted by AgentJwtGuard on /portal/agent/* routes — an agent
+// token can NEVER authenticate a staff route (different secret + guard), and the
+// agent controllers only ever return the agent's OWN data. Accounts are created
+// by staff (agent:manage); no self-registration.
+model AgentUser {
+  id                 String              @id @default(uuid())
+  agentId            String
+  agent              Agent               @relation(fields: [agentId], references: [id])
+  email              String              @unique
+  passwordHash       String
+  status             String              @default("active") // active | disabled
+  mustChangePassword Boolean             @default(true)
+  lastLoginAt        DateTime?
+  createdBy          String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  deletedAt          DateTime?
+  sessions           AgentRefreshToken[]
+  authCodes          AgentAuthCode[]
+
+  @@index([agentId])
+}
+
+model AgentRefreshToken {
+  id          String    @id @default(uuid())
+  agentUserId String
+  agentUser   AgentUser @relation(fields: [agentUserId], references: [id], onDelete: Cascade)
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  userAgent   String?
+  ip          String?
+  createdAt   DateTime  @default(now())
+}
+
+/// password_reset | login_otp (Phase G1)
+model AgentAuthCode {
+  id          String    @id @default(uuid())
+  agentUserId String?
+  agentUser   AgentUser? @relation(fields: [agentUserId], references: [id], onDelete: Cascade)
+  email       String
+  purpose     String
+  codeHash    String
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  attempts    Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  @@index([email, purpose])
+  @@index([agentUserId])
+}
+
+model AgentSupportRequest {
+  id            String    @id @default(uuid())
+  agentId       String
+  agent         Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  subject       String
+  body          String
+  status        String    @default("open") // open | in_progress | resolved | closed
+  priority      String    @default("normal")
+  applicationId String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  closedAt      DateTime?
+
+  @@index([agentId])
+  @@index([status])
+}
+
+// ---------- Reference data (all-country / all-service) — Phase 12 ----------
+enum CaseDirection {
+  outbound
+  inbound
+}
+
+model Country {
+  id         String  @id @default(uuid())
+  iso2       String  @unique          // ISO 3166-1 alpha-2: CN, GB, QA, BD…
+  name       String                   // "China", "United Kingdom"
+  region     String?                  // Asia, Europe, Middle East…
+  isFeatured Boolean @default(false)  // China = true (top of pickers)
+  isActive   Boolean @default(true)
+  sortOrder  Int     @default(100)
+}
+
+model Airline {
+  id       String  @id @default(uuid())
+  name     String  @unique            // "China Southern Airlines"
+  iata     String?                    // "CZ"
+  icao     String?                    // "CSN"
+  country  String                     // operating country
+  isActive Boolean @default(true)
+}
+
+model Hotel {
+  id        String    @id @default(uuid())
+  name      String
+  country   String?
+  city      String?
+  area      String?
+  address   String?
+  stars     Int?
+  phone     String?
+  notes     String?
+  isExample Boolean   @default(false) // seeded starter — staff can edit/remove
+  isActive  Boolean   @default(true)
+  createdBy String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+model University {
+  id           String    @id @default(uuid())
+  name         String
+  country      String?
+  city         String?
+  programsNote String?
+  website      String?
+  isExample    Boolean   @default(false)
+  isActive     Boolean   @default(true)
+  createdBy    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+}
+
+/// Supplier vehicle offer catalog (Phase B3) — NOT owned fleet / plates / GPS.
+model TransportVehicleType {
+  id        String    @id @default(uuid())
+  name      String
+  category  String    // sedan | microbus | coaster | bus | other
+  capacity  Int?
+  notes     String?
+  isActive  Boolean   @default(true)
+  createdBy String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+/// Route / destination catalog for transfer bookings (Phase B3).
+model TransportRoute {
+  id          String    @id @default(uuid())
+  name        String
+  origin      String
+  destination String
+  kind        String    // airport_transfer | city_transfer | chauffeur | other
+  notes       String?
+  isActive    Boolean   @default(true)
+  createdBy   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+}
+
+/// Curated tour product master (Phase B4) — supplier-composed, not OTA inventory.
+model TourPackage {
+  id                  String    @id @default(uuid())
+  code                String    @unique
+  name                String
+  packageType         String    // group | private | corporate | honeymoon | family | educational | religious | other
+  category            String    // domestic | international
+  destination         String?
+  country             String?
+  city                String?
+  season              String?   // peak | shoulder | off | all_year
+  durationDays        Int?
+  durationNights      Int?
+  itinerary           String?
+  inclusions          String?
+  exclusions          String?
+  activities          String?
+  hotelsNote          String?
+  transportNote       String?
+  flightsNote         String?
+  visaRequirements    String?
+  insuranceNote       String?
+  occupancyNote       String?
+  childPolicy         String?
+  seasonalPricingNote String?
+  costBreakdown       String?
+  supplierCostPoisha  Int?
+  sellingPricePoisha  Int?
+  notes               String?
+  isActive            Boolean   @default(true)
+  createdBy           String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
+  departures          TourDeparture[]
+}
+
+/// Departure calendar for a tour product (Phase B4).
+model TourDeparture {
+  id          String      @id @default(uuid())
+  packageId   String
+  package     TourPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  departAt    DateTime
+  returnAt    DateTime?
+  seats       Int?
+  status      String      @default("open") // open | full | closed | cancelled
+  notes       String?
+  createdBy   String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+}
+
+/// Destination / city catalog for tour products (Phase B4).
+model TourDestination {
+  id        String    @id @default(uuid())
+  name      String
+  country   String?
+  city      String?
+  region    String?
+  season    String?
+  notes     String?
+  isActive  Boolean   @default(true)
+  createdBy String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+/// Hajj / Umrah package master (Phase B5) — templates + pricing. Not an OTA catalog.
+model HajjUmrahPackage {
+  id                 String    @id @default(uuid())
+  code               String    @unique
+  name               String
+  kind               String    // hajj | umrah
+  category           String    // economy | standard | premium | vip
+  season             String?
+  year               String?
+  durationDays       Int?
+  departureCity      String?
+  hotelMakkah        String?
+  hotelMadinah       String?
+  roomType           String?
+  occupancyNote      String?
+  inclusions         String?
+  exclusions         String?
+  capacity           Int?
+  supplierCostPoisha Int?
+  sellingPricePoisha Int?
+  notes              String?
+  isActive           Boolean   @default(true)
+  createdBy          String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
+  groups             HajjGroup[]
+}
+
+/// Pilgrim profile catalog (Phase B5).
+model HajjPilgrim {
+  id               String    @id @default(uuid())
+  code             String    @unique
+  fullName         String
+  passportNo       String?
+  nationality      String?
+  gender           String?   // M | F
+  dob              String?
+  phone            String?
+  email            String?
+  mahramName       String?
+  mahramRelation   String?
+  healthNotes      String?
+  emergencyContact String?
+  emergencyPhone   String?
+  visaStatus       String?   // not_applied | applied | approved | rejected
+  visaNo           String?
+  passportStatus   String?   // received | pending | expired
+  notes            String?
+  isActive         Boolean   @default(true)
+  createdBy        String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+}
+
+/// Group operations for Hajj/Umrah departures (Phase B5).
+model HajjGroup {
+  id            String          @id @default(uuid())
+  code          String          @unique
+  name          String
+  kind          String          // hajj | umrah
+  packageId     String?
+  package       HajjUmrahPackage? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  season        String?
+  year          String?
+  leaderName    String?
+  leaderPhone   String?
+  capacity      Int?
+  enrolled      Int?
+  flightNo      String?
+  airline       String?
+  transportNote String?
+  hotelMakkah   String?
+  hotelMadinah  String?
+  roomingNote   String?
+  status        String          @default("forming") // forming | confirmed | departed | returned | cancelled
+  departAt      DateTime?
+  returnAt      DateTime?
+  notes         String?
+  isActive      Boolean         @default(true)
+  createdBy     String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  deletedAt     DateTime?
+}
+
+// ---------- Phase C1 — Finance ERP Foundation (double-entry GL) ----------
+// Parallel to cash-basis Account/Invoice/Payment. Never hard-code GL account IDs.
+
+/// Account group (Assets / Liabilities / Equity / Income / Expenses + sub-groups).
+model GlAccountGroup {
+  id        String      @id @default(uuid())
+  code      String      @unique
+  name      String
+  type      String      // asset | liability | equity | income | expense
+  parentId  String?
+  parent    GlAccountGroup?  @relation("GlGroupTree", fields: [parentId], references: [id])
+  children  GlAccountGroup[] @relation("GlGroupTree")
+  sortOrder Int         @default(0)
+  isActive  Boolean     @default(true)
+  accounts  GlAccount[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  deletedAt DateTime?
+}
+
+/// Configurable Chart of Accounts node (postable or header).
+model GlAccount {
+  id          String          @id @default(uuid())
+  code        String          @unique
+  name        String
+  type        String          // asset | liability | equity | income | expense
+  groupId     String?
+  group       GlAccountGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  parentId    String?
+  parent      GlAccount?      @relation("GlAccountTree", fields: [parentId], references: [id])
+  children    GlAccount[]     @relation("GlAccountTree")
+  isHeader    Boolean         @default(false)
+  isPostable  Boolean         @default(true)
+  currencyCode String?        // null = org base; multi-currency ready
+  branchId    String?         // null = org-wide; multi-branch ready
+  taxCode     String?         // future VAT/tax hook
+  costCenterRequired Boolean  @default(false)
+  description String?
+  sortOrder   Int             @default(0)
+  isActive    Boolean         @default(true)
+  lines       JournalLine[]
+  bankAccounts BankAccount[]
+  createdBy   String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  deletedAt   DateTime?
+}
+
+model FiscalYear {
+  id        String             @id @default(uuid())
+  code      String             @unique
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  status    String             @default("open") // open | closed
+  periods   AccountingPeriod[]
+  createdBy String?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  deletedAt DateTime?
+}
+
+model AccountingPeriod {
+  id           String           @id @default(uuid())
+  fiscalYearId String
+  fiscalYear   FiscalYear       @relation(fields: [fiscalYearId], references: [id], onDelete: Cascade)
+  code         String
+  name         String
+  startDate    DateTime
+  endDate      DateTime
+  status       String           @default("open") // open | closed | locked
+  closedAt     DateTime?
+  closedBy     String?
+  journals     JournalEntry[]
+  reopenRequests PeriodReopenRequest[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  deletedAt    DateTime?
+
+  @@unique([fiscalYearId, code])
+}
+
+model CostCenter {
+  id        String        @id @default(uuid())
+  code      String        @unique
+  name      String
+  branchId  String?
+  notes     String?
+  isActive  Boolean       @default(true)
+  lines     JournalLine[]
+  createdBy String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  deletedAt DateTime?
+}
+
+model Currency {
+  id             String         @id @default(uuid())
+  code           String         @unique // BDT, USD, SAR…
+  name           String
+  symbol         String?
+  decimalPlaces  Int            @default(2)
+  isBase         Boolean        @default(false)
+  isActive       Boolean        @default(true)
+  ratesFrom      ExchangeRate[] @relation("FxFrom")
+  ratesTo        ExchangeRate[] @relation("FxTo")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+}
+
+model ExchangeRate {
+  id           String   @id @default(uuid())
+  fromCode     String
+  fromCurrency Currency @relation("FxFrom", fields: [fromCode], references: [code])
+  toCode       String
+  toCurrency   Currency @relation("FxTo", fields: [toCode], references: [code])
+  /// Rate scaled by 1e8 (e.g. 1 USD = 110.50 BDT → 11050000000)
+  rateScaled   BigInt
+  rateDate     DateTime
+  source       String?
+  createdBy    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  @@index([fromCode, toCode, rateDate])
+}
+
+model JournalEntry {
+  id              String           @id @default(uuid())
+  journalNo       String           @unique
+  entryDate       DateTime
+  periodId        String
+  period          AccountingPeriod @relation(fields: [periodId], references: [id])
+  branchId        String?
+  /// Journal currency for display; base amounts always in org base (BDT).
+  currencyCode    String           @default("BDT")
+  type            String           @default("standard") // standard | opening | closing | adjustment
+  status          String           @default("draft") // draft | pending_approval | posted | rejected | void
+  memo            String?
+  reference       String?
+  totalDebitPoisha  Int            @default(0)
+  totalCreditPoisha Int            @default(0)
+  createdBy       String
+  submittedBy     String?
+  submittedAt     DateTime?
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectedBy      String?
+  rejectedAt      DateTime?
+  rejectReason    String?
+  postedBy        String?
+  postedAt        DateTime?
+  voidedBy        String?
+  voidedAt        DateTime?
+  voidReason      String?
+  /// Optional link: this journal reverses another posted journal
+  reversesJournalId String?
+  reversesJournal   JournalEntry?  @relation("JournalReversal", fields: [reversesJournalId], references: [id], onDelete: SetNull)
+  reversedBy        JournalEntry[] @relation("JournalReversal")
+  lines           JournalLine[]
+  arDocuments     ArDocument[]
+  apDocuments     ApDocument[]
+  bankMovements   BankMovement[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+
+  @@index([entryDate])
+  @@index([status])
+  @@index([periodId])
+  @@index([reversesJournalId])
+}
+
+model JournalLine {
+  id               String      @id @default(uuid())
+  journalId        String
+  journal          JournalEntry @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  lineNo           Int
+  glAccountId      String
+  glAccount        GlAccount   @relation(fields: [glAccountId], references: [id])
+  costCenterId     String?
+  costCenter       CostCenter? @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
+  debitPoisha      Int         @default(0)
+  creditPoisha     Int         @default(0)
+  currencyCode     String      @default("BDT")
+  fxRateScaled     BigInt?
+  /// Amounts in org base currency (BDT) used for balancing & TB.
+  debitBasePoisha  Int         @default(0)
+  creditBasePoisha Int         @default(0)
+  memo             String?
+  createdAt        DateTime    @default(now())
+
+  @@index([glAccountId])
+  @@index([journalId, lineNo])
+}
+
+// ---------- Phase C2 — Accounts Receivable / Accounts Payable ----------
+// Parallel accrual subledgers. Cash Invoice/Payment remain the operational
+// billing path; AR/AP documents post journals through Phase C1 GL engine.
+
+model ArDocument {
+  id              String           @id @default(uuid())
+  docNo           String           @unique
+  /// invoice | receipt | advance | credit_note | debit_note | refund
+  type            String
+  /// draft | pending_approval | approved | posted | rejected | void
+  status          String           @default("draft")
+  branchId        String?
+  customerId      String
+  customer        Customer         @relation(fields: [customerId], references: [id])
+  applicationId   String?
+  application     Application?     @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  /// Optional link to cash-basis operational invoice
+  invoiceId       String?
+  invoice         Invoice?         @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  currencyCode    String           @default("BDT")
+  issueDate       DateTime
+  dueDate         DateTime?
+  subtotalPoisha  Int              @default(0)
+  taxPoisha       Int              @default(0)
+  totalPoisha     Int              @default(0)
+  /// Remaining open amount (updated on allocate/post)
+  balancePoisha   Int              @default(0)
+  memo            String?
+  reference       String?
+  journalId       String?
+  journal         JournalEntry?    @relation(fields: [journalId], references: [id], onDelete: SetNull)
+  lines           ArDocumentLine[]
+  allocationsFrom ArAllocation[]   @relation("ArAllocFrom")
+  allocationsTo   ArAllocation[]   @relation("ArAllocTo")
+  createdBy       String
+  submittedBy     String?
+  submittedAt     DateTime?
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectedBy      String?
+  rejectedAt      DateTime?
+  rejectReason    String?
+  postedBy        String?
+  postedAt        DateTime?
+  voidedBy        String?
+  voidedAt        DateTime?
+  voidReason      String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+
+  @@index([customerId])
+  @@index([applicationId])
+  @@index([status])
+  @@index([type])
+  @@index([issueDate])
+}
+
+model ArDocumentLine {
+  id            String     @id @default(uuid())
+  documentId    String
+  document      ArDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  lineNo        Int
+  description   String
+  quantity      Int        @default(1)
+  unitPricePoisha Int      @default(0)
+  amountPoisha  Int        @default(0)
+  glAccountCode String?    // optional override (default by doc type)
+  createdAt     DateTime   @default(now())
+
+  @@index([documentId])
+}
+
+/// Apply receipt/credit/advance against an AR invoice (or reverse).
+model ArAllocation {
+  id            String     @id @default(uuid())
+  fromDocId     String
+  fromDoc       ArDocument @relation("ArAllocFrom", fields: [fromDocId], references: [id], onDelete: Cascade)
+  toDocId       String
+  toDoc         ArDocument @relation("ArAllocTo", fields: [toDocId], references: [id], onDelete: Cascade)
+  amountPoisha  Int
+  createdBy     String
+  createdAt     DateTime   @default(now())
+
+  @@index([fromDocId])
+  @@index([toDocId])
+}
+
+model ApDocument {
+  id              String           @id @default(uuid())
+  docNo           String           @unique
+  /// bill | payment | advance | credit_note | debit_note
+  type            String
+  /// draft | pending_approval | approved | posted | rejected | void
+  status          String           @default("draft")
+  branchId        String?
+  supplierId      String
+  supplier        Supplier         @relation(fields: [supplierId], references: [id])
+  applicationId   String?
+  application     Application?     @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  currencyCode    String           @default("BDT")
+  issueDate       DateTime
+  dueDate         DateTime?
+  subtotalPoisha  Int              @default(0)
+  taxPoisha       Int              @default(0)
+  totalPoisha     Int              @default(0)
+  balancePoisha   Int              @default(0)
+  memo            String?
+  reference       String?
+  journalId       String?
+  journal         JournalEntry?    @relation(fields: [journalId], references: [id], onDelete: SetNull)
+  lines           ApDocumentLine[]
+  allocationsFrom ApAllocation[]   @relation("ApAllocFrom")
+  allocationsTo   ApAllocation[]   @relation("ApAllocTo")
+  createdBy       String
+  submittedBy     String?
+  submittedAt     DateTime?
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectedBy      String?
+  rejectedAt      DateTime?
+  rejectReason    String?
+  postedBy        String?
+  postedAt        DateTime?
+  voidedBy        String?
+  voidedAt        DateTime?
+  voidReason      String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+
+  @@index([supplierId])
+  @@index([applicationId])
+  @@index([status])
+  @@index([type])
+  @@index([issueDate])
+}
+
+model ApDocumentLine {
+  id              String     @id @default(uuid())
+  documentId      String
+  document        ApDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  lineNo          Int
+  description     String
+  quantity        Int        @default(1)
+  unitPricePoisha Int        @default(0)
+  amountPoisha    Int        @default(0)
+  glAccountCode   String?
+  createdAt       DateTime   @default(now())
+
+  @@index([documentId])
+}
+
+model ApAllocation {
+  id            String     @id @default(uuid())
+  fromDocId     String
+  fromDoc       ApDocument @relation("ApAllocFrom", fields: [fromDocId], references: [id], onDelete: Cascade)
+  toDocId       String
+  toDoc         ApDocument @relation("ApAllocTo", fields: [toDocId], references: [id], onDelete: Cascade)
+  amountPoisha  Int
+  createdBy     String
+  createdAt     DateTime   @default(now())
+
+  @@index([fromDocId])
+  @@index([toDocId])
+}
+
+// ---------- Phase C3 — Banking & Cash Management ----------
+model BankMaster {
+  id          String        @id @default(uuid())
+  code        String        @unique
+  name        String
+  swiftBic    String?
+  countryCode String?       @default("BD")
+  notes       String?
+  isActive    Boolean       @default(true)
+  accounts    BankAccount[]
+  createdBy   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+}
+
+model BankAccount {
+  id                   String          @id @default(uuid())
+  branchId             String?
+  bankMasterId         String?
+  bankMaster           BankMaster?     @relation(fields: [bankMasterId], references: [id], onDelete: SetNull)
+  kind                 String          @default("bank")
+  name                 String
+  accountNo            String?
+  iban                 String?
+  currencyCode         String          @default("BDT")
+  glAccountId          String
+  glAccount            GlAccount       @relation(fields: [glAccountId], references: [id])
+  cashAccountId        String?
+  cashAccount          Account?        @relation(fields: [cashAccountId], references: [id], onDelete: SetNull)
+  openingBalancePoisha Int             @default(0)
+  isActive             Boolean         @default(true)
+  notes                String?
+  movementsFrom        BankMovement[]  @relation("MovFrom")
+  movementsTo          BankMovement[]  @relation("MovTo")
+  cheques              Cheque[]
+  statements           BankStatement[]
+  createdBy            String?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  deletedAt            DateTime?
+
+  @@index([kind])
+  @@index([glAccountId])
+  @@index([branchId])
+}
+
+model BankMovement {
+  id                String        @id @default(uuid())
+  movementNo        String        @unique
+  type              String
+  status            String        @default("draft")
+  branchId          String?
+  fromBankAccountId String?
+  fromBankAccount   BankAccount?  @relation("MovFrom", fields: [fromBankAccountId], references: [id], onDelete: SetNull)
+  toBankAccountId   String?
+  toBankAccount     BankAccount?  @relation("MovTo", fields: [toBankAccountId], references: [id], onDelete: SetNull)
+  amountPoisha      Int
+  movementDate      DateTime
+  memo              String?
+  reference         String?
+  journalId         String?
+  journal           JournalEntry? @relation(fields: [journalId], references: [id], onDelete: SetNull)
+  chequeId          String?
+  arDocumentId      String?
+  apDocumentId      String?
+  paymentId         String?
+  applicationId     String?
+  createdBy         String
+  postedBy          String?
+  postedAt          DateTime?
+  voidedBy          String?
+  voidedAt          DateTime?
+  voidReason        String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  deletedAt         DateTime?
+
+  @@index([type])
+  @@index([status])
+  @@index([movementDate])
+  @@index([fromBankAccountId])
+  @@index([toBankAccountId])
+}
+
+model Cheque {
+  id            String      @id @default(uuid())
+  bankAccountId String
+  bankAccount   BankAccount @relation(fields: [bankAccountId], references: [id])
+  direction     String
+  chequeNo      String
+  chequeDate    DateTime
+  amountPoisha  Int
+  payeeOrDrawer String?
+  status        String      @default("received")
+  printedAt     DateTime?
+  printPayload  Json?
+  clearedAt     DateTime?
+  bounceReason  String?
+  movementId    String?
+  arDocumentId  String?
+  apDocumentId  String?
+  memo          String?
+  createdBy     String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+
+  @@unique([bankAccountId, chequeNo])
+  @@index([status])
+  @@index([chequeDate])
+}
+
+model BankStatement {
+  id                   String               @id @default(uuid())
+  bankAccountId        String
+  bankAccount          BankAccount          @relation(fields: [bankAccountId], references: [id])
+  statementDate        DateTime
+  periodStart          DateTime?
+  periodEnd            DateTime?
+  openingBalancePoisha Int                  @default(0)
+  closingBalancePoisha Int                  @default(0)
+  source               String               @default("manual")
+  importRef            String?
+  status               String               @default("open")
+  lines                BankStatementLine[]
+  reconciliations      BankReconciliation[]
+  createdBy            String
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  deletedAt            DateTime?
+
+  @@index([bankAccountId])
+  @@index([statementDate])
+}
+
+model BankStatementLine {
+  id                String        @id @default(uuid())
+  statementId       String
+  statement         BankStatement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+  lineNo            Int
+  txnDate           DateTime
+  description       String
+  amountPoisha      Int
+  bankRef           String?
+  matchStatus       String        @default("unmatched")
+  matchedMovementId String?
+  matchedJournalId  String?
+  createdAt         DateTime      @default(now())
+
+  @@index([statementId])
+  @@index([matchStatus])
+}
+
+model BankReconciliation {
+  id                     String         @id @default(uuid())
+  bankAccountId          String
+  statementId            String?
+  statement              BankStatement? @relation(fields: [statementId], references: [id], onDelete: SetNull)
+  asOfDate               DateTime
+  statementBalancePoisha Int            @default(0)
+  bookBalancePoisha      Int            @default(0)
+  differencePoisha       Int            @default(0)
+  status                 String         @default("in_progress")
+  notes                  String?
+  completedAt            DateTime?
+  completedBy            String?
+  createdBy              String
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  deletedAt              DateTime?
+
+  @@index([bankAccountId])
+  @@index([status])
+}
+
+model ChequePrintConfig {
+  id        String   @id @default(uuid())
+  name      String   @unique @default("default")
+  template  Json
+  isActive  Boolean  @default(true)
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+// ---------- Phase C4 — Financial Statements / Closing controls ----------
+model PeriodReopenRequest {
+  id           String           @id @default(uuid())
+  periodId     String
+  period       AccountingPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  reason       String
+  /// pending | approved | rejected
+  status       String           @default("pending")
+  requestedBy  String
+  requestedAt  DateTime         @default(now())
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  reviewNote   String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([periodId])
+  @@index([status])
+}
+
+model ClosingRun {
+  id                String      @id @default(uuid())
+  /// period | year_end | roll_forward
+  type              String
+  fiscalYearId      String?
+  periodId          String?
+  closingJournalId  String?
+  openingJournalId  String?
+  /// draft | completed | failed
+  status            String      @default("completed")
+  notes             String?
+  meta              Json?
+  createdBy         String
+  completedAt       DateTime?
+  createdAt         DateTime    @default(now())
+
+  @@index([type])
+  @@index([fiscalYearId])
+}
+
+/// Phase D4 — saved analytics report templates
+model AnalyticsReportTemplate {
+  id          String    @id @default(uuid())
+  branchId    String?
+  code        String    @unique
+  name        String
+  /// executive | customer | sales | comms | finance
+  category    String
+  description String?
+  /// JSON: { metrics: string[], defaultFilters?: object }
+  definition  Json
+  isSystem    Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  schedules   AnalyticsScheduledReport[]
+
+  @@index([category])
+  @@index([branchId])
+}
+
+/// Phase D4 — scheduled report definitions (execution engine deferred)
+model AnalyticsScheduledReport {
+  id           String    @id @default(uuid())
+  branchId     String?
+  templateId   String
+  template     AnalyticsReportTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  name         String
+  /// cron-like expression e.g. "0 8 * * 1" (stored; not executed in D4)
+  cronExpr     String
+  /// csv | excel | html | pdf
+  format       String    @default("csv")
+  filters      Json?
+  /// JSON array of email recipients
+  recipients   Json?
+  isActive     Boolean   @default(true)
+  nextRunAt    DateTime?
+  lastRunAt    DateTime?
+  createdBy    String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  @@index([templateId])
+  @@index([isActive])
+  @@index([branchId])
+}
+
+/// Phase E — page version history
+model CmsPageVersion {
+  id        String   @id @default(uuid())
+  pageId    String
+  page      CmsPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  version   Int
+  title     String
+  body      String
+  blocks    Json?
+  seoTitle  String?
+  seoDescription String?
+  status    String
+  snapshot  Json?
+  createdBy String
+  createdAt DateTime @default(now())
+
+  @@unique([pageId, version])
+  @@index([pageId])
+}
+
+model CmsMenu {
+  id        String        @id @default(uuid())
+  branchId  String?
+  code      String        @unique
+  name      String
+  isActive  Boolean       @default(true)
+  createdBy String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  items     CmsMenuItem[]
+
+  @@index([branchId])
+}
+
+model CmsMenuItem {
+  id        String   @id @default(uuid())
+  menuId    String
+  menu      CmsMenu  @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  parentId  String?
+  label     String
+  href      String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  openInNew Boolean  @default(false)
+
+  @@index([menuId])
+  @@index([parentId])
+}
+
+model CmsMedia {
+  id          String    @id @default(uuid())
+  branchId    String?
+  fileName    String
+  storageKey  String
+  mimeType    String
+  sizeBytes   Int       @default(0)
+  altText     String?
+  folder      String?   @default("general")
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
+
+  @@index([branchId])
+  @@index([folder])
+}
+
+model CmsBanner {
+  id          String    @id @default(uuid())
+  branchId    String?
+  code        String
+  title       String
+  subtitle    String?
+  imageUrl    String?
+  linkHref    String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  /// hero | slider | promo
+  placement   String    @default("hero")
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([branchId])
+  @@index([placement])
+  @@index([isActive])
+}
+
+model CmsRedirect {
+  id          String    @id @default(uuid())
+  branchId    String?
+  fromPath    String    @unique
+  toPath      String
+  /// 301 | 302
+  statusCode  Int       @default(301)
+  isActive    Boolean   @default(true)
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([isActive])
+}
+
+/// blog | announcement | faq | testimonial | gallery | download
+model CmsContent {
+  id          String    @id @default(uuid())
+  branchId    String?
+  type        String
+  slug        String
+  title       String
+  summary     String?
+  body        String    @default("")
+  coverUrl    String?
+  meta        Json?
+  /// draft | published | archived
+  status      String    @default("draft")
+  publishedAt DateTime?
+  authorName  String?
+  sortOrder   Int       @default(0)
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@unique([type, slug])
+  @@index([type])
+  @@index([status])
+  @@index([branchId])
+}
+
+/// Travel catalog content for the website (not booking engines)
+model CmsTravelOffer {
+  id            String    @id @default(uuid())
+  branchId      String?
+  /// visa | air_ticket | tour | hajj | umrah | hotel | transport
+  serviceType   String
+  slug          String
+  title         String
+  summary       String?
+  body          String    @default("")
+  coverUrl      String?
+  priceFromPoisha Int?
+  currencyCode  String    @default("BDT")
+  destination   String?
+  highlights    Json?
+  status        String    @default("draft")
+  publishedAt   DateTime?
+  sortOrder     Int       @default(0)
+  seoTitle      String?
+  seoDescription String?
+  packageId     String?
+  packageMaster PackageMaster? @relation("CmsOfferPackage", fields: [packageId], references: [id], onDelete: SetNull)
+  createdBy     String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  @@unique([serviceType, slug])
+  @@index([serviceType])
+  @@index([status])
+  @@index([branchId])
+  @@index([packageId])
+}
+
+model CmsFormSubmission {
+  id            String    @id @default(uuid())
+  branchId      String?
+  /// contact | enquiry | quote | visa | tour | hajj | career
+  formType      String
+  name          String
+  email         String?
+  phone         String?
+  message       String?
+  payload       Json?
+  pageSlug      String?
+  leadId        String?
+  applicationId String?
+  status        String    @default("new")
+  createdAt     DateTime  @default(now())
+
+  @@index([formType])
+  @@index([status])
+  @@index([leadId])
+  @@index([createdAt])
+  @@index([branchId])
+}
+
+model CmsPageView {
+  id        String   @id @default(uuid())
+  pageId    String?
+  page      CmsPage? @relation(fields: [pageId], references: [id], onDelete: SetNull)
+  path      String
+  branchId  String?
+  viewedAt  DateTime @default(now())
+  referrer  String?
+  userAgent String?
+
+  @@index([pageId])
+  @@index([path])
+  @@index([viewedAt])
+}
+
+// ---------- Customer self-service portal (Phase F1) ----------
+// SEPARATE from staff + agent auth: JWT_CUSTOMER_SECRET + st_customer cookie
+// + aud:"customer". Controllers are @Public() + CustomerJwtGuard. All data
+// queries are scoped to the JWT customerId.
+model CustomerUser {
+  id                 String                 @id @default(uuid())
+  customerId         String
+  customer           Customer               @relation(fields: [customerId], references: [id])
+  email              String                 @unique
+  phone              String?
+  passwordHash       String
+  status             String                 @default("pending") // pending | active | disabled
+  emailVerifiedAt    DateTime?
+  mustChangePassword Boolean                @default(false)
+  lastLoginAt        DateTime?
+  createdBy          String?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  deletedAt          DateTime?
+  sessions           CustomerRefreshToken[]
+  authCodes          CustomerAuthCode[]
+
+  @@index([customerId])
+  @@index([phone])
+}
+
+model CustomerRefreshToken {
+  id             String       @id @default(uuid())
+  customerUserId String
+  customerUser   CustomerUser @relation(fields: [customerUserId], references: [id], onDelete: Cascade)
+  tokenHash      String       @unique
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  userAgent      String?
+  ip             String?
+  createdAt      DateTime     @default(now())
+
+  @@index([customerUserId])
+}
+
+/// email_verify | password_reset | login_otp
+model CustomerAuthCode {
+  id             String       @id @default(uuid())
+  customerUserId String?
+  customerUser   CustomerUser? @relation(fields: [customerUserId], references: [id], onDelete: Cascade)
+  email          String
+  purpose        String
+  codeHash       String
+  expiresAt      DateTime
+  consumedAt     DateTime?
+  attempts       Int          @default(0)
+  createdAt      DateTime     @default(now())
+
+  @@index([email, purpose])
+  @@index([customerUserId])
+}
+
+model CustomerFamilyMember {
+  id           String    @id @default(uuid())
+  customerId   String
+  customer     Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  fullName     String
+  relationship String?
+  dob          DateTime?
+  passportNo   String?
+  nationality  String?
+  phone        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  @@index([customerId])
+}
+
+model CustomerSavedTraveller {
+  id          String    @id @default(uuid())
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  fullName    String
+  passportNo  String?
+  nationality String?
+  dob         DateTime?
+  phone       String?
+  email       String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([customerId])
+}
+
+model CustomerEmergencyContact {
+  id           String    @id @default(uuid())
+  customerId   String
+  customer     Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  fullName     String
+  relationship String?
+  phone        String
+  email        String?
+  address      String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  @@index([customerId])
+}
+
+model CustomerSupportRequest {
+  id          String    @id @default(uuid())
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  subject     String
+  body        String
+  status      String    @default("open") // open | in_progress | resolved | closed
+  priority    String    @default("normal")
+  applicationId String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  closedAt    DateTime?
+
+  @@index([customerId])
+  @@index([status])
+}
+
+model DocumentVersion {
+  id         String   @id @default(uuid())
+  documentId String
+  version    Int
+  fileName   String
+  storageKey String
+  mimeType   String
+  sizeBytes  Int
+  uploadedBy String
+  createdAt  DateTime @default(now())
+
+  @@unique([documentId, version])
+  @@index([documentId])
+}
+
+// ---------- Corporate self-service portal (Phase H1) ----------
+// SEPARATE realm: JWT_CORPORATE_SECRET + st_corporate + aud:"corporate".
+// Tenant isolation: every query scoped by corporateClientId.
+// HR Employee is NOT reused — corporate travellers are CorporateEmployee.
+
+model CorporateUser {
+  id                 String                   @id @default(uuid())
+  corporateClientId  String
+  corporateClient    CorporateClient          @relation(fields: [corporateClientId], references: [id])
+  employeeId         String?
+  employee           CorporateEmployee?       @relation(fields: [employeeId], references: [id])
+  email              String                   @unique
+  passwordHash       String
+  /// admin | manager | dept_head | finance | travel_desk | employee
+  role               String                   @default("admin")
+  status             String                   @default("active")
+  mustChangePassword Boolean                  @default(true)
+  lastLoginAt        DateTime?
+  createdBy          String
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  deletedAt          DateTime?
+  sessions           CorporateRefreshToken[]
+  authCodes          CorporateAuthCode[]
+
+  @@index([corporateClientId])
+  @@index([employeeId])
+}
+
+model CorporateRefreshToken {
+  id              String        @id @default(uuid())
+  corporateUserId String
+  corporateUser   CorporateUser @relation(fields: [corporateUserId], references: [id], onDelete: Cascade)
+  tokenHash       String        @unique
+  expiresAt       DateTime
+  revokedAt       DateTime?
+  userAgent       String?
+  ip              String?
+  createdAt       DateTime      @default(now())
+
+  @@index([corporateUserId])
+}
+
+/// password_reset | login_otp
+model CorporateAuthCode {
+  id              String         @id @default(uuid())
+  corporateUserId String?
+  corporateUser   CorporateUser? @relation(fields: [corporateUserId], references: [id], onDelete: Cascade)
+  email           String
+  purpose         String
+  codeHash        String
+  expiresAt       DateTime
+  consumedAt      DateTime?
+  attempts        Int            @default(0)
+  createdAt       DateTime       @default(now())
+
+  @@index([email, purpose])
+  @@index([corporateUserId])
+}
+
+model CorporateEmployee {
+  id                String    @id @default(uuid())
+  corporateClientId String
+  corporateClient   CorporateClient @relation(fields: [corporateClientId], references: [id], onDelete: Cascade)
+  code              String?
+  fullName          String
+  email             String?
+  phone             String?
+  department        String?
+  designation       String?
+  managerEmployeeId String?
+  passportNo        String?
+  nationality       String?
+  dob               DateTime?
+  isFrequentTraveller Boolean @default(false)
+  status            String    @default("active")
+  createdBy         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+  emergencyContacts CorporateEmployeeEmergency[]
+  portalUsers       CorporateUser[]
+  travelRequests    CorporateTravelRequest[]
+
+  @@index([corporateClientId])
+  @@index([department])
+}
+
+model CorporateEmployeeEmergency {
+  id         String            @id @default(uuid())
+  employeeId String
+  employee   CorporateEmployee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  fullName   String
+  relationship String?
+  phone      String
+  email      String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  deletedAt  DateTime?
+
+  @@index([employeeId])
+}
+
+model CorporateApprovalChain {
+  id                String    @id @default(uuid())
+  corporateClientId String
+  corporateClient   CorporateClient @relation(fields: [corporateClientId], references: [id], onDelete: Cascade)
+  name              String    @default("Default")
+  isDefault         Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  steps             CorporateApprovalStep[]
+
+  @@index([corporateClientId])
+}
+
+model CorporateApprovalStep {
+  id      String                 @id @default(uuid())
+  chainId String
+  chain   CorporateApprovalChain @relation(fields: [chainId], references: [id], onDelete: Cascade)
+  levelNo Int
+  /// manager | dept_head | finance | travel_desk
+  role    String
+  name    String?
+  createdAt DateTime @default(now())
+
+  @@unique([chainId, levelNo])
+  @@index([chainId])
+}
+
+model CorporateTravelRequest {
+  id                String    @id @default(uuid())
+  corporateClientId String
+  corporateClient   CorporateClient @relation(fields: [corporateClientId], references: [id], onDelete: Cascade)
+  employeeId        String
+  employee          CorporateEmployee @relation(fields: [employeeId], references: [id])
+  requesterUserId   String
+  serviceType       String
+  title             String?
+  message           String?
+  destination       String?
+  departAt          DateTime?
+  returnAt          DateTime?
+  /// draft | submitted | approved | rejected | cancelled | completed
+  status            String    @default("draft")
+  currentLevel      Int       @default(0)
+  chainId           String?
+  applicationId     String?
+  packageId         String?
+  packageMaster     PackageMaster? @relation("CorporateTravelPackage", fields: [packageId], references: [id], onDelete: SetNull)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  submittedAt       DateTime?
+  decidedAt         DateTime?
+  approvals         CorporateTravelApproval[]
+
+  @@index([corporateClientId])
+  @@index([employeeId])
+  @@index([status])
+  @@index([applicationId])
+  @@index([packageId])
+}
+
+model CorporateTravelApproval {
+  id              String                @id @default(uuid())
+  requestId       String
+  request         CorporateTravelRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  levelNo         Int
+  role            String
+  /// pending | approved | rejected
+  decision        String                @default("pending")
+  decidedByUserId String?
+  note            String?
+  decidedAt       DateTime?
+  createdAt       DateTime              @default(now())
+
+  @@unique([requestId, levelNo])
+  @@index([requestId])
+}
+
+model CorporateSupportRequest {
+  id                String    @id @default(uuid())
+  corporateClientId String
+  corporateClient   CorporateClient @relation(fields: [corporateClientId], references: [id], onDelete: Cascade)
+  createdByUserId   String?
+  subject           String
+  body              String
+  status            String    @default("open")
+  priority          String    @default("normal")
+  applicationId     String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  closedAt          DateTime?
+
+  @@index([corporateClientId])
+  @@index([status])
+}
+
+model CorporateAnnouncement {
+  id                String    @id @default(uuid())
+  corporateClientId String
+  corporateClient   CorporateClient @relation(fields: [corporateClientId], references: [id], onDelete: Cascade)
+  title             String
+  body              String
+  createdByUserId   String?
+  createdAt         DateTime  @default(now())
+  expiresAt         DateTime?
+  deletedAt         DateTime?
+
+  @@index([corporateClientId])
+}
+
+// ---------- Phase E3: Package Engine (PackageMaster = single source of truth) ----------
+enum PackageMasterStatus {
+  draft
+  published
+  archived
+  scheduled
+}
+
+enum PackageGalleryKind {
+  thumbnail
+  gallery
+  banner
+}
+
+enum PackageAvailabilityStatus {
+  open
+  full
+  closed
+  cancelled
+}
+
+model PackageCategory {
+  id          String          @id @default(uuid())
+  code        String          @unique
+  name        String
+  slug        String          @unique
+  description String?
+  icon        String?
+  sortOrder   Int             @default(0)
+  isActive    Boolean         @default(true)
+  packages    PackageMaster[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  deletedAt   DateTime?
+
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+model DestinationMaster {
+  id               String          @id @default(uuid())
+  name             String
+  slug             String          @unique
+  country          String
+  countryCode      String?
+  isoCode          String?
+  flagEmoji        String?
+  flagUrl          String?
+  heroImageUrl     String?
+  galleryJson      Json?
+  region           String?
+  visaRequired     Boolean         @default(true)
+  popular          Boolean         @default(false)
+  featured         Boolean         @default(false)
+  homepageFeatured Boolean         @default(false)
+  displayOrder     Int             @default(0)
+  status           String          @default("draft")
+  seoTitle         String?
+  seoDescription   String?
+  description      String?
+  latitude         Float?
+  longitude        Float?
+  mapEmbedUrl      String?
+  createdBy        String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  deletedAt        DateTime?
+  packages         PackageMaster[]
+
+  @@index([status])
+  @@index([homepageFeatured])
+  @@index([popular])
+  @@index([region])
+  @@index([displayOrder])
+  @@index([countryCode])
+}
+
+model PackageMaster {
+  id                    String          @id @default(uuid())
+  code                  String          @unique
+  name                  String
+  slug                  String          @unique
+  categoryId            String
+  category              PackageCategory @relation(fields: [categoryId], references: [id])
+  destinationId         String?
+  destinationMaster     DestinationMaster? @relation(fields: [destinationId], references: [id], onDelete: SetNull)
+  country               String?
+  destination           String?
+  cities                String?
+  durationDays          Int?
+  durationNights        Int?
+  packageType           String?
+  travelStartAt         DateTime?
+  travelEndAt           DateTime?
+  pricePoisha           Int             @default(0)
+  offerPricePoisha      Int?
+  currencyCode          String          @default("BDT")
+  adultPricePoisha      Int?
+  childPricePoisha      Int?
+  infantPricePoisha     Int?
+  singleSupplementPoisha Int?
+  maxPax                Int?
+  minPax                Int?
+  seatsAvailable        Int?
+  seatsSold             Int             @default(0)
+  status                PackageMasterStatus @default(draft)
+  featured              Boolean         @default(false)
+  popular               Boolean         @default(false)
+  recommended           Boolean         @default(false)
+  homeFeatured          Boolean         @default(false)
+  agentFeatured         Boolean         @default(false)
+  corporateFeatured     Boolean         @default(false)
+  corporateApproved     Boolean         @default(false)
+  tags                  String?
+  seoTitle              String?
+  seoDescription        String?
+  thumbnailUrl          String?
+  bannerUrl             String?
+  videoUrl              String?
+  description           String?
+  highlights            String?
+  included              String?
+  excluded              String?
+  terms                 String?
+  cancellationPolicy    String?
+  visaRequirements      String?
+  hotelDetails          String?
+  flightDetails         String?
+  transportDetails      String?
+  mealPlan              String?
+  tourPlan              String?
+  itineraryJson         Json?
+  mapEmbedUrl           String?
+  faqJson               Json?
+  ratingAvg             Float?
+  ratingCount           Int             @default(0)
+  supplierId            String?
+  supplier              Supplier?       @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  agentCommissionBps    Int?
+  publishAt             DateTime?
+  expireAt              DateTime?
+  createdBy             String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  deletedAt             DateTime?
+  gallery               PackageGalleryItem[]
+  availability          PackageAvailability[]
+  faqs                  PackageFaq[]
+  reviews               PackageReview[]
+  wishlists             PackageWishlist[]
+  applications          Application[]   @relation("ApplicationPackage")
+  leads                 Lead[]          @relation("LeadPackage")
+  opportunities         Opportunity[]   @relation("OpportunityPackage")
+  quotations            Quotation[]     @relation("QuotationPackage")
+  quotationLines        QuotationLine[] @relation("QuotationLinePackage")
+  invoices              Invoice[]       @relation("InvoicePackage")
+  invoiceItems          InvoiceItem[]   @relation("InvoiceItemPackage")
+  tourDetails           TourPackageDetail[] @relation("TourDetailPackage")
+  hajjDetails           HajjUmrahDetail[] @relation("HajjDetailPackage")
+  cmsOffers             CmsTravelOffer[] @relation("CmsOfferPackage")
+  corporateTravelRequests CorporateTravelRequest[] @relation("CorporateTravelPackage")
+
+  @@index([categoryId])
+  @@index([destinationId])
+  @@index([status])
+  @@index([destination])
+  @@index([country])
+  @@index([featured])
+  @@index([popular])
+  @@index([recommended])
+  @@index([homeFeatured])
+  @@index([agentFeatured])
+  @@index([corporateFeatured])
+  @@index([corporateApproved])
+  @@index([travelStartAt])
+  @@index([deletedAt])
+}
+
+model PackageGalleryItem {
+  id        String             @id @default(uuid())
+  packageId String
+  package   PackageMaster      @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  url       String
+  caption   String?
+  sortOrder Int                @default(0)
+  kind      PackageGalleryKind @default(gallery)
+  createdAt DateTime           @default(now())
+
+  @@index([packageId])
+}
+
+model PackageAvailability {
+  id        String                    @id @default(uuid())
+  packageId String
+  package   PackageMaster             @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  startAt   DateTime
+  endAt     DateTime?
+  seats     Int?
+  seatsSold Int                       @default(0)
+  status    PackageAvailabilityStatus @default(open)
+  notes     String?
+  createdAt DateTime                  @default(now())
+  updatedAt DateTime                  @updatedAt
+
+  @@index([packageId])
+  @@index([startAt])
+  @@index([status])
+}
+
+model PackageFaq {
+  id        String        @id @default(uuid())
+  packageId String
+  package   PackageMaster @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  question  String
+  answer    String
+  sortOrder Int           @default(0)
+  createdAt DateTime      @default(now())
+
+  @@index([packageId])
+}
+
+model PackageReview {
+  id          String        @id @default(uuid())
+  packageId   String
+  package     PackageMaster @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  authorName  String
+  rating      Int
+  body        String?
+  isPublished Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+
+  @@index([packageId])
+}
+
+model PackageWishlist {
+  id         String        @id @default(uuid())
+  customerId String
+  customer   Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  packageId  String
+  package    PackageMaster @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  createdAt  DateTime      @default(now())
+
+  @@unique([customerId, packageId])
+  @@index([customerId])
+  @@index([packageId])
+}

@@ -15,6 +15,15 @@ apps/web/dist/
 erp/assets/
 erp/index.html
 
+# Backend (erp-api) — source IS tracked; runtime artifacts are NOT.
+# The live source-of-truth runs from /opt/shanghai-erp-api; never commit its
+# .env (DB password, JWT secrets, Google Vision key), deps, or build output.
+erp-api/node_modules/
+erp-api/dist/
+erp-api/.env
+erp-api/.env.*
+!erp-api/.env.example
+
 # Test / coverage / reports
 coverage/
 .nyc_output/
