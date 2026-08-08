@@ -107,6 +107,8 @@ export type VisaDetail = {
   appointmentAt?: string | null;
   submittedAt?: string | null;
   decisionAt?: string | null;
+  collectedAt?: string | null;
+  deliveredAt?: string | null;
   visaNumber?: string | null;
   outcome?: string | null;
   notes?: string | null;

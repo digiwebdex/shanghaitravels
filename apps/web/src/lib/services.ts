@@ -250,7 +250,7 @@ export const customersApi = {
 };
 
 export const applicationsApi = {
-  list: (q?: { page?: number; limit?: number; q?: string; serviceType?: string; status?: string; agentId?: string }) => {
+  list: (q?: { page?: number; limit?: number; q?: string; serviceType?: string; status?: string; agentId?: string; expand?: string }) => {
     const p = new URLSearchParams();
     if (q?.page) p.set("page", String(q.page));
     if (q?.limit) p.set("limit", String(q.limit));
@@ -258,6 +258,7 @@ export const applicationsApi = {
     if (q?.serviceType) p.set("serviceType", q.serviceType);
     if (q?.status) p.set("status", q.status);
     if (q?.agentId) p.set("agentId", q.agentId);
+    if (q?.expand) p.set("expand", q.expand); // additive per-service detail (e.g. expand=visa)
     const qs = p.toString();
     return apiFetch<Paginated<Application> | Application[]>(`/applications${qs ? `?${qs}` : ""}`);
   },
