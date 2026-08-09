@@ -337,6 +337,26 @@ export class ApplicationsService {
     }
     const branchId = user.branchId ?? dto.branchId;
     const referenceNo = await nextApplicationReference(this.prisma);
+
+    // BUG-02 — snapshot the owning agent AT BOOKING TIME so attribution is
+    // point-in-time. Precedence, in order:
+    //   1. an explicitly supplied agentId wins and is never overwritten;
+    //   2. otherwise the customer's CURRENT primary agent is copied onto the case;
+    //   3. otherwise null.
+    // A later ownership change does NOT rewrite this case — that is the point.
+    // These stay three distinct concepts: customer-ownership agent, booking
+    // agent, and portal-submitting agent. The agent portal creates its own
+    // Application rows (agent-portal.service.ts) and never calls this method, so
+    // its attribution is untouched.
+    let agentId: string | null = dto.agentId ?? null;
+    if (!agentId && dto.customerId) {
+      const owner = await this.prisma.customer.findUnique({
+        where: { id: dto.customerId },
+        select: { primaryAgentId: true },
+      });
+      agentId = owner?.primaryAgentId ?? null;
+    }
+
     const app = await this.prisma.application.create({
       data: {
         branchId, referenceNo, serviceType, customerId: dto.customerId, title: dto.title,
@@ -344,6 +364,7 @@ export class ApplicationsService {
         status: "draft", priority: dto.priority || "medium", assignedTo: dto.assignedTo,
         source: dto.source || "walkin", createdBy: user.id,
         packageId: dto.packageId || null,
+        agentId,
       },
     });
     // Copy the active workflow template's stages onto the case (proves the spine pattern).

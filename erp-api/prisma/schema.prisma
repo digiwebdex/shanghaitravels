@@ -1055,6 +1055,11 @@ model Commission {
   createdAt     DateTime         @default(now())
   approvedAt    DateTime?
   paidAt        DateTime?
+
+  // BUG-01 — ONE INVOICE = ONE COMMISSION ACCRUAL, enforced by the database so
+  // it is concurrency-safe. invoiceId is nullable and PostgreSQL treats NULLs as
+  // distinct, so manual (invoice-less) commissions stay unrestricted.
+  @@unique([invoiceId])
 }
 
 // V6 Wave 1 — commission RULE (policy). The most-specific active, in-date rule

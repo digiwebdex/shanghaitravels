@@ -307,6 +307,18 @@ export class AgentsService {
     if (!(amount > 0)) throw new BadRequestException("amount must be positive (minor units)");
     if (!dto.agentId) throw new BadRequestException("agentId required");
     await this.get(dto.agentId);
+    // BUG-01 — ONE INVOICE = ONE COMMISSION ACCRUAL applies to this manual path
+    // too. The unique index on Commission(invoiceId) is the real guarantee; this
+    // check only turns it into a clear message instead of a raw 500. Manual
+    // commissions with no invoice (invoiceId null) remain unrestricted.
+    if (dto.invoiceId) {
+      const existing = await this.prisma.commission.findFirst({ where: { invoiceId: dto.invoiceId } });
+      if (existing) {
+        throw new BadRequestException(
+          `This invoice already has a commission (${existing.id}). One invoice accrues commission once.`,
+        );
+      }
+    }
     return this.prisma.commission.create({ data: { agentId: dto.agentId, amount, applicationId: dto.applicationId ?? null,
       invoiceId: dto.invoiceId ?? null, note: dto.note, status: "pending", createdBy: user.id } });
   }

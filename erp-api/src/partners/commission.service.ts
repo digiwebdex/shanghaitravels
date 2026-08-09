@@ -117,30 +117,64 @@ export class CommissionService {
       computedAmount: this.compute(base, "percentage", bps), source: bps > 0 ? ("agent_rate" as const) : ("none" as const) };
   }
 
-  /** Create a pending Commission from the matched rule/rate + write an earn ledger entry. Idempotent per (invoice, agent). */
+  /**
+   * Create a pending Commission from the matched rule/rate + write an earn
+   * ledger entry.
+   *
+   * BUG-01 — idempotent per INVOICE, not per (invoice, agent).
+   *
+   * The old guard keyed on (invoiceId, agentId), so reassigning customer
+   * ownership and re-running this accrued a SECOND commission and a SECOND
+   * `earn` ledger entry for the new agent on the same invoice. The business rule
+   * is ONE INVOICE = ONE COMMISSION ACCRUAL, and an already-earned commission
+   * stays attributed to the agent who earned it — ownership changes never
+   * retro-transfer it.
+   *
+   * Concurrency: the pre-check alone is a race, so the real guarantee is the
+   * unique index on Commission(invoiceId). Both the check and the write live
+   * inside one transaction, and a unique-violation (P2002) from a racing request
+   * is resolved by returning the commission that won.
+   */
   async generateForInvoice(invoiceId: string, user: AuthedUser) {
+    const existingBefore = await this.prisma.commission.findFirst({ where: { invoiceId } });
+    if (existingBefore) return existingBefore;
+
     const p = await this.previewForInvoice(invoiceId);
     if (!p.agentId) throw new BadRequestException("No agent owns this invoice — nothing to accrue");
     if (!(p.computedAmount > 0)) throw new BadRequestException("Computed commission is zero (no matching rule or rate)");
-    const existing = await this.prisma.commission.findFirst({ where: { invoiceId, agentId: p.agentId } });
-    if (existing) return existing;
-    const commission = await this.prisma.$transaction(async (tx) => {
-      const c = await tx.commission.create({
-        data: {
-          agentId: p.agentId as string, invoiceId, applicationId: (await this.resolveInvoice(invoiceId)).inv.applicationId ?? null,
-          amount: p.computedAmount, baseAmount: p.baseAmount, status: "pending", trigger: "on_invoice",
-          ruleId: "ruleId" in p ? (p.ruleId as string) : null,
-          ruleSnapshot: { basis: p.basis, value: p.value, source: p.source } as any, createdBy: user.id,
-        },
+    const applicationId = (await this.resolveInvoice(invoiceId)).inv.applicationId ?? null;
+
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        // Re-check inside the transaction so a commission created between the
+        // preview and the write is honoured rather than duplicated.
+        const existing = await tx.commission.findFirst({ where: { invoiceId } });
+        if (existing) return existing;
+
+        const c = await tx.commission.create({
+          data: {
+            agentId: p.agentId as string, invoiceId, applicationId,
+            amount: p.computedAmount, baseAmount: p.baseAmount, status: "pending", trigger: "on_invoice",
+            ruleId: "ruleId" in p ? (p.ruleId as string) : null,
+            ruleSnapshot: { basis: p.basis, value: p.value, source: p.source } as any, createdBy: user.id,
+          },
+        });
+        const last = await tx.commissionLedger.findFirst({ where: { agentId: p.agentId as string }, orderBy: { createdAt: "desc" } });
+        await tx.commissionLedger.create({
+          data: { agentId: p.agentId as string, commissionId: c.id, entryType: "earn", amount: p.computedAmount,
+            runningBalance: (last?.runningBalance || 0) + p.computedAmount, memo: `Earn on invoice ${invoiceId}`, createdBy: user.id },
+        });
+        return c;
       });
-      const last = await tx.commissionLedger.findFirst({ where: { agentId: p.agentId as string }, orderBy: { createdAt: "desc" } });
-      await tx.commissionLedger.create({
-        data: { agentId: p.agentId as string, commissionId: c.id, entryType: "earn", amount: p.computedAmount,
-          runningBalance: (last?.runningBalance || 0) + p.computedAmount, memo: `Earn on invoice ${invoiceId}`, createdBy: user.id },
-      });
-      return c;
-    });
-    return commission;
+    } catch (e) {
+      // A concurrent request won the unique index — return its commission so the
+      // caller still gets exactly one, and no second ledger entry was written.
+      if ((e as { code?: string })?.code === "P2002") {
+        const winner = await this.prisma.commission.findFirst({ where: { invoiceId } });
+        if (winner) return winner;
+      }
+      throw e;
+    }
   }
 
   ledger(agentId: string) {
