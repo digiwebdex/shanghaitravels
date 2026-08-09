@@ -33,7 +33,8 @@ export class PdfController {
         items: true,
         payments: { where: { deletedAt: null } },
         customer: { include: { passports: true } },
-        application: true,
+        // V16: service detail supplies the billing "Country" column. Read-only.
+        application: { include: { visa: true, hotel: true, tour: true, student: true, work: true } },
       },
     });
     if (!inv || (!HQ(user) && inv.branchId !== user.branchId)) throw new NotFoundException("Invoice not found");
@@ -44,15 +45,53 @@ export class PdfController {
       const ag = await this.prisma.agent.findUnique({ where: { id: agentId }, select: { name: true, code: true } });
       if (ag) agentName = `${ag.name} · ${ag.code}`;
     }
+    // V16 — "Sales By": resolve the existing createdBy user id to a display name.
+    let salesBy: string | undefined;
+    if (inv.createdBy) {
+      const su = await this.prisma.user.findUnique({ where: { id: inv.createdBy }, select: { fullName: true, email: true } });
+      salesBy = su?.fullName || su?.email || undefined;
+    }
+    // V16 — traveller rows for the Passport Info table, built from the existing
+    // customer + passport records: one row per passport (primary first), falling
+    // back to a single customer row when no passport is on file.
+    const c = inv.customer;
+    const passports = (c?.passports || []).slice().sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary));
+    const travellers = (passports.length ? passports : [null]).map((p) => ({
+      name: c?.fullName,
+      passportNo: p?.passportNo,
+      nationality: c?.nationality || p?.issuingCountry,
+      mobile: c?.phone || c?.whatsapp,
+      dob: c?.dob,
+      issueDate: p?.issueDate,
+      expiryDate: p?.expiryDate,
+    }));
     return {
       invoice: { ...inv, paid, due: inv.total - paid },
       bookingNo: inv.application?.referenceNo,
-      customerName: inv.customer?.fullName,
-      passportNo: inv.customer?.passports?.[0]?.passportNo,
-      nationality: inv.customer?.nationality || inv.customer?.passports?.[0]?.issuingCountry,
+      customerName: c?.fullName,
+      passportNo: passports[0]?.passportNo,
+      nationality: c?.nationality || passports[0]?.issuingCountry,
       serviceType: inv.application?.serviceType,
       agentName,
       bookingDate: inv.application?.createdAt,
+      // ---- V16 presentation fields (all sourced from existing records) ----
+      customerCode: c?.code,
+      customerType: c?.type,
+      customerAddress: c?.address,
+      customerEmail: c?.email,
+      customerMobile: c?.phone || c?.whatsapp,
+      salesBy,
+      salesDate: inv.createdAt,
+      note: inv.notes,
+      travellers,
+      // Billing "Country": the destination already recorded on the service detail.
+      country:
+        (inv.application as any)?.visa?.destination ||
+        (inv.application as any)?.hotel?.country ||
+        (inv.application as any)?.tour?.destination ||
+        (inv.application as any)?.student?.country ||
+        (inv.application as any)?.work?.country ||
+        undefined,
     };
   }
 
