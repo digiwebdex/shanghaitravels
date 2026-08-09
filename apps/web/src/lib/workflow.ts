@@ -57,21 +57,21 @@ export const SERVICE_OPTIONS: {
   { value: "transport", label: "Transport", apiType: "transport", description: "Transfers & vehicles" },
   { value: "hajj", label: "Hajj", apiType: "hajj", description: "Hajj packages" },
   { value: "umrah", label: "Umrah", apiType: "umrah", description: "Umrah packages" },
-  // HF2 — not yet implemented. apiType is their OWN value (NOT "visa") so they can
-  // never be silently created as visa cases; the API also rejects them.
+  // V14/V15 verticals — both ARE supported by the API. "student" is accepted
+  // as-is; manpower is stored under serviceType "work" (there is no "manpower"
+  // ServiceType — the API rejects that literal, which is exactly why apiType
+  // maps to "work" here rather than to the UI value).
   {
     value: "student",
     label: "Student Consultancy",
     apiType: "student",
-    description: "Not yet supported",
-    supported: false,
+    description: "University applications & student visas",
   },
   {
     value: "manpower",
     label: "Manpower",
-    apiType: "manpower",
-    description: "Not yet supported",
-    supported: false,
+    apiType: "work",
+    description: "Overseas employment & BMET",
   },
 ];
 
