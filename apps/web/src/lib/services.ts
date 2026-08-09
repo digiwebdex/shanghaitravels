@@ -264,6 +264,17 @@ export const applicationsApi = {
   },
   get: (id: string) => apiFetch<Application>(`/applications/${id}`),
   journey: (id: string) => apiFetch<Journey>(`/applications/${id}/journey`),
+  // FINAL WORKFLOW — supplier + cost + selling price for THIS booking.
+  setCommercials: (
+    id: string,
+    body: { supplierId?: string | null; supplierCostPoisha?: number | null; sellingPricePoisha?: number | null },
+  ) => apiFetch<Application>(`/applications/${id}/commercials`, { method: "PATCH", body }),
+  /** Raises the supplier payable through the existing AP engine. */
+  supplierBill: (id: string, body?: { amountPoisha?: number; memo?: string; dueDate?: string }) =>
+    apiFetch<{ id: string; docNo: string; totalPoisha: number }>(`/applications/${id}/supplier-bill`, {
+      method: "POST",
+      body: body ?? {},
+    }),
   create: (body: Record<string, unknown>) =>
     apiFetch<Application>("/applications", { method: "POST", body }),
   update: (id: string, body: Record<string, unknown>) =>

@@ -21,6 +21,19 @@ export class ApplicationsController {
   @Patch(":id") @Permissions("application:update")
   update(@Param("id") id: string, @Body() dto: any, @CurrentUser() u: AuthedUser) { return this.apps.update(id, dto, u); }
 
+  // FINAL WORKFLOW — supplier + cost + selling price for THIS booking.
+  // Editing the booking's commercials is a booking edit (application:update);
+  // raising the payable commits money, so it needs ap:manage.
+  @Patch(":id/commercials") @Permissions("application:update")
+  setCommercials(@Param("id") id: string, @Body() dto: any, @CurrentUser() u: AuthedUser) {
+    return this.apps.setCommercials(id, dto, u);
+  }
+
+  @Post(":id/supplier-bill") @Permissions("ap:manage")
+  supplierBill(@Param("id") id: string, @Body() dto: any, @CurrentUser() u: AuthedUser) {
+    return this.apps.createSupplierBill(id, dto, u);
+  }
+
   @Post(":id/advance-stage") @Permissions("application:advance-stage")
   advance(@Param("id") id: string, @Body() dto: any, @CurrentUser() u: AuthedUser) { return this.apps.advanceStage(id, u, dto?.note); }
 

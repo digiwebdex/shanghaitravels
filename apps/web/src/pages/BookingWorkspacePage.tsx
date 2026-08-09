@@ -21,6 +21,7 @@ import {
 import { EntityTabPanel, EntityTabs } from "@/components/workflow/EntityTabs";
 import { JourneyContinuity, NextStepBanner } from "@/components/workflow/MasterJourney";
 import { CaseAssignCard } from "@/components/cases/CaseAssignCard";
+import { BookingCommercialsCard } from "@/components/bookings/BookingCommercialsCard";
 import { CaseDocumentsCard } from "@/components/cases/CaseDocumentsCard";
 import { CaseFinanceCard } from "@/components/cases/CaseFinanceCard";
 import CaseTimeline from "@/admin/shared/CaseTimeline";
@@ -346,13 +347,16 @@ export default function BookingWorkspacePage() {
       </EntityTabPanel>
 
       <EntityTabPanel when="supplier" active={tab}>
-        <Surface padded>
-          <p className="text-[12px] text-[var(--muted-foreground)]">
-            Suppliers are managed in Business Partners. Link them from the service desk for this booking.
-          </p>
-          <Link to="/suppliers" className="text-[11px] font-bold text-[var(--accent)]">
-            Supplier center →
-          </Link>
+        {/* FINAL WORKFLOW — real supplier assignment + commercials for this
+            booking, replacing the previous placeholder that only linked away
+            (and to a route that did not exist). */}
+        <Surface>
+          <BookingCommercialsCard
+            app={app}
+            onSaved={reload}
+            setError={setError}
+            setOk={setOk}
+          />
         </Surface>
       </EntityTabPanel>
 

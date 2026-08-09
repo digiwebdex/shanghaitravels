@@ -128,6 +128,11 @@ export type Application = {
   direction?: string;
   customerId: string;
   customer?: Customer;
+  // FINAL WORKFLOW — commercials recorded on the booking transaction.
+  supplierId?: string | null;
+  supplier?: { id: string; code: string; name: string; type?: string } | null;
+  supplierCostPoisha?: number | null;
+  sellingPricePoisha?: number | null;
   stages?: ApplicationStage[];
   events?: ApplicationEvent[];
   docs?: unknown[];

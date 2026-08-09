@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma.service";
 import { WorkflowService } from "../workflow/workflow.service";
 import { NotificationsService } from "../notifications/notifications.service";
+import { ArApService } from "../arap/arap.service";
 import { AuthedUser } from "../rbac";
 import { nextApplicationReference } from "../util/next-reference";
 
@@ -16,7 +18,13 @@ const UNSUPPORTED_SERVICE_TYPES = new Set(["manpower", "medical", "immigration",
 
 @Injectable()
 export class ApplicationsService {
-  constructor(private prisma: PrismaService, private workflow: WorkflowService, private notes: NotificationsService) {}
+  constructor(
+    private prisma: PrismaService,
+    private workflow: WorkflowService,
+    private notes: NotificationsService,
+    // FINAL WORKFLOW — reused so the booking never grows a second payables path.
+    private arap: ArApService,
+  ) {}
 
   /**
    * Visa-scoped notifications (V8). Best-effort fan-out through the EXISTING
@@ -246,7 +254,10 @@ export class ApplicationsService {
     visa: "visa", ticket: "airTicket", hotel: "hotel", transport: "transport", tour: "tour", hajj: "hajjUmrah", umrah: "hajjUmrah", student: "student", work: "work", manpower: "work",
   };
   private listInclude(expandRaw?: string) {
-    const include: any = { customer: { select: { fullName: true, code: true } } };
+    const include: any = {
+      customer: { select: { fullName: true, code: true } },
+      supplier: { select: { id: true, code: true, name: true } },
+    };
     const expand = String(expandRaw || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
     if (!expand.length) return include; // default payload — unchanged
     let wantPassport = false;
@@ -296,6 +307,8 @@ export class ApplicationsService {
       where: { id, deletedAt: null, ...this.branchFilter(user) },
       include: {
         customer: { select: { id: true, fullName: true, code: true, phone: true } },
+        // FINAL WORKFLOW — booking commercials render the supplier inline.
+        supplier: { select: { id: true, code: true, name: true, type: true } },
         visa: true, airTicket: true, hotel: true, tour: true, transport: true,
         hajjUmrah: true, student: true, medical: true, immigration: true, insurance: true, work: true,
         stages: { orderBy: { stageNo: "asc" } },
@@ -518,6 +531,103 @@ export class ApplicationsService {
       if (String(status) === "cancelled") await this.notifyVertical(before as any, "cancelled");
     }
     return this.get(id, user);
+  }
+
+  /**
+   * FINAL WORKFLOW — booking commercials.
+   *
+   * Supplier + cost + selling price belong to the booking TRANSACTION, so one
+   * customer can buy a visa from one supplier and a ticket from another.
+   * Recorded as one edit with an audit event; no money moves here — the payable
+   * is raised separately by `createSupplierBill`.
+   */
+  async setCommercials(id: string, dto: any, user: AuthedUser) {
+    const before = (await this.get(id, user)) as unknown as Record<string, any>;
+
+    const has = (k: string) => Object.prototype.hasOwnProperty.call(dto || {}, k);
+    const money = (v: any, label: string): number | null => {
+      if (v === null || v === "") return null;
+      const n = Math.round(Number(v));
+      if (!Number.isFinite(n) || n < 0) throw new BadRequestException(`${label} must be a non-negative amount`);
+      return n;
+    };
+
+    const data: Record<string, any> = {};
+    if (has("supplierId")) {
+      const supplierId = dto.supplierId || null;
+      if (supplierId) {
+        const sup = await this.prisma.supplier.findFirst({ where: { id: supplierId, deletedAt: null } });
+        if (!sup) throw new NotFoundException("Supplier not found");
+      }
+      data.supplierId = supplierId;
+    }
+    if (has("supplierCostPoisha")) data.supplierCostPoisha = money(dto.supplierCostPoisha, "Supplier cost");
+    if (has("sellingPricePoisha")) data.sellingPricePoisha = money(dto.sellingPricePoisha, "Selling price");
+    if (!Object.keys(data).length) throw new BadRequestException("Nothing to update");
+
+    await this.prisma.application.update({ where: { id }, data });
+    await this.prisma.applicationEvent.create({
+      data: {
+        applicationId: id,
+        type: "commercials_updated",
+        message: `Commercials updated by ${user.email}`,
+        userId: user.id,
+        meta: {
+          from: {
+            supplierId: before.supplierId ?? null,
+            supplierCostPoisha: before.supplierCostPoisha ?? null,
+            sellingPricePoisha: before.sellingPricePoisha ?? null,
+          },
+          to: data as Prisma.InputJsonValue,
+        },
+      },
+    });
+    return this.get(id, user);
+  }
+
+  /**
+   * Raises the supplier payable for this booking by REUSING the AP engine —
+   * deliberately not a second payables path. Refuses to bill the same supplier
+   * twice for the same booking.
+   */
+  async createSupplierBill(id: string, dto: any, user: AuthedUser) {
+    const app = (await this.get(id, user)) as unknown as Record<string, any>;
+    const supplierId = dto?.supplierId || app.supplierId;
+    if (!supplierId) throw new BadRequestException("Assign a supplier to this booking first");
+    const cost = dto?.amountPoisha != null ? Math.round(Number(dto.amountPoisha)) : app.supplierCostPoisha;
+    if (!(Number.isFinite(cost) && cost > 0)) throw new BadRequestException("Supplier cost must be greater than zero");
+
+    const existing = await this.prisma.apDocument.findFirst({
+      where: { applicationId: id, supplierId, deletedAt: null },
+      select: { docNo: true },
+    });
+    if (existing) throw new BadRequestException(`Supplier already billed on this booking (${existing.docNo})`);
+
+    const doc: any = await this.arap.createApDocument(
+      {
+        type: "bill",
+        supplierId,
+        applicationId: id,
+        branchId: app.branchId,
+        issueDate: dto?.issueDate,
+        dueDate: dto?.dueDate,
+        memo: dto?.memo || `${app.referenceNo} — ${app.serviceType} supplier cost`,
+        reference: app.referenceNo,
+        lines: [{ description: dto?.description || `${app.serviceType} service cost`, amountPoisha: cost }],
+      },
+      user,
+    );
+
+    await this.prisma.applicationEvent.create({
+      data: {
+        applicationId: id,
+        type: "supplier_billed",
+        message: `Supplier payable ${doc.docNo} raised by ${user.email}`,
+        userId: user.id,
+        meta: { apDocumentId: doc.id, docNo: doc.docNo, amountPoisha: cost },
+      },
+    });
+    return doc;
   }
 
   async approve(id: string, user: AuthedUser) {
