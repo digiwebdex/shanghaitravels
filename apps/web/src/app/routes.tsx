@@ -17,6 +17,14 @@ const VisaListPage = lazy(() => import("@/pages/VisaListPage"));
 const VisaCasePage = lazy(() => import("@/pages/VisaCasePage"));
 const PassportsPage = lazy(() => import("@/pages/PassportsPage"));
 const CaseJourneyPage = lazy(() => import("@/pages/CaseJourneyPage"));
+// V17 — guidance layer. Documentation only: these pages read the static
+// knowledge base and never call a business API.
+const HelpCenterPage = lazy(() => import("@/pages/HelpCenterPage"));
+const HelpArticlePage = lazy(() => import("@/pages/HelpArticlePage"));
+const HelpCategoryPage = lazy(() =>
+  import("@/pages/HelpArticlePage").then((m) => ({ default: m.HelpCategoryPage })),
+);
+const HelpFlowPage = lazy(() => import("@/pages/HelpFlowPage"));
 const TicketingListPage = lazy(() => import("@/pages/TicketingListPage"));
 const TicketingCasePage = lazy(() => import("@/pages/TicketingCasePage"));
 const HotelsListPage = lazy(() => import("@/pages/HotelsListPage"));
@@ -1591,6 +1599,49 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <CaseJourneyPage />
+              </Lazy>
+            ),
+          },
+          // V17 — Help Center. Intentionally NOT permission-gated: guidance must
+          // be reachable by every signed-in user; the content itself hides any
+          // action their role cannot perform.
+          {
+            path: "help",
+            element: (
+              <Lazy>
+                <HelpCenterPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "help/a/:slug",
+            element: (
+              <Lazy>
+                <HelpArticlePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "help/c/:id",
+            element: (
+              <Lazy>
+                <HelpCategoryPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "help/flow",
+            element: (
+              <Lazy>
+                <HelpFlowPage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "help/flow/:slug",
+            element: (
+              <Lazy>
+                <HelpFlowPage />
               </Lazy>
             ),
           },

@@ -23,6 +23,7 @@ import {
   searchPlaceholderForPath,
 } from "@/config/contextUi";
 import { CommandPalette } from "@/components/shell/CommandPalette";
+import { HelpAssistant } from "@/help/HelpAssistant";
 import { ScanDocumentModal } from "@/components/ocr/ScanDocumentPanel";
 import { brand, gradient } from "@/styles/tokens";
 
@@ -542,6 +543,8 @@ export default function AdminLayout() {
 
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
       <ScanDocumentModal open={scanOpen} onClose={() => setScanOpen(false)} />
+      {/* V17 — floating ERP Assistant, available on every admin screen. */}
+      <HelpAssistant />
     </div>
   );
 }

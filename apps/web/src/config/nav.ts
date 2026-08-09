@@ -24,6 +24,7 @@ import {
   Image as ImageIcon,
   Landmark,
   LayoutDashboard,
+  LifeBuoy,
   ListChecks,
   Map,
   MessagesSquare,
@@ -545,6 +546,31 @@ export const NAV: NavSection[] = [
         to: "/admin/settings",
         icon: Settings,
         perm: "settings:manage",
+      },
+    ],
+  },
+
+  // V17 — guidance. No `perm`: every signed-in user may read the guide, and the
+  // articles themselves hide any action their role cannot perform.
+  {
+    id: "help",
+    label: "Help & Guide",
+    icon: LifeBuoy,
+    items: [
+      {
+        id: "help-center",
+        label: "ERP Assistant",
+        to: "/help",
+        icon: LifeBuoy,
+        end: true,
+        keywords: "help guide assistant how to support documentation faq",
+      },
+      {
+        id: "help-flow",
+        label: "Master Workflow",
+        to: "/help/flow/master-journey",
+        icon: Workflow,
+        keywords: "flow flowchart journey lifecycle lead to completion process map",
       },
     ],
   },
