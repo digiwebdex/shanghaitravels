@@ -70,6 +70,8 @@ export type NavSection = {
   to?: string;
   end?: boolean;
   items?: NavLeaf[];
+  /** Simplify step 3 — back-office sections tucked under a "More" divider. */
+  advanced?: boolean;
 };
 
 /** Supplier taxonomy. `type` is the value stored on Supplier.type. */
@@ -227,6 +229,7 @@ export const NAV: NavSection[] = [
 
   {
     id: "cms",
+    advanced: true,
     label: "Website CMS",
     icon: Globe,
     items: [
@@ -246,6 +249,7 @@ export const NAV: NavSection[] = [
 
   {
     id: "administration",
+    advanced: true,
     label: "Settings",
     icon: Settings,
     items: [
@@ -262,6 +266,7 @@ export const NAV: NavSection[] = [
   // articles themselves hide any action their role cannot perform.
   {
     id: "help",
+    advanced: true,
     label: "Help & Guide",
     icon: LifeBuoy,
     items: [

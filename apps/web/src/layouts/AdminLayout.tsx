@@ -213,7 +213,34 @@ export default function AdminLayout() {
     [can],
   );
 
+  // Simplify step 3 — split the daily/main sections from the back-office ones,
+  // which live under a collapsible "More" divider so the sidebar stays short.
+  const mainSections = useMemo(() => sections.filter(({ section }) => !section.advanced), [sections]);
+  const advancedSections = useMemo(() => sections.filter(({ section }) => section.advanced), [sections]);
+
   const activeSection = useMemo(() => sectionForPath(pathname), [pathname]);
+  const activeIsAdvanced = useMemo(
+    () => advancedSections.some(({ section }) => section.id === activeSection),
+    [advancedSections, activeSection],
+  );
+  const [showMore, setShowMore] = useState(() => {
+    try {
+      return localStorage.getItem("travelos:nav:more") === "1";
+    } catch {
+      return false;
+    }
+  });
+  // Auto-open "More" when the current route lives in an advanced section.
+  useEffect(() => {
+    if (activeIsAdvanced) setShowMore(true);
+  }, [activeIsAdvanced]);
+  useEffect(() => {
+    try {
+      localStorage.setItem("travelos:nav:more", showMore ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [showMore]);
 
   // Keep the section containing the current route open, without collapsing
   // whatever the user opened by hand.
@@ -309,7 +336,7 @@ export default function AdminLayout() {
         className={`scrollbar-hide flex-1 space-y-[3px] overflow-y-auto py-3 ${collapsed ? "px-1.5" : "px-2.5"}`}
         aria-label="Main navigation"
       >
-        {sections.map(({ section, items }) => (
+        {mainSections.map(({ section, items }) => (
           <SidebarSection
             key={section.id}
             section={section}
@@ -325,6 +352,38 @@ export default function AdminLayout() {
             search={search}
           />
         ))}
+
+        {advancedSections.length > 0 && (
+          <>
+            {!collapsed && (
+              <button
+                type="button"
+                onClick={() => setShowMore((v) => !v)}
+                className="mt-1.5 flex w-full items-center gap-2 rounded-lg px-2.5 py-[7px] text-[11px] font-semibold uppercase tracking-[0.06em] text-white/40 transition-colors hover:text-white/70"
+              >
+                <ChevronRight size={12} className={`transition-transform ${showMore ? "rotate-90" : ""}`} />
+                {showMore ? "Less" : "More · Setup"}
+              </button>
+            )}
+            {(showMore || collapsed) &&
+              advancedSections.map(({ section, items }) => (
+                <SidebarSection
+                  key={section.id}
+                  section={section}
+                  items={items}
+                  collapsed={collapsed}
+                  expanded={!!expanded[section.id]}
+                  onToggle={() => {
+                    if (collapsed) setCollapsed(false);
+                    toggleSection(section.id);
+                  }}
+                  onNavigate={closeMobile}
+                  pathname={pathname}
+                  search={search}
+                />
+              ))}
+          </>
+        )}
       </nav>
 
       {!collapsed && (
