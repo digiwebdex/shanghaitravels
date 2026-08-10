@@ -94,6 +94,24 @@ export function supplierTypeLabel(type: string): string {
 export const NAV: NavSection[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, to: "/", end: true },
 
+  // Simplify step 2 — the daily-work shortcuts pinned at the top, so every role
+  // has its core screens up front. Each leaf is permission-gated, so staff only
+  // see the ones they can use; the full grouped menu stays below for the rest.
+  {
+    id: "daily",
+    label: "Daily work",
+    icon: Sparkles,
+    items: [
+      { id: "daily-leads", label: "Leads", to: "/crm", icon: Sparkles, perm: "lead:read", end: true },
+      { id: "daily-customers", label: "Customers", to: "/customers", icon: Users, perm: "customer:read" },
+      { id: "daily-newbooking", label: "New Booking", to: "/bookings/new", icon: ClipboardList, perm: "application:create" },
+      { id: "daily-operations", label: "Operations", to: "/operations", icon: Workflow, perm: "application:read", end: true },
+      { id: "daily-scan", label: "Scan Passport", to: "/operations/document-intelligence", icon: FileCheck, perm: "ocr:use" },
+      { id: "daily-payments", label: "Payments", to: "/finance/payments", icon: CreditCard, perm: "ar:read" },
+      { id: "daily-reports", label: "Reports", to: "/analytics", icon: PieChart, perm: "analytics:read", end: true },
+    ],
+  },
+
   {
     id: "crm",
     label: "CRM & Sales",
