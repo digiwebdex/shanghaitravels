@@ -9,7 +9,8 @@ import {
   type DocIntelType,
   type OcrScanResult,
 } from "@/lib/documentIntelligence";
-import { btnGhost, btnPrimary, btnPrimaryStyle } from "@/components/enterprise/Page";
+import { btnGhost } from "@/components/enterprise/Page";
+import { PassportScanForm } from "@/components/ocr/PassportScanForm";
 
 export type ScanDocumentPanelProps = {
   customerId?: string;
@@ -120,60 +121,45 @@ export function ScanDocumentPanel({
   );
 }
 
-/** Global shell modal — Scan Document quick action. */
+/**
+ * Global shell modal — "Document Scanner" quick action, in the owner-approved
+ * reference format (image left · EXTRACTED DATA right · green CONFIRM).
+ * With no customer context, CONFIRM copies the verified fields into
+ * sessionStorage exactly as before, so forms can keep autofilling from it.
+ */
 export function ScanDocumentModal({
   open,
   onClose,
+  customerId,
 }: {
   open: boolean;
   onClose: () => void;
+  /** Optional — when launched from a customer context, CONFIRM also saves the passport. */
+  customerId?: string;
 }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[80] flex items-start justify-center bg-black/40 p-4 pt-[8vh]" role="dialog" aria-modal>
-      <div className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-[var(--border)] bg-white p-4 shadow-xl">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-[14px] font-bold text-[var(--primary)]">Scan Document</h2>
-          <button type="button" className={btnGhost} onClick={onClose}>
-            <X size={14} /> Close
+    <div className="fixed inset-0 z-[80] flex items-start justify-center bg-black/40 p-4 pt-[6vh]" role="dialog" aria-modal aria-label="Document Scanner">
+      <div className="max-h-[88vh] w-full max-w-5xl overflow-y-auto rounded-2xl border border-[var(--border)] bg-white p-5 shadow-xl">
+        <div className="mb-4 flex items-center justify-between border-b border-[var(--border)] pb-3">
+          <h2 className="flex items-center gap-2 text-[16px] font-bold text-[var(--foreground)]">
+            <ScanLine size={18} className="text-emerald-500" /> Document Scanner
+          </h2>
+          <button type="button" onClick={onClose} aria-label="Close" className="rounded p-1.5 text-[var(--muted-foreground)] hover:bg-[var(--muted)]">
+            <X size={18} />
           </button>
         </div>
-        <p className="mb-3 text-[11px] text-[var(--muted-foreground)]">
-          Upload → OCR → review confidence → copy fields into your open form, or open{" "}
-          <a href="#/operations/document-intelligence" className="font-semibold text-[var(--accent)]" onClick={onClose}>
-            Document Intelligence
-          </a>{" "}
-          to save.
-        </p>
-        <DocumentUploadFlow
-          defaultDocType="auto"
-          scanFile={async (file, docType) => {
-            const bad = validateUploadFile(file);
-            if (bad) throw new Error(bad);
-            return (await ocrApi.scan(file, { docType })) as OcrScanResult;
-          }}
-          checkDuplicate={async (fields) =>
-            ocrApi.checkDuplicate({
-              passportNo: fields.passportNo,
-              nidNumber: fields.nidNumber,
-              visaNumber: fields.visaNumber,
-            })
-          }
-          onSave={async ({ fields }) => {
+        <PassportScanForm
+          customerId={customerId}
+          onConfirm={(fields) => {
             try {
               sessionStorage.setItem("st-ocr-last-fields", JSON.stringify(fields));
-              onClose();
-              return true;
             } catch {
-              return false;
+              /* copy-through is best-effort */
             }
+            onClose();
           }}
         />
-        <div className="mt-3 flex justify-end">
-          <button type="button" className={btnPrimary} style={btnPrimaryStyle} onClick={onClose}>
-            Done
-          </button>
-        </div>
       </div>
     </div>
   );

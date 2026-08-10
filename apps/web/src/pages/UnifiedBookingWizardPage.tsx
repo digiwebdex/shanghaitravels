@@ -18,15 +18,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import {
-  AlertTriangle, ArrowLeft, ArrowRight, Building2, Check, CreditCard, FileCheck,
-  Loader2, Receipt, Search, ScanLine, UserRound, Users,
+  ArrowLeft, ArrowRight, Building2, Check, CreditCard, FileCheck,
+  Receipt, Search, ScanLine, UserRound, Users,
 } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
 import {
   PageShell, PageHeader, Surface, SurfaceHeader, btnGhost, btnPrimary, inputCls, labelCls,
 } from "@/components/enterprise/Page";
 import { ErrorBanner } from "@/components/Feedback";
-import { agentsApi, applicationsApi, customersApi, financeApi, ocrApi, suppliersApi } from "@/lib/services";
+import { agentsApi, applicationsApi, customersApi, financeApi, suppliersApi } from "@/lib/services";
+import { PassportScanForm } from "@/components/ocr/PassportScanForm";
 import { SERVICE_OPTIONS, type ServiceKind } from "@/lib/workflow";
 import { buildDetailPayload, fieldsFor, missingRequired, type ServiceField } from "@/lib/serviceForms";
 import { fmtBDT, fromPoisha, toPoisha } from "@/lib/money";
@@ -64,11 +65,8 @@ export default function UnifiedBookingWizardPage() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [agentLabel, setAgentLabel] = useState<string>("");
 
-  // ---- step 2: passport ----
+  // ---- step 2: passport (shared Document Scanner does the heavy lifting) ----
   const [passportMode, setPassportMode] = useState<"skip" | "scan" | "manual">("skip");
-  const [scanFields, setScanFields] = useState<Record<string, string>>({});
-  const [scanId, setScanId] = useState<string | null>(null);
-  const [dupWarning, setDupWarning] = useState("");
 
   // ---- step 3/4: service ----
   const [service, setService] = useState<ServiceKind>((params.get("service") as ServiceKind) || "visa");
@@ -177,43 +175,6 @@ export default function UnifiedBookingWizardPage() {
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
   }
   const back = () => { setError(""); setStep((s) => Math.max(0, s - 1)); };
-
-  async function runScan(file: File) {
-    if (!customer) return;
-    setBusy(true); setError(""); setDupWarning("");
-    try {
-      const scan = await ocrApi.scan(file, { customerId: customer.id, docType: "passport" });
-      setScanId((scan as { id: string }).id);
-      const f = ((scan as { fields?: Record<string, string> }).fields || {}) as Record<string, string>;
-      setScanFields({
-        passportNo: f.passportNo || "", fullName: f.fullName || "", dob: f.dob || "",
-        nationality: f.nationality || "", gender: f.gender || "",
-        issueDate: f.issueDate || "", expiryDate: f.expiryDate || "",
-      });
-      if (f.passportNo) {
-        const dup = await ocrApi.checkDuplicate({ passportNo: f.passportNo, customerId: customer.id });
-        if (dup.duplicate) {
-          setDupWarning(
-            `This passport already exists on ${dup.hits.map((h) => h.customerName || h.customerCode).join(", ")}. Resolve before applying.`,
-          );
-        }
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Scan failed");
-    } finally { setBusy(false); }
-  }
-
-  async function applyScan() {
-    if (!scanId || !customer) return;
-    setBusy(true); setError("");
-    try {
-      await ocrApi.apply(scanId, { customerId: customer.id, fields: scanFields, isPrimary: true });
-      setPassportMode("skip");
-      setScanId(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not apply the scan");
-    } finally { setBusy(false); }
-  }
 
   /** Creates the case, its detail, its commercials, the invoice and any payment. */
   async function submit() {
@@ -402,47 +363,16 @@ export default function UnifiedBookingWizardPage() {
               <button type="button" className={btnGhost} onClick={() => setPassportMode("skip")}>Skip for now</button>
             </div>
 
-            {passportMode === "scan" && can("ocr:use") && (
-              <div className="space-y-3">
-                <input
-                  type="file"
-                  accept="image/*,application/pdf"
-                  aria-label="Passport image"
-                  className={inputCls}
-                  onChange={(e) => e.target.files?.[0] && runScan(e.target.files[0])}
-                />
-                {busy && <p className="flex items-center gap-1.5 text-[12px]"><Loader2 size={13} className="animate-spin" /> Reading the document…</p>}
-                {dupWarning && (
-                  <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/[0.08] px-3 py-2">
-                    <AlertTriangle size={14} className="mt-[1px] shrink-0 text-amber-600" />
-                    <p className="text-[11.5px]">{dupWarning}</p>
-                  </div>
-                )}
-                {scanId && (
-                  <>
-                    <p className="text-[11px] text-[var(--muted-foreground)]">Check every value against the passport before applying.</p>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {Object.entries(scanFields).map(([k, v]) => (
-                        <div key={k}>
-                          <label className={labelCls} htmlFor={`ocr-${k}`}>{k}</label>
-                          <input id={`ocr-${k}`} className={inputCls} value={v} onChange={(e) => setScanFields((f) => ({ ...f, [k]: e.target.value }))} />
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      {can("ocr:apply") && (
-                        <button type="button" className={btnPrimary} onClick={applyScan} disabled={busy || !!dupWarning}>
-                          Confirm & save to customer
-                        </button>
-                      )}
-                      <button type="button" className={btnGhost} onClick={() => { setScanId(null); setScanFields({}); }}>Cancel</button>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-            {passportMode === "scan" && !can("ocr:use") && (
-              <p className="text-[12px] text-[var(--muted-foreground)]">Scanning needs <code>ocr:use</code>.</p>
+            {passportMode === "scan" && customer && (
+              /* The shared Document Scanner (owner-approved format) — same
+                 component as the top-bar quick action, so passport scanning is
+                 ONE system everywhere. Confirm saves the passport onto the
+                 selected customer through the existing OCR apply path. */
+              <PassportScanForm
+                customerId={customer.id}
+                initialPhone={customer.phone || ""}
+                onConfirm={() => setPassportMode("skip")}
+              />
             )}
 
             {passportMode === "manual" && (
