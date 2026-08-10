@@ -193,6 +193,8 @@ export const NAV: NavSection[] = [
       { id: "an-bookings", label: "Booking Reports", to: "/analytics/sales", icon: ClipboardList, perm: "analytics:read" },
       // One service-report screen; it was previously listed twice.
       { id: "an-service", label: "Service Reports", to: "/analytics/reports", icon: Globe, perm: "analytics:read", keywords: "visa ticket hotel transport tour hajj student manpower report" },
+      // Shanghai Travels Owner Requirement — Delivery Report.
+      { id: "an-delivery", label: "Delivery Report", to: "/analytics/delivery", icon: ClipboardList, perm: "report:read", keywords: "passport submit delivery embassy handover register" },
       { id: "an-finance", label: "Finance Reports", to: "/analytics/finance", icon: Landmark, perm: "analytics:read" },
       { id: "an-customers", label: "Customer Reports", to: "/analytics/customers", icon: Users, perm: "analytics:read" },
       { id: "an-supplier", label: "Supplier Reports", to: "/finance/ar-ap-reports", icon: Truck, perm: "financial-report:read" },

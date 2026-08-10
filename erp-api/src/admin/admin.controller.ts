@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from "@nestjs/common";
 import { AdminService } from "./admin.service";
 import { Permissions, CurrentUser, AuthedUser } from "../rbac";
 
@@ -22,4 +22,11 @@ export class SettingsController {
 export class ReportsController {
   constructor(private admin: AdminService) {}
   @Get("operational") @Permissions("report:read") ops(@CurrentUser() u: AuthedUser) { return this.admin.operationalReport(u); }
+
+  // Shanghai Travels Owner Requirement — Delivery Report. Server-side filtering
+  // (date range + customer classification), existing report:read permission.
+  @Get("delivery") @Permissions("report:read")
+  delivery(@CurrentUser() u: AuthedUser, @Query() q: any) {
+    return this.admin.deliveryReport(u, q);
+  }
 }

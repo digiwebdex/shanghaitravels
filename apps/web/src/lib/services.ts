@@ -2140,7 +2140,36 @@ export type OperationalReport = {
   unassignedWebEnquiries: number;
 };
 
+export type DeliveryReportRow = {
+  applicationId: string;
+  referenceNo: string;
+  name: string | null;
+  customerCode: string | null;
+  passportNo: string | null;
+  category: string;
+  type: string | null;
+  submitDate: string | null;
+  deliveryDate: string | null;
+  embassyCollectedAt: string | null;
+  customerClass: "Individual" | "Agent" | "Corporate";
+  customerOwner: string | null;
+  remarks: string | null;
+};
+
 export const reportsApi = {
+  /** Shanghai Travels Owner Requirement — Delivery Report (server-side filtered). */
+  delivery: (q?: { from?: string; to?: string; customerType?: string; take?: number; skip?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.from) p.set("from", q.from);
+    if (q?.to) p.set("to", q.to);
+    if (q?.customerType && q.customerType !== "all") p.set("customerType", q.customerType);
+    if (q?.take) p.set("take", String(q.take));
+    if (q?.skip) p.set("skip", String(q.skip));
+    const qs = p.toString();
+    return apiFetch<{ total: number; take: number; skip: number; data: DeliveryReportRow[] }>(
+      `/reports/delivery${qs ? `?${qs}` : ""}`,
+    );
+  },
   financeSummary: () => apiFetch<FinanceSummary>("/finance/summary"),
   operational: () => apiFetch<OperationalReport>("/reports/operational"),
 };

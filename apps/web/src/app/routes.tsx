@@ -25,6 +25,8 @@ const HelpCategoryPage = lazy(() =>
   import("@/pages/HelpArticlePage").then((m) => ({ default: m.HelpCategoryPage })),
 );
 const HelpFlowPage = lazy(() => import("@/pages/HelpFlowPage"));
+// Shanghai Travels Owner Requirement — Delivery Report.
+const DeliveryReportPage = lazy(() => import("@/pages/DeliveryReportPage"));
 const TicketingListPage = lazy(() => import("@/pages/TicketingListPage"));
 const TicketingCasePage = lazy(() => import("@/pages/TicketingCasePage"));
 const HotelsListPage = lazy(() => import("@/pages/HotelsListPage"));
@@ -1471,6 +1473,14 @@ export const router = createHashRouter([
             element: (
               <Lazy>
                 <AnalyticsFinancePage />
+              </Lazy>
+            ),
+          },
+          {
+            path: "analytics/delivery",
+            element: (
+              <Lazy>
+                <DeliveryReportPage />
               </Lazy>
             ),
           },
