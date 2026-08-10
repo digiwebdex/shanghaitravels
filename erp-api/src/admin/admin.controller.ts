@@ -29,4 +29,11 @@ export class ReportsController {
   delivery(@CurrentUser() u: AuthedUser, @Query() q: any) {
     return this.admin.deliveryReport(u, q);
   }
+
+  // Shanghai Travels Owner Requirement — Submit Report. Same audited data path,
+  // filtered to real submission events. Existing report:read permission.
+  @Get("submit") @Permissions("report:read")
+  submit(@CurrentUser() u: AuthedUser, @Query() q: any) {
+    return this.admin.submitReport(u, q);
+  }
 }

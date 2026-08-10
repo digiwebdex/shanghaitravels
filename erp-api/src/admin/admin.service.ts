@@ -54,9 +54,20 @@ export class AdminService {
    *                    back to HajjUmrahDetail.passportNo.
    *   Remarks        → the service detail's existing notes field.
    */
-  async deliveryReport(
+  /**
+   * Submit Report (owner requirement P16) — the SAME audited data path as the
+   * Delivery Report, filtered to applications that carry a real SUBMISSION
+   * event. There is deliberately no second query/engine: mode="submit" narrows
+   * the signal to submittedAt / the "…Submission"/"…Submitted" stage, so the
+   * Submit Date is never fabricated.
+   */
+  deliveryReport = (user: AuthedUser, q: any) => this.movementsReport(user, q, "delivery");
+  submitReport = (user: AuthedUser, q: any) => this.movementsReport(user, q, "submit");
+
+  private async movementsReport(
     user: AuthedUser,
     q: { from?: string; to?: string; customerType?: string; take?: number; skip?: number },
+    mode: "delivery" | "submit",
   ) {
     const HQ = user.role === "super_admin" || user.role === "general_manager";
     const take = Math.min(Math.max(Number(q.take) || 100, 1), 500);
@@ -77,20 +88,23 @@ export class AdminService {
     const where: any = {
       deletedAt: null,
       ...(HQ ? {} : { branchId: user.branchId ?? "__none__" }),
-      // A row must carry a real submit or delivery signal (date-filtered when a
-      // range is given) — the report is a register of events, not a case list.
+      // A row must carry a real signal (date-filtered when a range is given) —
+      // the report is a register of events, not a case list. Submit mode keys
+      // on the submission event; delivery mode on either submit or delivery.
       OR: range
         ? [
             { visa: { is: { submittedAt: range } } },
-            { visa: { is: { deliveredAt: range } } },
             signal(SUBMIT_STAGES, true),
-            signal(DELIVER_STAGES, true),
+            ...(mode === "delivery"
+              ? [{ visa: { is: { deliveredAt: range } } }, signal(DELIVER_STAGES, true)]
+              : []),
           ]
         : [
             { visa: { is: { submittedAt: { not: null } } } },
-            { visa: { is: { deliveredAt: { not: null } } } },
             signal(SUBMIT_STAGES, false),
-            signal(DELIVER_STAGES, false),
+            ...(mode === "delivery"
+              ? [{ visa: { is: { deliveredAt: { not: null } } } }, signal(DELIVER_STAGES, false)]
+              : []),
           ],
     };
 
@@ -195,7 +209,10 @@ export class AdminService {
       };
     });
 
-    return { total, take, skip, data };
+    // Submit mode: only rows with a real Submit Date (belt-and-suspenders on top
+    // of the WHERE), so the Submit Report never shows a fabricated submission.
+    const out = mode === "submit" ? data.filter((r) => r.submitDate) : data;
+    return { total: mode === "submit" ? out.length : total, take, skip, mode, data: out };
   }
 
   // ---- Reports & BI (report:read) — derived, never fabricated ----

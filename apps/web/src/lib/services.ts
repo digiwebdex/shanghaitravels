@@ -2156,7 +2156,57 @@ export type DeliveryReportRow = {
   remarks: string | null;
 };
 
+export type Employee = {
+  id: string; code: string; fullName: string; designation?: string | null;
+  department?: string | null; phone?: string | null; email?: string | null;
+  joinDate?: string | null; salary: number; status?: string | null; notes?: string | null;
+  salaries?: SalaryPayment[];
+};
+export type SalaryPayment = {
+  id: string; employeeId: string; period: string; amount: number; accountId?: string | null;
+  paidAt: string; note?: string | null;
+  employee?: { code: string; fullName: string; designation?: string | null; department?: string | null };
+};
+
+export const hrApi = {
+  listEmployees: (q?: { q?: string; department?: string; page?: number; limit?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.q) p.set("q", q.q);
+    if (q?.department) p.set("department", q.department);
+    if (q?.page) p.set("page", String(q.page));
+    if (q?.limit) p.set("limit", String(q.limit));
+    const qs = p.toString();
+    return apiFetch<{ data: Employee[]; total: number; page: number; limit: number }>(`/employees${qs ? `?${qs}` : ""}`);
+  },
+  getEmployee: (id: string) => apiFetch<Employee>(`/employees/${id}`),
+  createEmployee: (body: Partial<Employee> & { fullName: string }) =>
+    apiFetch<Employee>("/employees", { method: "POST", body }),
+  updateEmployee: (id: string, body: Partial<Employee>) =>
+    apiFetch<Employee>(`/employees/${id}`, { method: "PATCH", body }),
+  /** Record a monthly salary; posts to the ledger when an account is chosen. */
+  paySalary: (id: string, body: { period: string; amount?: number; deduction?: number; accountId?: string; paidAt?: string; note?: string }) =>
+    apiFetch<SalaryPayment>(`/employees/${id}/salary`, { method: "POST", body }),
+  listSalaries: (q?: { employeeId?: string; period?: string; take?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.employeeId) p.set("employeeId", q.employeeId);
+    if (q?.period) p.set("period", q.period);
+    if (q?.take) p.set("take", String(q.take));
+    const qs = p.toString();
+    return apiFetch<SalaryPayment[]>(`/payroll${qs ? `?${qs}` : ""}`);
+  },
+};
+
 export const reportsApi = {
+  /** Shanghai Travels Owner Requirement — Submit Report (same path, submit-filtered). */
+  submit: (q?: { from?: string; to?: string; customerType?: string; take?: number; skip?: number }) => {
+    const p = new URLSearchParams();
+    if (q?.from) p.set("from", q.from);
+    if (q?.to) p.set("to", q.to);
+    if (q?.customerType && q.customerType !== "all") p.set("customerType", q.customerType);
+    if (q?.take) p.set("take", String(q.take));
+    const qs = p.toString();
+    return apiFetch<{ total: number; data: DeliveryReportRow[] }>(`/reports/submit${qs ? `?${qs}` : ""}`);
+  },
   /** Shanghai Travels Owner Requirement — Delivery Report (server-side filtered). */
   delivery: (q?: { from?: string; to?: string; customerType?: string; take?: number; skip?: number }) => {
     const p = new URLSearchParams();

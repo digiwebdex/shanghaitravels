@@ -179,6 +179,8 @@ export const NAV: NavSection[] = [
       { id: "fin-supplier-payables", label: "Supplier Payables", to: "/finance/ap", icon: Truck, perm: "ap:read", keywords: "supplier due ap vendor payment" },
       { id: "fin-commission", label: "Agent Commission", to: "/finance/commission-rules", icon: Wallet, perm: "commission:read", keywords: "commission rule agent wallet payout" },
       { id: "fin-expenses", label: "Expenses", to: "/finance/expenses", icon: FileText, perm: "expense:manage" },
+      // Shanghai Travels Owner Requirement — Monthly Staff Salary (existing HR backend).
+      { id: "fin-salary", label: "Staff Salary", to: "/finance/salary", icon: Wallet, perm: "hr:read", keywords: "salary payroll staff employee monthly wages" },
       { id: "fin-accounts", label: "Accounting", to: "/finance/accounting", icon: Landmark, perm: "gl:read" },
       { id: "fin-reports", label: "Reports", to: "/finance/reports", icon: PieChart, perm: "financial-report:read" },
     ],
@@ -193,8 +195,9 @@ export const NAV: NavSection[] = [
       { id: "an-bookings", label: "Booking Reports", to: "/analytics/sales", icon: ClipboardList, perm: "analytics:read" },
       // One service-report screen; it was previously listed twice.
       { id: "an-service", label: "Service Reports", to: "/analytics/reports", icon: Globe, perm: "analytics:read", keywords: "visa ticket hotel transport tour hajj student manpower report" },
-      // Shanghai Travels Owner Requirement — Delivery Report.
-      { id: "an-delivery", label: "Delivery Report", to: "/analytics/delivery", icon: ClipboardList, perm: "report:read", keywords: "passport submit delivery embassy handover register" },
+      // Shanghai Travels Owner Requirement — Submit + Delivery Reports.
+      { id: "an-submit", label: "Submit Report", to: "/analytics/submit", icon: ClipboardList, perm: "report:read", keywords: "passport submit embassy submission register" },
+      { id: "an-delivery", label: "Delivery Report", to: "/analytics/delivery", icon: ClipboardList, perm: "report:read", keywords: "passport delivery embassy handover register" },
       { id: "an-finance", label: "Finance Reports", to: "/analytics/finance", icon: Landmark, perm: "analytics:read" },
       { id: "an-customers", label: "Customer Reports", to: "/analytics/customers", icon: Users, perm: "analytics:read" },
       { id: "an-supplier", label: "Supplier Reports", to: "/finance/ar-ap-reports", icon: Truck, perm: "financial-report:read" },

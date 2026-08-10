@@ -30,6 +30,27 @@ export const articlesInCategory = (id: CategoryId): Article[] =>
  */
 export const ANSWERS: Answer[] = [
   {
+    q: "How do I pay staff salary?",
+    alt: ["salary", "payroll", "monthly salary", "pay employee", "staff wages"],
+    a: "Finance → Staff Salary. Add employees, then 'Pay salary': choose the month, gross and any deduction (net = gross − deduction), and a payment account. Choosing an account posts it to the ledger; leaving it blank records salary only. Needs hr:manage.",
+    route: "/finance/salary",
+    perm: "hr:read",
+  },
+  {
+    q: "Where is the Submit Report?",
+    alt: ["submit report", "submission report", "what was submitted", "embassy submission report"],
+    a: "Reports & Analytics → Submit Report. It lists applications actually submitted to the embassy/authority, filterable by date and by All / Agent / Corporate / Individual. Submit Date comes from the real submission event, never typed by hand. Needs report:read.",
+    route: "/analytics/submit",
+    perm: "report:read",
+  },
+  {
+    q: "Where is the Delivery Report?",
+    alt: ["delivery report", "what was delivered", "passport delivery report"],
+    a: "Reports & Analytics → Delivery Report. It shows customer deliveries (not embassy returns), filterable by date and customer type. A passport back from the embassy shows as 'with office', not delivered. Needs report:read.",
+    route: "/analytics/delivery",
+    perm: "report:read",
+  },
+  {
     q: "What should I do after creating a customer?",
     alt: ["after creating customer", "next after customer", "customer created now what"],
     article: "customer-360",
