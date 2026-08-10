@@ -17,10 +17,16 @@ import {
 import {
   ArrowRight,
   Building2,
+  ClipboardList,
+  CreditCard,
   Handshake,
+  PieChart as PieChartIcon,
   RefreshCw,
+  ScanLine,
+  Sparkles,
   Truck,
   UserRound,
+  Workflow,
 } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
 import { ErrorBanner } from "@/components/Feedback";
@@ -188,6 +194,21 @@ function DashboardBody() {
 
   const lens = roleLens(user?.role);
 
+  // Simple Home — the daily-work shortcuts as big tiles, front and centre.
+  // Each is permission-gated, so a user only sees what they can actually do.
+  const homeTiles = useMemo(
+    () =>
+      [
+        { label: "New Lead", hint: "Capture an enquiry", to: "/crm", perm: "lead:manage", icon: Sparkles },
+        { label: "New Booking", hint: "Start a service", to: "/bookings/new", perm: "application:create", icon: ClipboardList },
+        { label: "Scan Passport", hint: "OCR a document", to: "/operations/document-intelligence", perm: "ocr:use", icon: ScanLine },
+        { label: "Take Payment", hint: "Record money in", to: "/finance/payments", perm: "ar:read", icon: CreditCard },
+        { label: "Today's Work", hint: "Operations queue", to: "/operations", perm: "application:read", icon: Workflow },
+        { label: "Reports", hint: "Business overview", to: "/analytics", perm: "analytics:read", icon: PieChartIcon },
+      ].filter((t) => !t.perm || can(t.perm)),
+    [can],
+  );
+
   return (
     <PageShell wide>
       <PageHeader
@@ -199,6 +220,27 @@ function DashboardBody() {
           </button>
         }
       />
+
+      {homeTiles.length > 0 && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {homeTiles.map((t) => (
+            <Link
+              key={t.to + t.label}
+              to={t.to}
+              className="group flex flex-col items-start gap-2 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--accent)]/50 hover:shadow-md"
+            >
+              <span
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-white shadow-sm"
+                style={{ background: brand.accent }}
+              >
+                <t.icon size={20} />
+              </span>
+              <span className="mt-1 text-[13.5px] font-bold text-[var(--foreground)]">{t.label}</span>
+              <span className="text-[11px] text-[var(--muted-foreground)]">{t.hint}</span>
+            </Link>
+          ))}
+        </div>
+      )}
 
       <JourneyContinuity
         active="booking"
