@@ -966,8 +966,11 @@ export const crmApi = {
     return apiFetch<{ data: CrmLead[]; total: number }>(`/crm/leads${qs ? `?${qs}` : ""}`);
   },
   createLead: (body: Record<string, unknown>) => apiFetch<CrmLead>("/crm/leads", { method: "POST", body }),
+  getLead: (id: string) => apiFetch<CrmLead>(`/crm/leads/${id}`),
   updateLead: (id: string, body: Record<string, unknown>) =>
     apiFetch<CrmLead>(`/crm/leads/${id}`, { method: "PATCH", body }),
+  /** Soft-delete a lead (lead:manage). Delete route lives on /leads/:id. */
+  deleteLead: (id: string) => apiFetch<{ ok: boolean }>(`/leads/${id}`, { method: "DELETE" }),
   listContacts: (q?: Record<string, string | undefined>) => {
     const p = new URLSearchParams();
     for (const [k, v] of Object.entries(q || {})) if (v) p.set(k, v);
