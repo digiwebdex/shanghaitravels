@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
 import {
-  PageShell, PageHeader, Surface, SurfaceHeader, btnGhost, btnPrimary, inputCls, labelCls,
+  PageShell, PageHeader, Surface, SurfaceHeader, btnGhost, btnPrimary, btnPrimaryStyle, inputCls, labelCls,
 } from "@/components/enterprise/Page";
 import { ErrorBanner } from "@/components/Feedback";
 import { agentsApi, applicationsApi, customersApi, financeApi, suppliersApi } from "@/lib/services";
@@ -354,10 +354,10 @@ export default function UnifiedBookingWizardPage() {
           <div className="space-y-4 px-5 py-5">
             <SurfaceHeader title="Passport & documents" hint="Optional — but visa, ticketing, hajj and manpower need it." />
             <div className="flex flex-wrap gap-2">
-              <button type="button" className={passportMode === "scan" ? btnPrimary : btnGhost} onClick={() => setPassportMode("scan")}>
+              <button type="button" className={passportMode === "scan" ? btnPrimary : btnGhost} style={passportMode === "scan" ? btnPrimaryStyle : undefined} onClick={() => setPassportMode("scan")}>
                 <ScanLine size={13} className="mr-1 inline" /> Auto scan (OCR)
               </button>
-              <button type="button" className={passportMode === "manual" ? btnPrimary : btnGhost} onClick={() => setPassportMode("manual")}>
+              <button type="button" className={passportMode === "manual" ? btnPrimary : btnGhost} style={passportMode === "manual" ? btnPrimaryStyle : undefined} onClick={() => setPassportMode("manual")}>
                 <FileCheck size={13} className="mr-1 inline" /> Manual entry
               </button>
               <button type="button" className={btnGhost} onClick={() => setPassportMode("skip")}>Skip for now</button>
@@ -566,7 +566,7 @@ export default function UnifiedBookingWizardPage() {
               <li>The case has entered its workflow and appears in the operations queue.</li>
             </ul>
             <div className="flex flex-wrap gap-2 pt-2">
-              <button type="button" className={btnPrimary} onClick={() => navigate(`/bookings/${created.appId}`)}>Open Booking 360</button>
+              <button type="button" className={btnPrimary} style={btnPrimaryStyle} onClick={() => navigate(`/bookings/${created.appId}`)}>Open Booking 360</button>
               <button type="button" className={btnGhost} onClick={() => navigate("/operations")}>Operations queue</button>
             </div>
           </div>
@@ -579,11 +579,11 @@ export default function UnifiedBookingWizardPage() {
             <ArrowLeft size={13} className="mr-1 inline" /> Back
           </button>
           {step < 5 ? (
-            <button type="button" className={btnPrimary} onClick={next} disabled={busy}>
+            <button type="button" className={btnPrimary} style={btnPrimaryStyle} onClick={next} disabled={busy}>
               Continue <ArrowRight size={13} className="ml-1 inline" />
             </button>
           ) : (
-            <button type="button" className={btnPrimary} onClick={submit} disabled={busy}>
+            <button type="button" className={btnPrimary} style={btnPrimaryStyle} onClick={submit} disabled={busy}>
               {busy ? "Creating…" : "Create service"}
             </button>
           )}
