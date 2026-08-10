@@ -279,6 +279,8 @@ export const applicationsApi = {
     apiFetch<Application>("/applications", { method: "POST", body }),
   update: (id: string, body: Record<string, unknown>) =>
     apiFetch<Application>(`/applications/${id}`, { method: "PATCH", body }),
+  /** Soft-delete a booking (application:delete — super_admin / general_manager). */
+  remove: (id: string) => apiFetch<{ ok: boolean }>(`/applications/${id}`, { method: "DELETE" }),
   advance: (id: string, note?: string) =>
     apiFetch(`/applications/${id}/advance-stage`, {
       method: "POST",

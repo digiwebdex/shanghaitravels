@@ -10,12 +10,16 @@ import {
   Eye,
   FileSpreadsheet,
   Files,
+  Pencil,
   Route,
   Search,
+  Trash2,
   Workflow,
+  X,
 } from "lucide-react";
 import { applicationsApi, financeApi, usersApi } from "@/lib/services";
 import { ApiError, listOf } from "@/lib/api";
+import { useAuth } from "@/auth/AuthProvider";
 import type { AppDocument, Application, Invoice, Journey, StaffUser } from "@/lib/types";
 import {
   ListToolbar,
@@ -24,6 +28,10 @@ import {
   Surface,
   SurfaceHeader,
   btnGhost,
+  btnPrimary,
+  btnPrimaryStyle,
+  inputCls,
+  labelCls,
   searchInputClassName,
 } from "@/components/enterprise/Page";
 import { Column, DataTable, Pill, statusTone } from "@/components/enterprise/DataTable";
@@ -77,6 +85,7 @@ function bookingBadges(a: Application): { label: string; tone: Tone }[] {
 }
 
 export default function OperationsOverviewPage() {
+  const { can } = useAuth();
   const workspace = workspaceById("operations")!;
   const [params, setParams] = useSearchParams();
   const tab = params.get("tab") || "queue";
@@ -110,6 +119,56 @@ export default function OperationsOverviewPage() {
       setLoading(false);
     }
   }, []);
+
+  // Edit + Delete for a booking (reuse PATCH/DELETE /applications/:id).
+  const [editing, setEditing] = useState<Application | null>(null);
+  const [editForm, setEditForm] = useState<{ title: string; priority: string; assignedTo: string }>({ title: "", priority: "medium", assignedTo: "" });
+  const [deleting, setDeleting] = useState<Application | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [ok, setOk] = useState("");
+
+  function openEdit(a: Application) {
+    setEditForm({ title: a.title || "", priority: a.priority || "medium", assignedTo: a.assignedTo || "" });
+    setEditing(a);
+    setError("");
+    setOk("");
+  }
+
+  async function saveEdit() {
+    if (!editing) return;
+    setBusy(true);
+    setError("");
+    try {
+      await applicationsApi.update(editing.id, {
+        title: editForm.title.trim() || undefined,
+        priority: editForm.priority,
+        assignedTo: editForm.assignedTo || null,
+      });
+      setOk(`Booking ${editing.referenceNo} updated`);
+      setEditing(null);
+      await load();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Update failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmDelete() {
+    if (!deleting) return;
+    setBusy(true);
+    setError("");
+    try {
+      await applicationsApi.remove(deleting.id);
+      setOk(`Booking ${deleting.referenceNo} deleted`);
+      setDeleting(null);
+      await load();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Delete failed");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   useEffect(() => {
     void load();
@@ -275,9 +334,25 @@ export default function OperationsOverviewPage() {
       className: "text-right",
       render: (a) => (
         <div className="flex items-center justify-end gap-1">
-          <button type="button" className={`${btnGhost} px-2 py-1`} title="Booking 360" aria-label="View" onClick={() => openView(a)}>
+          <button type="button" className={`${btnGhost} px-2 py-1`} title="View (Booking 360)" aria-label={`View ${a.referenceNo}`} onClick={() => openView(a)}>
             <Eye size={13} />
           </button>
+          {can("application:update") && (
+            <button type="button" className={`${btnGhost} px-2 py-1`} title="Edit" aria-label={`Edit ${a.referenceNo}`} onClick={() => openEdit(a)}>
+              <Pencil size={13} />
+            </button>
+          )}
+          {can("application:delete") && (
+            <button
+              type="button"
+              className={`${btnGhost} px-2 py-1 hover:!border-red-400 hover:!text-red-500`}
+              title="Delete"
+              aria-label={`Delete ${a.referenceNo}`}
+              onClick={() => setDeleting(a)}
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
           <Link to={bookingWorkspaceHref(a.id)} className={`${btnGhost} px-2 py-1`} title="Open workspace" aria-label="Workspace">
             <Briefcase size={13} />
           </Link>
@@ -386,6 +461,66 @@ export default function OperationsOverviewPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Edit booking */}
+      {editing && (
+        <div className="fixed inset-0 z-[75] flex items-center justify-center bg-black/40 p-4" onClick={() => setEditing(null)}>
+          <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-[14px] font-bold">Edit booking <span className="ml-1 text-[12px] font-normal text-[var(--muted-foreground)]">{editing.referenceNo}</span></h3>
+              <button type="button" aria-label="Close" onClick={() => setEditing(null)} className="rounded p-1 text-[var(--muted-foreground)] hover:bg-[var(--muted)]"><X size={16} /></button>
+            </div>
+            {error && <p className="mb-2 text-[11.5px] text-red-600">{error}</p>}
+            <div className="space-y-3">
+              <div>
+                <label className={labelCls}>Title</label>
+                <input className={inputCls} value={editForm.title} onChange={(e) => setEditForm((s) => ({ ...s, title: e.target.value }))} placeholder="Optional label" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Priority</label>
+                  <select className={inputCls} value={editForm.priority} onChange={(e) => setEditForm((s) => ({ ...s, priority: e.target.value }))}>
+                    {["low", "medium", "high", "urgent"].map((p) => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Assigned to</label>
+                  <select className={inputCls} value={editForm.assignedTo} onChange={(e) => setEditForm((s) => ({ ...s, assignedTo: e.target.value }))}>
+                    <option value="">Unassigned</option>
+                    {Object.entries(staffMap).map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+                  </select>
+                </div>
+              </div>
+              <p className="text-[10.5px] text-[var(--muted-foreground)]">Status advances through the workflow — advance stages in Booking 360, not here.</p>
+              <div className="flex gap-2 pt-1">
+                <button type="button" className={btnPrimary} style={btnPrimaryStyle} disabled={busy} onClick={() => void saveEdit()}>{busy ? "Saving…" : "Save changes"}</button>
+                <button type="button" className={btnGhost} onClick={() => setEditing(null)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete booking confirm */}
+      {deleting && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4" onClick={() => setDeleting(null)}>
+          <div className="w-full max-w-sm rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="flex items-center gap-2 text-[14px] font-bold text-red-600"><Trash2 size={15} /> Delete booking</h3>
+            <p className="mt-2 text-[12.5px]">Delete <strong>{deleting.referenceNo}</strong> ({deleting.serviceType.replace(/_/g, " ")})? It is soft-deleted and removed from the queue.</p>
+            {error && <p className="mt-2 text-[11.5px] text-red-600">{error}</p>}
+            <div className="mt-4 flex justify-end gap-2">
+              <button type="button" className={btnGhost} onClick={() => setDeleting(null)}>Cancel</button>
+              <button type="button" disabled={busy} onClick={() => void confirmDelete()} className="inline-flex items-center gap-1.5 rounded-xl bg-red-500 px-3.5 py-2 text-[12px] font-bold text-white transition-colors hover:bg-red-600 disabled:opacity-50">{busy ? "Deleting…" : "Delete"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {ok && (
+        <div className="fixed bottom-5 left-1/2 z-[85] -translate-x-1/2 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2 text-[12px] font-semibold text-emerald-800 shadow" onClick={() => setOk("")}>
+          {ok}
+        </div>
+      )}
     </PageShell>
   );
 }
