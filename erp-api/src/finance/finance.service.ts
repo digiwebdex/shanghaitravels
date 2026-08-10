@@ -74,7 +74,13 @@ export class FinanceService {
 
   private computeTotals(items: any[], discount = 0, tax = 0) {
     const subtotal = items.reduce((s, it) => s + Math.round(Number(it.quantity || 1) * Number(it.unitPrice || 0)), 0);
-    return { subtotal, total: subtotal - Math.round(discount) + Math.round(tax) };
+    const d = Math.round(Number(discount) || 0);
+    const t = Math.round(Number(tax) || 0);
+    // F-1: discount must sit within [0, subtotal] so the invoice total can never
+    // go negative. Reject invalid input rather than silently clamping it.
+    if (d < 0) throw new BadRequestException("Discount cannot be negative.");
+    if (d > subtotal) throw new BadRequestException("Discount cannot be greater than invoice subtotal.");
+    return { subtotal, total: subtotal - d + t };
   }
 
   async createInvoice(dto: any, user: AuthedUser) {
@@ -195,6 +201,21 @@ export class FinanceService {
     if (!(amount > 0)) throw new BadRequestException("amount must be positive (minor units)");
     if (!dto.accountId) throw new BadRequestException("accountId required");
     const pay = await this.prisma.$transaction(async (tx) => {
+      // F-2: a customer payment can never exceed the invoice's outstanding
+      // balance. Lock the invoice row FOR UPDATE first so two concurrent
+      // payments serialize and cannot both pass the check (refunds are exempt —
+      // they reduce the paid amount, not exceed the due).
+      if (kind === "payment" && dto.invoiceId) {
+        await tx.$queryRaw`SELECT id FROM "Invoice" WHERE id = ${dto.invoiceId} FOR UPDATE`;
+        const inv = await tx.invoice.findUnique({ where: { id: dto.invoiceId } });
+        if (!inv) throw new NotFoundException("Invoice not found");
+        const prior = await tx.payment.findMany({ where: { invoiceId: dto.invoiceId, deletedAt: null } });
+        const paid = prior.reduce((s: number, p: any) => s + (p.kind === "refund" ? -p.amount : p.amount), 0);
+        const outstanding = inv.total - paid;
+        if (amount > outstanding) {
+          throw new BadRequestException("Payment amount cannot exceed the outstanding invoice balance.");
+        }
+      }
       const pay = await tx.payment.create({ data: { kind, invoiceId: dto.invoiceId ?? null, customerId: dto.customerId ?? null,
         accountId: dto.accountId, amount, method: dto.method || "cash", reference: dto.reference, note: dto.note,
         receivedAt: dto.receivedAt ? new Date(dto.receivedAt) : new Date(), recordedBy: user.id } });

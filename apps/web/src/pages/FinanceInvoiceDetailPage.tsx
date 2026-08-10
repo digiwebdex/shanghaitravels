@@ -163,6 +163,12 @@ export default function FinanceInvoiceDetailPage() {
       setError("Select a receiving account");
       return;
     }
+    // F-2: a payment can never exceed the outstanding balance (refunds are exempt).
+    // The backend is the final enforcement layer; this is the friendly front stop.
+    if (pKind !== "refund" && inv?.due != null && Math.round(taka * 100) > inv.due) {
+      setError("Payment amount cannot exceed the outstanding invoice balance.");
+      return;
+    }
     try {
       const body = {
         invoiceId: id,
@@ -503,6 +509,9 @@ export default function FinanceInvoiceDetailPage() {
               <div>
                 <label className={labelCls}>Amount (BDT)</label>
                 <input className={inputCls} inputMode="decimal" value={pAmount} onChange={(e) => setPAmount(e.target.value)} placeholder="0.00" />
+                {pKind !== "refund" && (inv?.due ?? 0) > 0 && (
+                  <p className="mt-1 text-[10.5px] text-[var(--muted-foreground)]">Outstanding: {fmtBDTPlain(inv?.due ?? 0)}</p>
+                )}
               </div>
               <div>
                 <label className={labelCls}>Method</label>
