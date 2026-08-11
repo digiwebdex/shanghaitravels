@@ -33,14 +33,13 @@ import { buildDetailPayload, fieldsFor, missingRequired, type ServiceField } fro
 import { fmtBDT, fromPoisha, toPoisha } from "@/lib/money";
 import type { Customer, Supplier } from "@/lib/types";
 
+// Simplify — one booking in 4 short steps (was 7). Same fields, same API flow;
+// related things now sit together so staff don't click through as many pages.
 const STEPS = [
-  "Customer & Agent",
-  "Passport & Documents",
+  "Customer",
   "Service",
-  "Service details",
-  "Supplier & Commercials",
-  "Invoice & Payment",
-  "Confirmation",
+  "Price & Payment",
+  "Done",
 ] as const;
 
 /** Existing CasePriority enum — not a second priority list. */
@@ -150,20 +149,22 @@ export default function UnifiedBookingWizardPage() {
   }, [finalPrice, cost]);
 
   function guard(): string {
+    // Step 0 = Customer (+ passport). Step 1 = Service (+ details).
+    // Step 2 = Supplier + price + invoice + payment.
     if (step === 0 && !customer) return "Select a customer to continue";
-    if (step === 2 && !service) return "Choose a service";
-    if (step === 3) {
+    if (step === 1) {
+      if (!service) return "Choose a service";
       const missing = missingRequired(apiType, detail);
       if (missing.length) return `Required: ${missing.join(", ")}`;
     }
-    if (step === 4) {
+    if (step === 2) {
       if (cost.trim() && !(Number(cost) >= 0)) return "Supplier cost must be zero or more";
       if (price.trim() && !(Number(price) >= 0)) return "Selling price must be zero or more";
       if (finalPrice != null && finalPrice < 0) return "Discount cannot exceed the selling price";
-    }
-    if (step === 5 && payNow) {
-      if (!accountId) return "Choose the receive account for this payment";
-      if (!(Number(payAmount) > 0)) return "Payment amount must be greater than zero";
+      if (payNow) {
+        if (!accountId) return "Choose the receive account for this payment";
+        if (!(Number(payAmount) > 0)) return "Payment amount must be greater than zero";
+      }
     }
     return "";
   }
@@ -250,7 +251,7 @@ export default function UnifiedBookingWizardPage() {
       }
 
       setCreated({ appId: app.id, ref: app.referenceNo, invoiceNo, apDoc });
-      setStep(6);
+      setStep(3);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not complete the booking");
     } finally { setBusy(false); }
@@ -349,9 +350,9 @@ export default function UnifiedBookingWizardPage() {
           </div>
         )}
 
-        {/* ─────────── 2 · PASSPORT ─────────── */}
-        {step === 1 && (
-          <div className="space-y-4 px-5 py-5">
+        {/* PASSPORT — now sits under Customer so it's one step, shown once a customer is picked. */}
+        {step === 0 && customer && (
+          <div className="space-y-4 border-t border-[var(--border)] px-5 py-5">
             <SurfaceHeader title="Passport & documents" hint="Optional — but visa, ticketing, hajj and manpower need it." />
             <div className="flex flex-wrap gap-2">
               <button type="button" className={passportMode === "scan" ? btnPrimary : btnGhost} style={passportMode === "scan" ? btnPrimaryStyle : undefined} onClick={() => setPassportMode("scan")}>
@@ -384,8 +385,8 @@ export default function UnifiedBookingWizardPage() {
           </div>
         )}
 
-        {/* ─────────── 3 · SERVICE ─────────── */}
-        {step === 2 && (
+        {/* SERVICE ─────────── */}
+        {step === 1 && (
           <div className="space-y-4 px-5 py-5">
             <SurfaceHeader title="What service does this customer need?" />
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -422,9 +423,9 @@ export default function UnifiedBookingWizardPage() {
           </div>
         )}
 
-        {/* ─────────── 4 · SERVICE DETAILS (dynamic) ─────────── */}
-        {step === 3 && (
-          <div className="space-y-4 px-5 py-5">
+        {/* SERVICE DETAILS (dynamic) — under the same Service step. */}
+        {step === 1 && service && (
+          <div className="space-y-4 border-t border-[var(--border)] px-5 py-5">
             <SurfaceHeader
               title={`${SERVICE_OPTIONS.find((s) => s.value === service)?.label} details`}
               hint="Only the fields this service actually uses."
@@ -461,8 +462,8 @@ export default function UnifiedBookingWizardPage() {
           </div>
         )}
 
-        {/* ─────────── 5 · SUPPLIER & COMMERCIALS ─────────── */}
-        {step === 4 && (
+        {/* PRICE & PAYMENT — supplier, cost, price, discount (step 2). */}
+        {step === 2 && (
           <div className="space-y-4 px-5 py-5">
             <SurfaceHeader title="Supplier & commercials" hint="The supplier belongs to THIS service, not to the customer." />
             <div>
@@ -504,9 +505,9 @@ export default function UnifiedBookingWizardPage() {
           </div>
         )}
 
-        {/* ─────────── 6 · INVOICE & PAYMENT ─────────── */}
-        {step === 5 && (
-          <div className="space-y-4 px-5 py-5">
+        {/* INVOICE & PAYMENT — same step 2, right below the price. */}
+        {step === 2 && (
+          <div className="space-y-4 border-t border-[var(--border)] px-5 py-5">
             <SurfaceHeader title="Invoice & payment" hint="Payment method and receive account are separate." />
             <div className="rounded-xl border border-[var(--border)] px-4 py-3 text-[12px]">
               <p>Customer: <strong>{customer?.fullName}</strong></p>
@@ -551,8 +552,8 @@ export default function UnifiedBookingWizardPage() {
           </div>
         )}
 
-        {/* ─────────── 7 · CONFIRMATION ─────────── */}
-        {step === 6 && created && (
+        {/* DONE ─────────── */}
+        {step === 3 && created && (
           <div className="space-y-3 px-5 py-6">
             <p className="flex items-center gap-2 text-[14px] font-bold text-emerald-600">
               <Check size={16} /> {created.ref} created
@@ -573,18 +574,18 @@ export default function UnifiedBookingWizardPage() {
         )}
       </Surface>
 
-      {step < 6 && (
+      {step < 3 && (
         <div className="flex items-center justify-between">
           <button type="button" className={btnGhost} onClick={back} disabled={step === 0 || busy}>
             <ArrowLeft size={13} className="mr-1 inline" /> Back
           </button>
-          {step < 5 ? (
+          {step < 2 ? (
             <button type="button" className={btnPrimary} style={btnPrimaryStyle} onClick={next} disabled={busy}>
               Continue <ArrowRight size={13} className="ml-1 inline" />
             </button>
           ) : (
             <button type="button" className={btnPrimary} style={btnPrimaryStyle} onClick={submit} disabled={busy}>
-              {busy ? "Creating…" : "Create service"}
+              {busy ? "Creating…" : "Create booking"}
             </button>
           )}
         </div>
