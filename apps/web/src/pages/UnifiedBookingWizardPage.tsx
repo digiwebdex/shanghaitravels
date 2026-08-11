@@ -19,7 +19,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import {
   ArrowLeft, ArrowRight, Building2, Check, CreditCard, FileCheck,
-  Receipt, Search, ScanLine, UserRound, Users,
+  Receipt, Search, ScanLine, UserPlus, UserRound, Users, X,
 } from "lucide-react";
 import { useAuth } from "@/auth/AuthProvider";
 import {
@@ -30,6 +30,7 @@ import { agentsApi, applicationsApi, customersApi, financeApi, suppliersApi } fr
 import { PassportScanForm } from "@/components/ocr/PassportScanForm";
 import { SERVICE_OPTIONS, type ServiceKind } from "@/lib/workflow";
 import { buildDetailPayload, fieldsFor, missingRequired, type ServiceField } from "@/lib/serviceForms";
+import { ISSUE_STAGE_NAME } from "@/lib/airTicketOps";
 import { fmtBDT, fromPoisha, toPoisha } from "@/lib/money";
 import type { Customer, Supplier } from "@/lib/types";
 
@@ -63,6 +64,12 @@ export default function UnifiedBookingWizardPage() {
   const [results, setResults] = useState<Customer[]>([]);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [agentLabel, setAgentLabel] = useState<string>("");
+  // inline "new customer" — so staff never leave the wizard to /customers mid-booking.
+  const [showNew, setShowNew] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [creatingCust, setCreatingCust] = useState(false);
 
   // ---- step 2: passport (shared Document Scanner does the heavy lifting) ----
   const [passportMode, setPassportMode] = useState<"skip" | "scan" | "manual">("skip");
@@ -92,7 +99,7 @@ export default function UnifiedBookingWizardPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
 
   // ---- result ----
-  const [created, setCreated] = useState<{ appId: string; ref: string; invoiceNo?: string; apDoc?: string } | null>(null);
+  const [created, setCreated] = useState<{ appId: string; ref: string; invoiceNo?: string; apDoc?: string; ticketIssued?: boolean } | null>(null);
 
   // customer search (existing API; searches name / phone / code / passport / email)
   useEffect(() => {
@@ -134,6 +141,25 @@ export default function UnifiedBookingWizardPage() {
       setAgentLabel(`Agent ${primaryId.slice(0, 8)}…`);
     }
   }, []);
+
+  // Create a brand-new customer inline and select them — no trip to /customers,
+  // no lost wizard state. Uses the SAME endpoint as the Customers page (min:
+  // fullName + phone). Backend still enforces customer:create.
+  const createCustomer = useCallback(async () => {
+    const fullName = newName.trim();
+    const phone = newPhone.trim();
+    if (!fullName || !phone) { setError("A new customer needs a name and a mobile number"); return; }
+    setCreatingCust(true); setError("");
+    try {
+      const body: Record<string, string> = { fullName, phone };
+      if (newEmail.trim()) body.email = newEmail.trim();
+      const c = await customersApi.create(body);
+      await pickCustomer(c);
+      setShowNew(false); setNewName(""); setNewPhone(""); setNewEmail(""); setQ(""); setResults([]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not create the customer");
+    } finally { setCreatingCust(false); }
+  }, [newName, newPhone, newEmail, pickCustomer]);
 
   const finalPrice = useMemo(() => {
     const p = price.trim() === "" ? null : toPoisha(Number(price));
@@ -250,7 +276,36 @@ export default function UnifiedBookingWizardPage() {
         }
       }
 
-      setCreated({ appId: app.id, ref: app.referenceNo, invoiceNo, apDoc });
+      // 6 — an air ticket that already carries a ticket number is, by
+      // definition, issued. Fast-forward its workflow to "Ticket Issued" so
+      // staff don't need a second screen (/ticketing) to mark it. Best-effort:
+      // wrapped so it can NEVER fail the booking — it reuses the existing
+      // advance-stage endpoint one stage at a time (same call the manual
+      // "Mark ticket issued" button makes).
+      let ticketIssued = false;
+      const tno = (detail.ticketNo || "").trim();
+      if (apiType === "air_ticket" && tno && can("application:advance-stage")) {
+        try {
+          const j = await applicationsApi.journey(app.id);
+          const stages = (j.stages || []).slice().sort((a, b) => a.stageNo - b.stageNo);
+          const issue = stages.find((s) => s.name === ISSUE_STAGE_NAME);
+          const active = stages.find((s) => s.status === "active");
+          if (issue && active && active.stageNo < issue.stageNo) {
+            const hops = issue.stageNo - active.stageNo;
+            for (let i = 0; i < hops && i < 15; i++) {
+              const note = i === hops - 1
+                ? `Ticket issued — ${tno}${detail.pnr?.trim() ? ` / PNR ${detail.pnr.trim()}` : ""}`
+                : undefined;
+              await applicationsApi.advance(app.id, note);
+            }
+            ticketIssued = true;
+          } else if (issue && (issue.status === "active" || issue.status === "done")) {
+            ticketIssued = true;
+          }
+        } catch { /* leave it for the manual "Mark ticket issued" button */ }
+      }
+
+      setCreated({ appId: app.id, ref: app.referenceNo, invoiceNo, apDoc, ticketIssued });
       setStep(3);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not complete the booking");
@@ -305,6 +360,47 @@ export default function UnifiedBookingWizardPage() {
               />
             </div>
 
+            {!customer && !showNew && can("customer:create") && (
+              <button
+                type="button"
+                onClick={() => setShowNew(true)}
+                className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-[var(--accent)]"
+              >
+                <UserPlus size={13} /> Add a new customer
+              </button>
+            )}
+
+            {showNew && can("customer:create") && (
+              <div className="space-y-3 rounded-xl border border-[var(--accent)]/40 bg-[var(--accent)]/[0.05] px-4 py-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-[12.5px] font-bold">New customer</p>
+                  <button type="button" onClick={() => setShowNew(false)} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]" aria-label="Cancel new customer">
+                    <X size={15} />
+                  </button>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div>
+                    <label className={labelCls} htmlFor="nc-name">Full name *</label>
+                    <input id="nc-name" className={inputCls} value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="As per passport" />
+                  </div>
+                  <div>
+                    <label className={labelCls} htmlFor="nc-phone">Mobile *</label>
+                    <input id="nc-phone" className={inputCls} value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder="01XXXXXXXXX" />
+                  </div>
+                  <div>
+                    <label className={labelCls} htmlFor="nc-email">Email</label>
+                    <input id="nc-email" type="email" className={inputCls} value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="Optional" />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button type="button" className={btnPrimary} style={btnPrimaryStyle} onClick={createCustomer} disabled={creatingCust || !newName.trim() || !newPhone.trim()}>
+                    {creatingCust ? "Creating…" : "Create & select"}
+                  </button>
+                  <button type="button" className={btnGhost} onClick={() => setShowNew(false)} disabled={creatingCust}>Cancel</button>
+                </div>
+              </div>
+            )}
+
             {results.length > 0 && (
               <ul className="space-y-1.5">
                 {results.map((c) => (
@@ -342,9 +438,24 @@ export default function UnifiedBookingWizardPage() {
               </div>
             )}
 
-            {q.trim() && results.length === 0 && (
+            {q.trim() && results.length === 0 && !showNew && (
               <div className="rounded-lg border border-dashed border-[var(--border)] px-3.5 py-4 text-[12px] text-[var(--muted-foreground)]">
-                No match. <Link to="/customers" className="font-semibold text-[var(--accent)]">Create the customer →</Link>
+                No match.{" "}
+                {can("customer:create") ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const t = q.trim();
+                      if (/^\+?[\d][\d\s-]*$/.test(t)) setNewPhone(t); else setNewName(t);
+                      setShowNew(true);
+                    }}
+                    className="font-semibold text-[var(--accent)]"
+                  >
+                    + Add “{q.trim()}” as a new customer
+                  </button>
+                ) : (
+                  <Link to="/customers" className="font-semibold text-[var(--accent)]">Create the customer →</Link>
+                )}
               </div>
             )}
           </div>
@@ -564,6 +675,11 @@ export default function UnifiedBookingWizardPage() {
               {created.invoiceNo && <li className="flex items-center gap-1.5"><Receipt size={12} /> Invoice {created.invoiceNo}</li>}
               {created.apDoc && <li className="flex items-center gap-1.5"><Building2 size={12} /> Supplier payable {created.apDoc}</li>}
               {payNow && <li className="flex items-center gap-1.5"><CreditCard size={12} /> Payment recorded</li>}
+              {created.ticketIssued && (
+                <li className="flex items-center gap-1.5 font-semibold text-emerald-600">
+                  <FileCheck size={12} /> Ticket issued — workflow advanced to “{ISSUE_STAGE_NAME}”.
+                </li>
+              )}
               <li>The case has entered its workflow and appears in the operations queue.</li>
             </ul>
             <div className="flex flex-wrap gap-2 pt-2">
