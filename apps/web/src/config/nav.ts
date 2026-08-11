@@ -104,7 +104,6 @@ export const NAV: NavSection[] = [
     label: "Daily work",
     icon: Sparkles,
     items: [
-      { id: "daily-leads", label: "Leads", to: "/crm", icon: Sparkles, perm: "lead:read", end: true },
       { id: "daily-customers", label: "Customers", to: "/customers", icon: Users, perm: "customer:read" },
       { id: "daily-newbooking", label: "New Booking", to: "/bookings/new", icon: ClipboardList, perm: "application:create" },
       { id: "daily-operations", label: "Operations", to: "/operations", icon: Workflow, perm: "application:read", end: true },
@@ -120,7 +119,6 @@ export const NAV: NavSection[] = [
     icon: Target,
     items: [
       { id: "crm-dashboard", label: "Dashboard", to: "/crm/directory", icon: LayoutDashboard, perm: "crm:read", keywords: "crm home acquire" },
-      { id: "crm-leads", label: "Leads", to: "/crm", icon: Sparkles, perm: "crm:read", end: true },
       { id: "customers", label: "Customers", to: "/customers", icon: Users, perm: "customer:read", keywords: "client passenger customer 360" },
       { id: "crm-opps", label: "Opportunities", to: "/crm/opportunities", icon: TrendingUp, perm: "crm:read" },
       { id: "sales-pipeline", label: "Pipeline", to: "/sales", icon: BarChart3, perm: "opportunity:read", end: true },

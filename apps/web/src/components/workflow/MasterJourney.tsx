@@ -6,18 +6,23 @@ import { MASTER_JOURNEY, type MasterJourneyId } from "@/lib/workflow";
 export function MasterJourneyStrip({
   active,
   compact,
+  startFrom,
 }: {
   active?: MasterJourneyId;
   compact?: boolean;
+  /** Begin the displayed journey at this node (e.g. hide "Lead", start at Customer). */
+  startFrom?: MasterJourneyId;
 }) {
-  const idx = active ? MASTER_JOURNEY.findIndex((s) => s.id === active) : -1;
+  const start = startFrom ? Math.max(0, MASTER_JOURNEY.findIndex((s) => s.id === startFrom)) : 0;
+  const journey = MASTER_JOURNEY.slice(start);
+  const idx = active ? journey.findIndex((s) => s.id === active) : -1;
 
   return (
     <ol
       className={`flex flex-wrap items-center gap-1 ${compact ? "" : "gap-1.5"}`}
       aria-label="Master booking journey"
     >
-      {MASTER_JOURNEY.map((step, i) => {
+      {journey.map((step, i) => {
         const done = idx >= 0 && i < idx;
         const current = idx >= 0 && i === idx;
         return (
@@ -54,19 +59,24 @@ export function JourneyContinuity({
   active,
   previousHint,
   nextHint,
+  startFrom,
 }: {
   active?: MasterJourneyId;
   previousHint?: string;
   nextHint?: string;
+  /** Begin the displayed journey at this node (e.g. start at Customer). */
+  startFrom?: MasterJourneyId;
 }) {
-  const idx = active ? MASTER_JOURNEY.findIndex((s) => s.id === active) : -1;
-  const prev = idx > 0 ? MASTER_JOURNEY[idx - 1] : null;
-  const curr = idx >= 0 ? MASTER_JOURNEY[idx] : null;
-  const next = idx >= 0 && idx < MASTER_JOURNEY.length - 1 ? MASTER_JOURNEY[idx + 1] : null;
+  const start = startFrom ? Math.max(0, MASTER_JOURNEY.findIndex((s) => s.id === startFrom)) : 0;
+  const journey = MASTER_JOURNEY.slice(start);
+  const idx = active ? journey.findIndex((s) => s.id === active) : -1;
+  const prev = idx > 0 ? journey[idx - 1] : null;
+  const curr = idx >= 0 ? journey[idx] : null;
+  const next = idx >= 0 && idx < journey.length - 1 ? journey[idx + 1] : null;
 
   return (
     <div className="space-y-3">
-      <MasterJourneyStrip active={active} />
+      <MasterJourneyStrip active={active} startFrom={startFrom} />
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <ContinuityCard
           kind="previous"

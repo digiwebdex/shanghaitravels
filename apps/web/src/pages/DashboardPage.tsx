@@ -23,7 +23,6 @@ import {
   PieChart as PieChartIcon,
   RefreshCw,
   ScanLine,
-  Sparkles,
   Truck,
   UserRound,
   Workflow,
@@ -88,9 +87,9 @@ function roleLens(role?: string): {
   if (r.includes("sales") || r.includes("crm")) {
     return {
       title: "Sales lens",
-      body: "Stay in CRM until a booking exists: Lead → Opportunity → Quotation → Booking.",
+      body: "Start from the customer: Customer → Quotation → Booking.",
       actions: [
-        { label: "Leads", to: "/crm", primary: true },
+        { label: "Customers", to: "/customers", primary: true },
         { label: "Booking wizard", to: "/bookings/new" },
       ],
     };
@@ -199,7 +198,7 @@ function DashboardBody() {
   const homeTiles = useMemo(
     () =>
       [
-        { label: "New Lead", hint: "Capture an enquiry", to: "/crm", perm: "lead:manage", icon: Sparkles },
+        { label: "Customers", hint: "Add or find a customer", to: "/customers", perm: "customer:read", icon: UserRound },
         { label: "New Booking", hint: "Start a service", to: "/bookings/new", perm: "application:create", icon: ClipboardList },
         { label: "Scan Passport", hint: "OCR a document", to: "/operations/document-intelligence", perm: "ocr:use", icon: ScanLine },
         { label: "Take Payment", hint: "Record money in", to: "/finance/payments", perm: "ar:read", icon: CreditCard },
@@ -244,7 +243,8 @@ function DashboardBody() {
 
       <JourneyContinuity
         active="booking"
-        previousHint="Lead → Customer → Documents"
+        startFrom="customer"
+        previousHint="Customer → Documents → OCR"
         nextHint="Operations queue → Finance → Travel"
       />
       <NextStepBanner title={lens.title} body={lens.body} actions={lens.actions} />
